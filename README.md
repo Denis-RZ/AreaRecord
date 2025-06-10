@@ -1,6 +1,15 @@
 # AreaRecord
 Record a selected area with presets, hotkeys, and live stats.
 
+## Restoring Dependencies
+
+After cloning the repository, restore the required packages:
+
+```bash
+dotnet restore
+libman restore
+```
+
 ## Configuring the Database Connection
 
 `appsettings.json` contains the default connection string used by the
