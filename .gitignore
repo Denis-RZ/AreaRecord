@@ -1,0 +1,7 @@
+bin/
+obj/
+*.dll
+*/wwwroot/lib/
+node_modules/
+dotnet-install.sh
+*.ico
