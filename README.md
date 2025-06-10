@@ -53,3 +53,13 @@ sqlcmd -S <server> -d <database> -i update.sql
 ```
 
 This approach avoids installing the .NET SDK on the server while keeping the database schema in sync.
+
+## Running Tests
+
+Unit tests live in the `MyWebApp.Tests` project. To execute them locally run:
+
+```bash
+dotnet test
+```
+
+This will build the solution and run all tests.
