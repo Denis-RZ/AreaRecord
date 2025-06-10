@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MyWebApp.Models;
 
 namespace MyWebApp.Data
 {
@@ -10,5 +11,6 @@ namespace MyWebApp.Data
         }
 
         // Add DbSet<> properties here
+        public DbSet<Recording> Recordings { get; set; }
     }
 }
