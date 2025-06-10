@@ -1,0 +1,106 @@
+body{font-family:Arial,sans-serif;width:320px;padding:10px;margin:0}
+h1{font-size:16px;margin:0 0 6px}
+h3{font-size:14px;margin:12px 0 6px;color:#333}
+
+#controls{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+button{flex:1 1 auto;padding:6px;font-size:12px}
+select{width:100%;padding:4px;margin-bottom:6px}
+
+#status{margin-top:8px;font-size:12px;color:#c00}
+#area-info{margin-top:6px;font-size:12px;color:#444}
+#preset-buttons button{margin:2px;padding:4px 6px;font-size:12px}
+
+/* Google Drive Configuration */
+#drive-config {
+  background: #f8f9fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+.drive-option {
+  display: flex;
+  align-items: center;
+  margin: 6px 0;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.drive-option input[type="checkbox"] {
+  margin: 0;
+}
+
+.drive-option input[type="text"] {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #d1d5da;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.drive-option span {
+  flex: none;
+  min-width: 80px;
+}
+
+.drive-hidden {
+  display: none;
+}
+
+.drive-visible {
+  display: block;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; height: 0; }
+  to { opacity: 1; height: auto; }
+}
+
+.drive-test-btn {
+  width: 100%;
+  padding: 6px;
+  margin-top: 6px;
+  background: #0969da;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.drive-test-btn:hover {
+  background: #0850c1;
+}
+
+.drive-test-btn:disabled {
+  background: #8c959f;
+  cursor: not-allowed;
+}
+
+.drive-status {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  margin: 4px 0;
+  text-align: center;
+}
+
+.drive-status.success {
+  background: #d4f8d4;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+
+.drive-status.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.drive-status.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}

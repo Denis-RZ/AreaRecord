@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Загрузка в Google Drive</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; }
+    #popup {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 30px #0005;
+      padding: 30px 32px 24px 32px;
+      min-width: 350px;
+      max-width: 95vw;
+      z-index: 999999;
+    }
+    #popup h2 { margin-top: 0; }
+    #popup input[type="file"] { margin: 10px 0; }
+    #popup .status { margin: 10px 0 0 0; font-size: 13px; color: #555; }
+    #popup .error { color: #c00; }
+    #popup .success { color: #080; }
+    #popup button { margin-top: 12px; padding: 8px 18px; font-size: 15px; border-radius: 5px; border: none; background: #3498db; color: #fff; cursor: pointer; }
+    #popup button:disabled { opacity: 0.6; }
+    #popup .close { position: absolute; right: 18px; top: 12px; font-size: 22px; color: #888; background: none; border: none; cursor: pointer; }
+    #popup .close:hover { color: #c00; }
+    #popup label { font-size: 14px; }
+    #popup .progress { width: 100%; background: #eee; border-radius: 4px; height: 10px; margin: 10px 0; }
+    #popup .progress-bar { height: 10px; background: #4caf50; border-radius: 4px; width: 0; transition: width 0.2s; }
+  </style>
+</head>
+<body>
+<div id="popup">
+  <button class="close" onclick="window.close()">×</button>
+  <h2>Загрузка в Google Drive</h2>
+  <div id="step-auth">
+    <button id="btn-auth">Авторизоваться в Google</button>
+    <div class="status" id="auth-status"></div>
+  </div>
+  <div id="step-file" style="display:none">
+    <label>Выберите видеофайл для загрузки (до 10 ГБ):<br>
+      <input type="file" id="file-input" accept="video/*">
+    </label>
+    <div class="status" id="file-status"></div>
+  </div>
+  <div id="step-upload" style="display:none">
+    <div>Загрузка файла в Google Drive...</div>
+    <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="status" id="upload-status"></div>
+  </div>
+</div>
+<script>
+const CLIENT_ID = '';
+const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let accessToken = '';
+let fileToUpload = null;
+
+// 1. Авторизация Google OAuth 2.0 (response_type=token)
+document.getElementById('btn-auth').onclick = function() {
+  const redirectUri = window.location.origin + window.location.pathname;
+  const url =
+    'https://accounts.google.com/o/oauth2/v2/auth?' +
+    'client_id=' + encodeURIComponent(CLIENT_ID) +
+    '&redirect_uri=' + encodeURIComponent(redirectUri) +
+    '&response_type=token' +
+    '&scope=' + encodeURIComponent(SCOPE) +
+    '&prompt=consent';
+  window.location.href = url;
+};
+
+// 2. После авторизации получаем access_token из URL
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    accessToken = params.get('access_token');
+    document.getElementById('step-auth').style.display = 'none';
+    document.getElementById('step-file').style.display = '';
+    document.getElementById('auth-status').textContent = 'Авторизация успешна!';
+  }
+});
+
+// 3. Выбор файла
+const fileInput = document.getElementById('file-input');
+fileInput.onchange = function() {
+  if (!fileInput.files.length) return;
+  fileToUpload = fileInput.files[0];
+  document.getElementById('file-status').textContent = 'Файл выбран: ' + fileToUpload.name + ' (' + (fileToUpload.size/1024/1024).toFixed(2) + ' МБ)';
+  uploadFile();
+};
+
+// 4. Загрузка файла в Google Drive
+function uploadFile() {
+  if (!accessToken || !fileToUpload) return;
+  document.getElementById('step-file').style.display = 'none';
+  document.getElementById('step-upload').style.display = '';
+  const progressBar = document.getElementById('progress-bar');
+  const uploadStatus = document.getElementById('upload-status');
+
+  // Используем Resumable Upload для больших файлов
+  const metadata = {
+    name: fileToUpload.name,
+    mimeType: fileToUpload.type
+  };
+
+  // 1. Инициализация сессии загрузки
+  fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken,
+      'Content-Type': 'application/json; charset=UTF-8'
+    },
+    body: JSON.stringify(metadata)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Ошибка инициализации загрузки: ' + res.status);
+    return res.headers.get('Location');
+  })
+  .then(uploadUrl => {
+    if (!uploadUrl) throw new Error('Не получен upload URL');
+    // 2. Загружаем файл чанками (10 МБ)
+    const chunkSize = 10 * 1024 * 1024;
+    let offset = 0;
+    function uploadChunk() {
+      const chunk = fileToUpload.slice(offset, offset + chunkSize);
+      const isLast = (offset + chunkSize) >= fileToUpload.size;
+      fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': `bytes ${offset}-${offset+chunk.size-1}/${fileToUpload.size}`
+        },
+        body: chunk
+      })
+      .then(res => {
+        if (res.status === 308) {
+          // Продолжаем загрузку
+          offset += chunkSize;
+          progressBar.style.width = Math.min(100, (offset/fileToUpload.size)*100) + '%';
+          uploadChunk();
+        } else if (res.ok) {
+          progressBar.style.width = '100%';
+          uploadStatus.textContent = '✅ Файл успешно загружен в Google Drive!';
+        } else {
+          throw new Error('Ошибка загрузки: ' + res.status);
+        }
+      })
+      .catch(err => {
+        uploadStatus.textContent = '❌ ' + err.message;
+      });
+    }
+    uploadChunk();
+  })
+  .catch(err => {
+    uploadStatus.textContent = '❌ ' + err.message;
+  });
+}
+</script>
+</body>
+</html>

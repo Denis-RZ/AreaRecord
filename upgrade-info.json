@@ -1,0 +1,35 @@
+﻿{
+    "features":  [
+                     "Legal documents (Privacy Policy, Terms of Service)",
+                     "Folder selection for recordings",
+                     "Auto-backup functionality",
+                     "Manual backup system",
+                     "Recording history tracking",
+                     "Enhanced UI with modern design",
+                     "Professional legal protection",
+                     "GDPR/CCPA compliance"
+                 ],
+    "version":  "2.0-full",
+    "contact":  {
+                    "email":  "baidu27@gmail.com",
+                    "company":  "Screen Area Recorder Pro",
+                    "jurisdiction":  "United States"
+                },
+    "timestamp":  "2025-05-29T12:48:13.321Z",
+    "files":  {
+                  "created":  [
+                                  "html/privacy-policy.html",
+                                  "html/terms-of-service.html",
+                                  "html/folder-picker.html",
+                                  "UPGRADE_NOTES.md",
+                                  "upgrade-info.json"
+                              ],
+                  "modified":  [
+                                   "manifest.json",
+                                   "html/popup.html",
+                                   "scripts/popup.js",
+                                   "scripts/content.js"
+                               ]
+              },
+    "backup":  ".\\bak_20250529_124757"
+}

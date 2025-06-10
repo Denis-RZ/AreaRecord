@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Folder Picker - Screen Area Recorder Pro</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #34495e;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+        }
+        button.secondary:hover {
+            box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+        }
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-radius: 8px;
+            display: none;
+            border: 1px solid #b7d7c5;
+        }
+        .icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-list h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .feature-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin: 5px 0;
+            color: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📁</div>
+        <h1>Choose Save Folder</h1>
+        <div class="subtitle">Configure where your screen recordings will be saved</div>
+        
+        <p>Select your preferred location for saving screen recordings. You can choose a custom folder or use the default Downloads folder.</p>
+        
+        <div class="feature-list">
+            <h3>📋 Folder Selection Benefits:</h3>
+            <ul>
+                <li>🎯 <strong>Organized Storage:</strong> Keep recordings in your preferred location</li>
+                <li>🔒 <strong>Privacy Control:</strong> Choose secure locations for sensitive recordings</li>
+                <li>💾 <strong>Easy Access:</strong> Find your recordings quickly</li>
+                <li>🗂️ <strong>Project Organization:</strong> Create project-specific folders</li>
+            </ul>
+        </div>
+        
+        <button id="selectFolder">📂 Choose Custom Folder</button>
+        <button id="useDefault" class="secondary">📥 Use Default Downloads</button>
+        
+        <div id="result"></div>
+        
+        <div style="margin-top: 25px; font-size: 0.8em; color: #7f8c8d;">
+            💡 <strong>Tip:</strong> You can change this setting anytime in the extension popup
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, isSuccess = true) {
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.innerHTML = message;
+            
+            if (isSuccess) {
+                result.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
+                result.style.borderColor = '#b7d7c5';
+                result.style.color = '#155724';
+            } else {
+                result.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%)';
+                result.style.borderColor = '#f1b0b7';
+                result.style.color = '#721c24';
+            }
+        }
+        
+        document.getElementById('selectFolder').onclick = async () => {
+            try {
+                // Check if File System Access API is available
+                if ('showDirectoryPicker' in window) {
+                    const dirHandle = await window.showDirectoryPicker({
+                        mode: 'readwrite',
+                        startIn: 'downloads'
+                    });
+                    
+                    showResult(
+                        <strong>✅ Folder Selected Successfully!</strong><br>
+                        <strong>Location:</strong> {dirHandle.name}<br>
+                        <em>Your recordings will now be saved in this folder</em>
+                    );
+                    
+                    // Send back to extension
+                    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                        chrome.runtime.sendMessage({
+                            type: 'folder-selected',
+                            folder: dirHandle.name,
+                            handle: dirHandle
+                        });
+                    }
+                    
+                    // Close window after 3 seconds
+                    setTimeout(() => {
+                        window.close();
+                    }, 3000);
+                    
+                } else {
+                    showResult(
+                        <strong>⚠️ Browser Limitation</strong><br>
+                        Folder selection is not supported in this browser version.<br>
+                        <em>Recordings will be saved to the Downloads folder.</em>
+                    , false);
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    showResult(
+                        <strong>📂 Folder Selection Cancelled</strong><br>
+                        <em>No folder was selected. Using default Downloads folder.</em>
+                    , false);
+                } else {
+                    showResult(
+                        <strong>❌ Error Selecting Folder</strong><br>
+                        <em>{err.message}</em><br>
+                        Using default Downloads folder instead.
+                    , false);
+                }
+            }
+        };
+        
+        document.getElementById('useDefault').onclick = () => {
+            showResult(
+                <strong>📥 Using Default Downloads Folder</strong><br>
+                <em>All recordings will be saved to your Downloads folder</em>
+            );
+            
+            // Send back to extension
+            if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({
+                    type: 'folder-selected',
+                    folder: null
+                });
+            }
+            
+            // Close window after 2 seconds
+            setTimeout(() => {
+                window.close();
+            }, 2000);
+        };
+        
+        // Handle messages from extension
+        if (chrome && chrome.runtime && chrome.runtime.onMessage) {
+            chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                if (message.type === 'close-folder-picker') {
+                    window.close();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

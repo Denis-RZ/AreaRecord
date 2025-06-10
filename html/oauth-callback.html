@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Drive Authorization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+    }
+    .success {
+      color: #0a7;
+      font-size: 18px;
+    }
+    .error {
+      color: #e33;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Processing authorization...</div>
+  
+  <script>
+    // Parse the access token from the URL
+    function getTokenFromUrl() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      return params.get('access_token');
+    }
+    
+    // Store the token in chrome.storage
+    function storeToken(token, expiresIn) {
+      const tokenData = {
+        access_token: token,
+        expiry: Date.now() + (parseInt(expiresIn) * 1000)
+      };
+      
+      chrome.storage.local.set({ googleAuthToken: tokenData }, () => {
+        document.getElementById('status').className = 'success';
+        document.getElementById('status').textContent = 'Authorization successful! You can close this window.';
+        
+        // Close this window after a delay
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+      });
+    }
+    
+    // Handle errors
+    function showError(message) {
+      document.getElementById('status').className = 'error';
+      document.getElementById('status').textContent = 'Authorization error: ' + message;
+    }
+    
+    // Main script
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        // Check if we have an access token
+        const accessToken = getTokenFromUrl();
+        const expiresIn = new URLSearchParams(window.location.hash.substring(1)).get('expires_in') || 3600;
+        
+        if (accessToken) {
+          storeToken(accessToken, expiresIn);
+        } else if (window.location.search.includes('error=')) {
+          const errorMsg = new URLSearchParams(window.location.search).get('error');
+          showError(errorMsg || 'Unknown error');
+        } else {
+          showError('No access token received');
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+  </script>
+</body>
+</html>

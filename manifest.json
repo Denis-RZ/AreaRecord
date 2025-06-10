@@ -1,0 +1,68 @@
+{
+  "name": "Screen Area Recorder Pro v2.1.3",
+  "description": "Record a selected area with presets, hotkeys, and live stats.",
+  "version": "2.1.3",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "downloads",
+    "storage",
+    "scripting",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/gif.js",
+        "lib/gif.worker.js",
+        "html/privacy-policy.html",
+        "html/terms-of-service.html",
+        "html/folder-picker.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "Screen Area Recorder",
+    "default_popup": "html/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "toggle-recording": {
+      "suggested_key": {
+        "default": "Ctrl+Space"
+      },
+      "description": "Start / Stop recording"
+    },
+    "pause-resume": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P"
+      },
+      "description": "Pause / Resume recording"
+    }
+  },
+  "optional_host_permissions": [
+    "<all_urls>"
+  ]
+}

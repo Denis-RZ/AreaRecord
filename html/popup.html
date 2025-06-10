@@ -1,0 +1,283 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SAR Pro</title>
+<style>
+/* Classic minimalistic design */
+:root {
+  /* Monochrome palette */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  
+  /* Neutral grays */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* Base colors */
+  --bg: #ffffff;
+  --bg-secondary: var(--gray-50);
+  --text: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-muted: var(--gray-500);
+  --border: var(--gray-200);
+  --border-focus: var(--primary);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-secondary);
+  width: 360px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.container {
+  background: var(--bg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+/* Typography */
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.025em;
+}
+
+#buildVersion {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+}
+
+h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 16px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Controls */
+#controls {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* Buttons */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--bg);
+  color: var(--text);
+  text-decoration: none;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
+}
+
+button:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+#btn-select {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  width: 100%;
+}
+
+#btn-select:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+/* Form Elements */
+select,
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 0.15s ease;
+}
+
+select:focus,
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+/* Checkboxes and Radios */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 0;
+  accent-color: var(--primary);
+}
+
+/* Sections */
+.section {
+  margin-bottom: 12px;
+  background: var(--bg-secondary);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* Area Info */
+#area-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Status */
+#status {
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  margin: 12px 0;
+  border: 1px solid var(--border);
+}
+
+/* Grid Controls */
+#grid-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#grid-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+
+
+
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Screen Area Recorder Pro</h1>
+  <div id="buildVersion"></div>
+
+  <!-- Main Controls -->
+  <div id="controls">
+    <button id="btn-select">Select Recording Area</button>
+  </div>
+
+  <!-- Area Info -->
+  <div id="area-info" hidden>
+    Selected area: <span id="span-dim"></span> at position <span id="span-pos"></span>
+  </div>
+
+  <!-- Quality Section -->
+  <h3>Recording Quality</h3>
+  <select id="quality-preset">
+    <option value="720p">720p (Fast)</option>
+    <option value="1080p" selected>1080p (Standard)</option>
+    <option value="4k">4K (High Quality)</option>
+  </select>
+
+
+
+
+
+  <!-- Grid Overlay -->
+  <h3>Grid Overlay</h3>
+  <div id="grid-controls">
+    <label>
+      <input type="checkbox" id="popup-grid-toggle"> Show grid overlay
+    </label>
+    <label style="margin-left:20px;">
+      Grid size: <input type="number" id="popup-grid-step" min="4" max="64" value="10" style="width:60px;"> px
+    </label>
+  </div>
+
+  <!-- Status -->
+  <div id="status" aria-live="polite">Ready to record</div>
+</div>
+
+<script src="../scripts/popup.js"></script>
+</body>
+</html>
