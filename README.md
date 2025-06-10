@@ -22,3 +22,34 @@ You can override this value in several ways:
 When switching to another provider (e.g. PostgreSQL or SQLite) update
 `Program.cs` so the `DbContext` uses the appropriate `Use*` method instead of
 `UseSqlServer`.
+
+## Database Migrations
+
+Entity Framework Core migrations are used to create and evolve the database schema. After modifying the `DbContext` or model classes, run the following commands from the `MyWebApp` project directory:
+
+```bash
+# Add a new migration
+dotnet ef migrations add <MigrationName>
+
+# Apply migrations to the configured database
+dotnet ef database update
+```
+
+To generate a SQL script that can be executed manually or on another server, use:
+
+```bash
+# Generate a SQL script for all pending migrations
+dotnet ef migrations script > update.sql
+```
+
+## Deploying Migrations Remotely
+
+1. Build the project and ensure migrations compile.
+2. Copy the generated `update.sql` file to the remote server.
+3. Execute the script using the database's command-line tools (for SQL Server you can use `sqlcmd`):
+
+```bash
+sqlcmd -S <server> -d <database> -i update.sql
+```
+
+This approach avoids installing the .NET SDK on the server while keeping the database schema in sync.
