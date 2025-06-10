@@ -5,3 +5,7 @@ obj/
 node_modules/
 dotnet-install.sh
 *.ico
+
+# Build logs
+*.log
+MyWebApp.Tests/TestResults/
