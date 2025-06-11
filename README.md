@@ -5,6 +5,7 @@ The repository now separates the codebase into two main parts:
 
 - `website/` – ASP.NET Core web application.
 - `extension/` – Chrome extension files.
+  The solution file `MyWebApp.sln` resides in `website/`.
 
 ## Restoring Dependencies
 
@@ -12,7 +13,7 @@ After cloning the repository, restore the required packages for the website:
 
 ```bash
 cd website
-dotnet restore
+dotnet restore MyWebApp.sln
 libman restore
 ```
 
@@ -76,7 +77,7 @@ To execute them locally run:
 
 ```bash
 cd website
-dotnet test
+dotnet test MyWebApp.sln
 ```
 
 This will build the solution and run all tests.
