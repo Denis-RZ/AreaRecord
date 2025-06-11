@@ -12,5 +12,6 @@ namespace MyWebApp.Data
 
         // Add DbSet<> properties here
         public DbSet<Recording> Recordings { get; set; }
+        public DbSet<Download> Downloads { get; set; }
     }
 }
