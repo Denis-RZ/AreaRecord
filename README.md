@@ -58,6 +58,11 @@ To generate a SQL script that can be executed manually or on another server, use
 dotnet ef migrations script > update.sql
 ```
 
+When the application starts it attempts to connect to the configured database.
+If the connection succeeds, `Program.cs` automatically runs
+`db.Database.Migrate()` to apply any pending migrations. If a connection cannot
+be established, a warning is logged and the app continues to run.
+
 ## Deploying Migrations Remotely
 
 1. Build the project and ensure migrations compile.
@@ -97,5 +102,6 @@ dotnet run
 ```
 
 2. With the site running, open your browser to `/Setup` to confirm the
-   database connection can be established. Ensure all migrations have been
-   applied with `dotnet ef database update` before visiting this page.
+   database connection can be established. Migrations are applied automatically
+   at startup when a connection is available, but you can still run
+   `dotnet ef database update` manually if needed.
