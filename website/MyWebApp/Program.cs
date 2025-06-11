@@ -39,6 +39,20 @@ builder.Services.AddSession();
 
 var app = builder.Build();
 
+// Ensure database is up to date
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (db.Database.CanConnect())
+    {
+        db.Database.Migrate();
+    }
+    else
+    {
+        app.Logger.LogWarning("Could not connect to the database. Migrations were not applied.");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
