@@ -1,0 +1,16 @@
+@model bool
+@{
+    ViewData["Title"] = "Setup";
+}
+
+<h1>Setup</h1>
+
+@if (Model)
+{
+    <p>Database connection successful.</p>
+}
+else
+{
+    <p>Database connection failed.</p>
+    <p>Please verify your connection string and ensure the database server is running.</p>
+}
