@@ -19,25 +19,25 @@ libman restore
 
 ## Configuring the Database Connection
 
-`appsettings.json` contains the default connection string used by the
-application:
+`appsettings.json` contains the default connection string and the provider
+selection used by the application:
 
 ```json
 "ConnectionStrings": {
   "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=MyWebAppDb;Trusted_Connection=True;MultipleActiveResultSets=true"
-}
+},
+"DatabaseProvider": "SqlServer"
 ```
 
-You can override this value in several ways:
+You can override these values in several ways:
 
 1. Create an `appsettings.{Environment}.json` file (for example
    `appsettings.Production.json`) containing a different `DefaultConnection`.
 2. Set the environment variable `ConnectionStrings__DefaultConnection`.
 3. Pass a command‑line argument `--ConnectionStrings:DefaultConnection="<your connection string>"`.
+4. Set `DatabaseProvider` (`SqlServer`, `PostgreSQL` or `Sqlite`) using the same methods above.
 
-When switching to another provider (e.g. PostgreSQL or SQLite) update
-`Program.cs` so the `DbContext` uses the appropriate `Use*` method instead of
-`UseSqlServer`.
+Specify `DatabaseProvider` when switching providers; `Program.cs` will pick the correct `Use*` method automatically.
 
 ## Database Migrations
 
