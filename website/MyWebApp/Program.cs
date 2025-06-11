@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MyWebApp.Data;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,23 @@ builder.Configuration
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Server=(localdb)\\mssqllocaldb;Database=MyWebAppDb;Trusted_Connection=True;MultipleActiveResultSets=true";
+var provider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
 builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    switch (provider.ToLowerInvariant())
+    {
+        case "postgresql":
+        case "npgsql":
+            options.UseNpgsql(connectionString);
+            break;
+        case "sqlite":
+            options.UseSqlite(connectionString);
+            break;
+        default:
+            options.UseSqlServer(connectionString);
+            break;
+    }
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
