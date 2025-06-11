@@ -1,11 +1,11 @@
 bin/
 obj/
 *.dll
-*/wwwroot/lib/
+**/wwwroot/lib/
 node_modules/
 dotnet-install.sh
 *.ico
 
 # Build logs
 *.log
-MyWebApp.Tests/TestResults/
+website/MyWebApp.Tests/TestResults/
