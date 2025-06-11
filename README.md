@@ -86,3 +86,16 @@ This will build the solution and run all tests.
 
 The extension source resides in the `extension/` folder. Load this folder in
 Chrome's extensions page when running the extension locally or packaging it.
+
+## Setup & Diagnostics
+
+1. Navigate to the web application project and start the development server:
+
+```bash
+cd website/MyWebApp
+dotnet run
+```
+
+2. With the site running, open your browser to `/Setup` to confirm the
+   database connection can be established. Ensure all migrations have been
+   applied with `dotnet ef database update` before visiting this page.
