@@ -15,8 +15,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore MyWebApp.sln
+        working-directory: website
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build MyWebApp.sln --no-restore
+        working-directory: website
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test MyWebApp.sln --no-build --verbosity normal
+        working-directory: website

@@ -1,12 +1,19 @@
 # AreaRecord
 Record a selected area with presets, hotkeys, and live stats.
 
+The repository now separates the codebase into two main parts:
+
+- `website/` – ASP.NET Core web application.
+- `extension/` – Chrome extension files.
+  The solution file `MyWebApp.sln` resides in `website/`.
+
 ## Restoring Dependencies
 
-After cloning the repository, restore the required packages:
+After cloning the repository, restore the required packages for the website:
 
 ```bash
-dotnet restore
+cd website
+dotnet restore MyWebApp.sln
 libman restore
 ```
 
@@ -65,10 +72,17 @@ This approach avoids installing the .NET SDK on the server while keeping the dat
 
 ## Running Tests
 
-Unit tests live in the `MyWebApp.Tests` project. To execute them locally run:
+Unit tests live in the `MyWebApp.Tests` project inside the `website` folder.
+To execute them locally run:
 
 ```bash
-dotnet test
+cd website
+dotnet test MyWebApp.sln
 ```
 
 This will build the solution and run all tests.
+
+## Chrome Extension
+
+The extension source resides in the `extension/` folder. Load this folder in
+Chrome's extensions page when running the extension locally or packaging it.
