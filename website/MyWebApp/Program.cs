@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MyWebApp.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,13 +23,15 @@ builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
     {
         case "postgresql":
         case "npgsql":
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.EnableRetryOnFailure());
             break;
         case "sqlite":
             options.UseSqlite(connectionString);
             break;
         default:
-            options.UseSqlServer(connectionString);
+            options.UseSqlServer(connectionString, sql =>
+                sql.EnableRetryOnFailure());
             break;
     }
 });
@@ -43,13 +46,20 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (db.Database.CanConnect())
+    try
     {
-        db.Database.Migrate();
+        if (db.Database.CanConnect())
+        {
+            db.Database.Migrate();
+        }
+        else
+        {
+            app.Logger.LogWarning("Could not connect to the database. Migrations were not applied.");
+        }
     }
-    else
+    catch (Exception ex)
     {
-        app.Logger.LogWarning("Could not connect to the database. Migrations were not applied.");
+        app.Logger.LogError(ex, "Database migration failed during startup.");
     }
 }
 
