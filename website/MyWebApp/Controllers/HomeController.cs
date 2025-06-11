@@ -18,7 +18,14 @@ public class HomeController : Controller
     public IActionResult Index()
     {
         _context.Recordings.Add(new Recording { Name = "Visit", Created = DateTime.UtcNow });
-        _context.SaveChanges();
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save recording");
+        }
         return View();
     }
 

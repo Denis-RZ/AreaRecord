@@ -57,7 +57,14 @@ public class DownloadController : Controller
         {
             _logger.LogWarning("Invalid user agent {Agent}", userAgent);
             _context.Downloads.Add(download);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save download");
+            }
             ModelState.AddModelError(string.Empty, "Invalid request.");
             ViewBag.TotalDownloads = _context.Downloads.Count(d => d.IsSuccessful);
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
@@ -69,7 +76,14 @@ public class DownloadController : Controller
             _logger.LogInformation("Rate limit hit for {IP}", ip);
             ModelState.AddModelError(string.Empty, "Please wait a few minutes before trying again.");
             _context.Downloads.Add(download);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save download");
+            }
             ViewBag.TotalDownloads = _context.Downloads.Count(d => d.IsSuccessful);
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
             return View();
@@ -80,7 +94,14 @@ public class DownloadController : Controller
             _logger.LogInformation("Captcha failed for {IP}", ip);
             ModelState.AddModelError(string.Empty, "CAPTCHA validation failed.");
             _context.Downloads.Add(download);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save download");
+            }
             ViewBag.TotalDownloads = _context.Downloads.Count(d => d.IsSuccessful);
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
             return View();
@@ -88,7 +109,14 @@ public class DownloadController : Controller
 
         download.IsSuccessful = true;
         _context.Downloads.Add(download);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save download");
+        }
         SetRateLimit(ip);
         return Redirect("https://chrome.google.com/webstore/detail/screen-area-recorder-pro");
     }

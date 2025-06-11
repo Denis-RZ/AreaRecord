@@ -105,3 +105,8 @@ dotnet run
    database connection can be established. Migrations are applied automatically
    at startup when a connection is available, but you can still run
    `dotnet ef database update` manually if needed.
+
+3. For a quick reminder on how to import data or apply migrations manually,
+   visit `/Setup/Import` while the site is running. The page shows the shell
+   commands used to update the schema and execute a generated `update.sql`
+   script using `sqlcmd`.

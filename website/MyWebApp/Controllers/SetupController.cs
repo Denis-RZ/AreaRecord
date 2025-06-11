@@ -25,4 +25,9 @@ public class SetupController : Controller
         }
         return View(canConnect);
     }
+
+    public IActionResult Import()
+    {
+        return View();
+    }
 }
