@@ -7,18 +7,27 @@ namespace MyWebApp.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly MyWebApp.Data.ApplicationDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, MyWebApp.Data.ApplicationDbContext context)
     {
         _logger = logger;
+        _context = context;
     }
 
     public IActionResult Index()
     {
+        _context.Recordings.Add(new Recording { Name = "Visit", Created = DateTime.UtcNow });
+        _context.SaveChanges();
         return View();
     }
 
     public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    public IActionResult Faq()
     {
         return View();
     }

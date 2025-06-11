@@ -1,22 +1,108 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.container-fluid {
+    width: 100%;
+    padding: 0 1rem;
+}
+
+.site-header {
+    background: #1e1e1e;
+    padding: 1rem 0;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.logo {
+    color: #fff;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.site-nav a {
+    margin-left: 1rem;
+    color: #bbb;
+    text-decoration: none;
+}
+
+.site-nav a:hover {
+    color: #fff;
+}
+
+.hero {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero-img {
+    width: 200px;
+    height: auto;
+    margin-bottom: 1rem;
+}
+
+.hero-text h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.download-btn {
+    background: #0078d4;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 1rem;
+}
+
+.features {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-list li {
+    padding: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.faq-section {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.site-footer {
+    text-align: center;
+    padding: 1rem;
+    background: #1e1e1e;
+    color: #aaa;
 }
