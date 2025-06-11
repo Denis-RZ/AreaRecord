@@ -17,6 +17,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+builder.Services.AddSession();
 
 var app = builder.Build();
 
@@ -32,6 +35,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthorization();
 

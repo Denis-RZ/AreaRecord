@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Download";
+}
+
+<h1>Download Screen Area Recorder Pro</h1>
+
+<p>Total downloads: @ViewBag.TotalDownloads</p>
+
+<form method="post" asp-controller="Download" asp-action="Index" id="download-form">
+    <input type="hidden" name="token" id="captcha-token" />
+    <button class="download-btn" type="submit" id="download-btn" disabled>Download Extension</button>
+</form>
+
+<div class="validation-summary">
+    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+    {
+        <p class="text-danger">@error.ErrorMessage</p>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://www.google.com/recaptcha/api.js?render=@ViewBag.SiteKey"></script>
+    <script>
+        grecaptcha.ready(function () {
+            grecaptcha.execute('@ViewBag.SiteKey', { action: 'download' }).then(function (token) {
+                document.getElementById('captcha-token').value = token;
+                document.getElementById('download-btn').disabled = false;
+            });
+        });
+    </script>
+}
