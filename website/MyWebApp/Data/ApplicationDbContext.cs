@@ -13,6 +13,7 @@ namespace MyWebApp.Data
         // Add DbSet<> properties here
         public DbSet<Recording> Recordings { get; set; }
         public DbSet<Download> Downloads { get; set; }
+        public DbSet<DownloadFile> DownloadFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +24,8 @@ namespace MyWebApp.Data
                 .HasIndex(d => d.IsSuccessful);
             modelBuilder.Entity<Download>()
                 .HasIndex(d => d.UserIP);
+            modelBuilder.Entity<DownloadFile>()
+                .HasIndex(f => f.FileName);
         }
     }
 }

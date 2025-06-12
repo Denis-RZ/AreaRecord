@@ -1,14 +1,21 @@
+@model IEnumerable<MyWebApp.Models.DownloadFile>
 @{
     ViewData["Title"] = "Download";
 }
 
-<h1>Download Screen Area Recorder Pro</h1>
+<h1>Downloads</h1>
 
 <p>Total downloads: @ViewBag.TotalDownloads</p>
 
 <form method="post" asp-controller="Download" asp-action="Index" id="download-form">
     <input type="hidden" name="token" id="captcha-token" />
-    <button class="download-btn" type="submit" id="download-btn" disabled>Download Extension</button>
+    <select name="fileId">
+        @foreach (var f in Model)
+        {
+            <option value="@f.Id">@f.FileName - @f.Description</option>
+        }
+    </select>
+    <button class="download-btn" type="submit" id="download-btn" disabled>Download</button>
 </form>
 
 <div class="validation-summary">

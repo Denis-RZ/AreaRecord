@@ -1,0 +1,11 @@
+@model MyWebApp.Models.DownloadFile
+@{
+    ViewData["Title"] = "Delete File";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Delete File</h2>
+<form method="post">
+    <input type="hidden" asp-for="Id" />
+    <p>Are you sure you want to delete @Model.FileName?</p>
+    <button type="submit">Delete</button>
+</form>
