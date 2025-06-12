@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Statistics";
+    Layout = "_AdminLayout";
+    var daily = ViewBag.DailyData as IEnumerable<dynamic>;
+    var countries = ViewBag.CountryData as IEnumerable<dynamic>;
+    var agents = ViewBag.AgentData as IEnumerable<dynamic>;
+}
+<h2>Statistics</h2>
+<canvas id="dailyChart" width="400" height="150"></canvas>
+<canvas id="countryChart" width="400" height="150"></canvas>
+<canvas id="agentChart" width="400" height="150"></canvas>
+@section Scripts {
+<script>
+const dailyCtx = document.getElementById('dailyChart');
+const countryCtx = document.getElementById('countryChart');
+const agentCtx = document.getElementById('agentChart');
+new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: [@string.Join(',', daily.Select(d => $"'{((DateTime)d.Date).ToString("MM-dd")}'"))],
+        datasets: [{ label: 'Downloads', data: [@string.Join(',', daily.Select(d => d.Count))] }]
+    }
+});
+new Chart(countryCtx, {
+    type: 'bar',
+    data: {
+        labels: [@string.Join(',', countries.Select(c => $"'{c.Country}'"))],
+        datasets: [{ label: 'Countries', data: [@string.Join(',', countries.Select(c => c.Count))] }]
+    }
+});
+new Chart(agentCtx, {
+    type: 'bar',
+    data: {
+        labels: [@string.Join(',', agents.Select(a => $"'{a.Agent}'"))],
+        datasets: [{ label: 'User Agents', data: [@string.Join(',', agents.Select(a => a.Count))] }]
+    },
+    options: { scales: { x: { ticks: { maxRotation: 90, minRotation: 45 } } } }
+});
+</script>
+}

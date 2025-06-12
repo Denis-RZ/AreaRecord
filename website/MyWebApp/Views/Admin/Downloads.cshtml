@@ -1,0 +1,43 @@
+@model DownloadStatsViewModel
+@{
+    ViewData["Title"] = "Downloads";
+    Layout = "_AdminLayout";
+}
+<h2>Downloads</h2>
+<form method="get" class="mb-3">
+    <input type="text" name="search" value="@Model.Search" placeholder="IP" />
+    <select name="status">
+        <option value="">All</option>
+        <option value="successful" @(Model.Status=="successful"?"selected":"")>Successful</option>
+        <option value="failed" @(Model.Status=="failed"?"selected":"")>Failed</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+<table class="table table-sm">
+    <thead><tr><th>Time</th><th>IP</th><th>User Agent</th><th>Status</th><th>Country</th></tr></thead>
+    <tbody>
+    @foreach (var d in Model.Downloads)
+    {
+        <tr>
+            <td>@d.DownloadTime</td>
+            <td>@d.UserIP</td>
+            <td>@Html.Raw(Html.Encode(d.UserAgent))</td>
+            <td>@(d.IsSuccessful?"Successful":"Failed")</td>
+            <td>@d.Country</td>
+        </tr>
+    }
+    </tbody>
+</table>
+<div class="pagination">
+    @for (int i = 1; i <= Model.TotalPages; i++)
+    {
+        if (i == Model.Page)
+        {
+            <span>@i</span>
+        }
+        else
+        {
+            <a href="?page=@i&search=@Model.Search&status=@Model.Status">@i</a>
+        }
+    }
+</div>

@@ -1,0 +1,27 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_AdminLayout";
+}
+<h2>Dashboard</h2>
+<div class="metrics">
+    <div class="card">Total Downloads<br />@Model.TotalDownloads</div>
+    <div class="card">Failed Downloads<br />@Model.FailedDownloads</div>
+    <div class="card">Last 24h<br />@Model.DownloadsLast24h</div>
+</div>
+<h3>Top Countries</h3>
+<table class="table">
+    <thead><tr><th>Country</th><th>Count</th></tr></thead>
+    <tbody>
+    @foreach (var c in Model.TopCountries)
+    {
+        <tr><td>@c.Country</td><td>@c.Count</td></tr>
+    }
+    </tbody>
+</table>
+<h3>System Info</h3>
+<ul>
+    <li>Uptime: @Model.SystemInfo.Uptime</li>
+    <li>.NET Version: @Model.SystemInfo.DotNetVersion</li>
+    <li>Started: @Model.SystemInfo.Started</li>
+</ul>
