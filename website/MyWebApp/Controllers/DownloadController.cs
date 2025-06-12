@@ -45,12 +45,13 @@ public class DownloadController : BaseController
             return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
         });
         ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
-        return View();
+        var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
+        return View(files);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(string token)
+    public async Task<IActionResult> Index(string token, int fileId)
     {
         if (!CheckDatabase())
         {
@@ -61,13 +62,28 @@ public class DownloadController : BaseController
         var userAgent = Request.Headers["User-Agent"].ToString();
         var sessionId = HttpContext.Session.Id;
 
+        var file = await Db.DownloadFiles.FindAsync(fileId);
+        if (file == null)
+        {
+            ModelState.AddModelError(string.Empty, "Invalid file.");
+            ViewBag.TotalDownloads = await _cache.GetOrCreateAsync(CacheKeys.TotalDownloads, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+            });
+            ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+            var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
+            return View(files);
+        }
+
         var download = new Download
         {
             UserIP = ip,
             UserAgent = userAgent,
             DownloadTime = DateTime.UtcNow,
             SessionId = sessionId,
-            IsSuccessful = false
+            IsSuccessful = false,
+            DownloadFileId = file.Id
         };
 
         if (!ValidateUserAgent(userAgent))
@@ -94,7 +110,8 @@ public class DownloadController : BaseController
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
-            return View();
+            var filesFail = await Db.DownloadFiles.AsNoTracking().ToListAsync();
+            return View(filesFail);
         }
 
         if (IsRateLimited(ip))
@@ -121,7 +138,8 @@ public class DownloadController : BaseController
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
-            return View();
+            var filesRate = await Db.DownloadFiles.AsNoTracking().ToListAsync();
+            return View(filesRate);
         }
 
         if (!await VerifyCaptchaAsync(token, ip))
@@ -148,7 +166,8 @@ public class DownloadController : BaseController
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
-            return View();
+            var filesCaptcha = await Db.DownloadFiles.AsNoTracking().ToListAsync();
+            return View(filesCaptcha);
         }
 
         download.IsSuccessful = true;
@@ -167,7 +186,7 @@ public class DownloadController : BaseController
             return RedirectToSetup(ex);
         }
         SetRateLimit(ip);
-        return Redirect("https://chrome.google.com/webstore/detail/screen-area-recorder-pro");
+        return Redirect("/files/" + file.FileName);
     }
 
     private bool ValidateUserAgent(string userAgent) => !string.IsNullOrWhiteSpace(userAgent);

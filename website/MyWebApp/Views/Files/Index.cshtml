@@ -1,0 +1,24 @@
+@model IEnumerable<MyWebApp.Models.FileStatsViewModel>
+@{
+    ViewData["Title"] = "Files";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Files</h2>
+<p><a asp-action="Create">Add New File</a></p>
+<table class="table table-sm">
+    <thead><tr><th>Name</th><th>Description</th><th>Downloads</th><th></th></tr></thead>
+    <tbody>
+    @foreach(var f in Model)
+    {
+        <tr>
+            <td>@f.File.FileName</td>
+            <td>@f.File.Description</td>
+            <td>@f.DownloadCount</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@f.File.Id">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@f.File.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

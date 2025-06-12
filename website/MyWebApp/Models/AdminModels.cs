@@ -33,4 +33,10 @@ namespace MyWebApp.Models
         public string Country { get; set; } = string.Empty;
         public int Count { get; set; }
     }
+
+    public class FileStatsViewModel
+    {
+        public DownloadFile File { get; set; } = new DownloadFile();
+        public int DownloadCount { get; set; }
+    }
 }

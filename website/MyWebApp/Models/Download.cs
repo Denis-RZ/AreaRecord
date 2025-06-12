@@ -11,5 +11,7 @@ namespace MyWebApp.Models
         public bool IsSuccessful { get; set; }
         public string? SessionId { get; set; }
         public string? Country { get; set; }
+        public int? DownloadFileId { get; set; }
+        public DownloadFile? DownloadFile { get; set; }
     }
 }
