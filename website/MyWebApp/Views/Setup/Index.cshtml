@@ -30,14 +30,15 @@ else
 }
 
 <h2>Test Connection</h2>
-<form method="post" asp-action="Test">
-    <input type="text" name="connectionString" value="@Model.ConnectionString" />
+<form method="post" action="@Url.Action("Test")">
+    <input type="text" name="connectionString" value="@Model.ConnectionString" style="width:600px" />
     <select name="provider">
         <option value="SqlServer" selected="@(Model.Provider=="SqlServer")">SQL Server</option>
         <option value="PostgreSQL" selected="@(Model.Provider=="PostgreSQL")">PostgreSQL</option>
         <option value="Sqlite" selected="@(Model.Provider=="Sqlite")">SQLite</option>
     </select>
     <button type="submit">Test</button>
+    <button type="submit" formaction="@Url.Action("Save")">Save</button>
 </form>
 
 <form method="post" asp-action="Seed">

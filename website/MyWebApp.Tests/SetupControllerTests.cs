@@ -5,7 +5,19 @@ using MyWebApp.Data;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Configuration;
 using MyWebApp.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.FileProviders;
 using Xunit;
+
+class FakeEnv : IWebHostEnvironment
+{
+    public string EnvironmentName { get; set; } = "Development";
+    public string ApplicationName { get; set; } = "Test";
+    public string WebRootPath { get; set; } = "/tmp";
+    public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
+    public string ContentRootPath { get; set; } = "/tmp";
+    public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+}
 
 public class SetupControllerTests
 {
@@ -17,7 +29,8 @@ public class SetupControllerTests
             .Options;
         using var context = new ApplicationDbContext(options);
         var config = new ConfigurationBuilder().Build();
-        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance);
+        var env = new FakeEnv();
+        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env);
 
         var result = controller.Index();
 
@@ -31,7 +44,8 @@ public class SetupControllerTests
         var options = new DbContextOptions<ApplicationDbContext>();
         using var context = new ApplicationDbContext(options);
         var config = new ConfigurationBuilder().Build();
-        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance);
+        var env = new FakeEnv();
+        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env);
 
         var result = controller.Index();
 
