@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
+var startupLogger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Startup");
 
 // Allow connection string overrides from environment-specific files,
 // environment variables, and command-line arguments
@@ -17,6 +19,38 @@ builder.Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Server=(localdb)\\mssqllocaldb;Database=MyWebAppDb;Trusted_Connection=True;MultipleActiveResultSets=true";
 var provider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
+var testOptions = new DbContextOptionsBuilder<ApplicationDbContext>();
+switch (provider.ToLowerInvariant())
+{
+    case "postgresql":
+    case "npgsql":
+        testOptions.UseNpgsql(connectionString);
+        break;
+    case "sqlite":
+        testOptions.UseSqlite(connectionString);
+        break;
+    default:
+        testOptions.UseSqlServer(connectionString);
+        break;
+}
+
+var needFallback = false;
+try
+{
+    using var testCtx = new ApplicationDbContext(testOptions.Options);
+    needFallback = !testCtx.Database.CanConnect();
+}
+catch
+{
+    needFallback = true;
+}
+
+if (needFallback && provider.ToLowerInvariant() != "sqlite")
+{
+    startupLogger.LogWarning("Falling back to SQLite due to database connection failure.");
+    provider = "Sqlite";
+    connectionString = "Data Source=mywebapp.db";
+}
 builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
 {
     switch (provider.ToLowerInvariant())

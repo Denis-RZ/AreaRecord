@@ -4,27 +4,28 @@ using MyWebApp.Models;
 
 namespace MyWebApp.Controllers;
 
-public class HomeController : Controller
+public class HomeController : BaseController
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly MyWebApp.Data.ApplicationDbContext _context;
-
     public HomeController(ILogger<HomeController> logger, MyWebApp.Data.ApplicationDbContext context)
+        : base(context, logger)
     {
-        _logger = logger;
-        _context = context;
     }
 
     public IActionResult Index()
     {
-        _context.Recordings.Add(new Recording { Name = "Visit", Created = DateTime.UtcNow });
+        if (!CheckDatabase())
+        {
+            return RedirectToSetup();
+        }
+
+        Db.Recordings.Add(new Recording { Name = "Visit", Created = DateTime.UtcNow });
         try
         {
-            _context.SaveChanges();
+            Db.SaveChanges();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to save recording");
+            return RedirectToSetup(ex);
         }
         return View();
     }
