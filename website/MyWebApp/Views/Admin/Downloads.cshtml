@@ -8,8 +8,8 @@
     <input type="text" name="search" value="@Model.Search" placeholder="IP" />
     <select name="status">
         <option value="">All</option>
-        <option value="successful" @(Model.Status=="successful"?"selected":"")>Successful</option>
-        <option value="failed" @(Model.Status=="failed"?"selected":"")>Failed</option>
+        <option value="successful" selected='@(Model.Status == "successful")'>Successful</option>
+        <option value="failed" selected='@(Model.Status == "failed")'>Failed</option>
     </select>
     <button type="submit">Filter</button>
 </form>
