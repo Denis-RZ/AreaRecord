@@ -24,11 +24,18 @@ public class SetupController : BaseController
     {
         var error = TempData != null ? TempData["DbError"]?.ToString() : null;
         var result = TempData != null ? TempData["SetupResult"]?.ToString() : null;
+        var connection = _config.GetConnectionString("DefaultConnection") ?? string.Empty;
+        var provider = _config["DatabaseProvider"] ?? "SqlServer";
+        ConnectionHelper.ParseConnectionString(provider, connection, out var server, out var database, out var user, out var pass);
         var model = new SetupViewModel
         {
             CanConnect = CheckDatabase(),
-            ConnectionString = _config.GetConnectionString("DefaultConnection") ?? string.Empty,
-            Provider = _config["DatabaseProvider"] ?? "SqlServer",
+            ConnectionString = connection,
+            Provider = provider,
+            Server = server,
+            Database = database,
+            Username = user,
+            Password = pass,
             ErrorMessage = error,
             ResultMessage = result
         };
@@ -51,8 +58,9 @@ public class SetupController : BaseController
     }
 
     [HttpPost]
-    public IActionResult Test(string connectionString, string provider)
+    public IActionResult Test(string provider, string server, string database, string username, string password)
     {
+        var connectionString = ConnectionHelper.BuildConnectionString(provider, server, database, username, password);
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         switch (provider.ToLowerInvariant())
         {
@@ -81,10 +89,11 @@ public class SetupController : BaseController
     }
 
     [HttpPost]
-    public IActionResult Save(string connectionString, string provider)
+    public IActionResult Save(string provider, string server, string database, string username, string password)
     {
         try
         {
+            var connectionString = ConnectionHelper.BuildConnectionString(provider, server, database, username, password);
             var path = System.IO.Path.Combine(_env.ContentRootPath, "appsettings.json");
             var json = System.IO.File.ReadAllText(path);
             var obj = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
