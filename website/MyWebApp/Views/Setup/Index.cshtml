@@ -1,18 +1,47 @@
-@model bool
+@model SetupViewModel
 @{
     ViewData["Title"] = "Setup";
 }
 
 <h1>Setup</h1>
 
-@if (Model)
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+@if (!string.IsNullOrEmpty(Model.ResultMessage))
+{
+    <div class="alert alert-info">@Model.ResultMessage</div>
+}
+
+<p>Current provider: @Model.Provider</p>
+<p>Connection string: @Model.ConnectionString</p>
+
+@if (Model.CanConnect)
 {
     <p>Database connection successful.</p>
 }
 else
 {
     <p>Database connection failed.</p>
-    <p>Please verify your connection string and ensure the database server is running.</p>
+    <form method="post" asp-action="UseSqlite">
+        <button type="submit">Use SQLite Fallback</button>
+    </form>
 }
+
+<h2>Test Connection</h2>
+<form method="post" asp-action="Test">
+    <input type="text" name="connectionString" value="@Model.ConnectionString" />
+    <select name="provider">
+        <option value="SqlServer" selected="@(Model.Provider=="SqlServer")">SQL Server</option>
+        <option value="PostgreSQL" selected="@(Model.Provider=="PostgreSQL")">PostgreSQL</option>
+        <option value="Sqlite" selected="@(Model.Provider=="Sqlite")">SQLite</option>
+    </select>
+    <button type="submit">Test</button>
+</form>
+
+<form method="post" asp-action="Seed">
+    <button type="submit">Seed Sample Data</button>
+</form>
 
 <p><a href="/Setup/Import">Import data instructions</a></p>
