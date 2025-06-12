@@ -2,17 +2,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyWebApp.Data;
 using MyWebApp.Models;
+using Microsoft.AspNetCore.Hosting;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace MyWebApp.Controllers;
 
 public class SetupController : BaseController
 {
     private readonly IConfiguration _config;
+    private readonly IWebHostEnvironment _env;
 
-    public SetupController(ApplicationDbContext context, IConfiguration config, ILogger<SetupController> logger)
+    public SetupController(ApplicationDbContext context, IConfiguration config, ILogger<SetupController> logger, IWebHostEnvironment env)
         : base(context, logger)
     {
         _config = config;
+        _env = env;
     }
 
     public IActionResult Index()
@@ -72,6 +77,42 @@ public class SetupController : BaseController
         {
             TempData["SetupResult"] = "Connection failed: " + ex.Message;
         }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public IActionResult Save(string connectionString, string provider)
+    {
+        try
+        {
+            var path = System.IO.Path.Combine(_env.ContentRootPath, "appsettings.json");
+            var json = System.IO.File.ReadAllText(path);
+            var obj = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
+            if (obj["ConnectionStrings"] is not JsonObject cs)
+            {
+                cs = new JsonObject();
+                obj["ConnectionStrings"] = cs;
+            }
+            cs["DefaultConnection"] = connectionString;
+            obj["DatabaseProvider"] = provider;
+            System.IO.File.WriteAllText(path, obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+
+            if (_config is IConfigurationRoot root)
+            {
+                foreach (var p in root.Providers)
+                {
+                    p.Set("ConnectionStrings:DefaultConnection", connectionString);
+                    p.Set("DatabaseProvider", provider);
+                }
+            }
+
+            TempData["SetupResult"] = "Configuration saved.";
+        }
+        catch (Exception ex)
+        {
+            TempData["SetupResult"] = "Save failed: " + ex.Message;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
