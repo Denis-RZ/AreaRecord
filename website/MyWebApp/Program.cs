@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
+using MyWebApp.Services;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System;
 
@@ -73,19 +74,22 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
+builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 
 var app = builder.Build();
 
 // Ensure database is up to date
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        if (db.Database.CanConnect())
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
+        try
         {
-            db.Database.Migrate();
-        }
+            if (db.Database.CanConnect())
+            {
+                db.Database.Migrate();
+                cacheService.WarmCache(db);
+            }
         else
         {
             app.Logger.LogWarning("Could not connect to the database. Migrations were not applied.");

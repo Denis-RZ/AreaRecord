@@ -10,6 +10,7 @@ using MyWebApp.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using MyWebApp.Services;
 
 namespace MyWebApp.Controllers
 {
@@ -20,14 +21,16 @@ namespace MyWebApp.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
+        private readonly CacheService _cache;
         private static readonly DateTime _startTime = DateTime.UtcNow;
 
-        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger, IConfiguration config, IWebHostEnvironment env)
+        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger, IConfiguration config, IWebHostEnvironment env, CacheService cache)
         {
             _context = context;
             _logger = logger;
             _config = config;
             _env = env;
+            _cache = cache;
         }
 
         private bool CheckDatabase()
@@ -43,34 +46,43 @@ namespace MyWebApp.Controllers
             }
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var model = new AdminDashboardViewModel
+            var model = await _cache.GetOrCreateAsync(CacheKeys.AdminDashboard, async entry =>
             {
-                TotalDownloads = _context.Downloads.Count(d => d.IsSuccessful),
-                FailedDownloads = _context.Downloads.Count(d => !d.IsSuccessful),
-                DownloadsLast24h = _context.Downloads.Count(d => d.DownloadTime > DateTime.UtcNow.AddDays(-1) && d.IsSuccessful),
-                TopCountries = _context.Downloads.Where(d => d.IsSuccessful && d.Country != null)
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+                var total = await _context.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+                var failed = await _context.Downloads.AsNoTracking().CountAsync(d => !d.IsSuccessful);
+                var last24h = await _context.Downloads.AsNoTracking().CountAsync(d => d.DownloadTime > DateTime.UtcNow.AddDays(-1) && d.IsSuccessful);
+                var countries = await _context.Downloads.AsNoTracking().Where(d => d.IsSuccessful && d.Country != null)
                     .GroupBy(d => d.Country)
                     .Select(g => new CountryCount { Country = g.Key!, Count = g.Count() })
                     .OrderByDescending(c => c.Count)
                     .Take(5)
-                    .ToList(),
-                SystemInfo = new SystemInfoViewModel
+                    .ToListAsync();
+
+                return new AdminDashboardViewModel
                 {
-                    Uptime = DateTime.UtcNow - _startTime,
-                    DotNetVersion = Environment.Version.ToString(),
-                    Started = _startTime
-                }
-            };
+                    TotalDownloads = total,
+                    FailedDownloads = failed,
+                    DownloadsLast24h = last24h,
+                    TopCountries = countries,
+                    SystemInfo = new SystemInfoViewModel
+                    {
+                        Uptime = DateTime.UtcNow - _startTime,
+                        DotNetVersion = Environment.Version.ToString(),
+                        Started = _startTime
+                    }
+                };
+            });
 
             return View(model);
         }
 
-        public IActionResult Downloads(int page = 1, string? search = null, string? status = null)
+        public async Task<IActionResult> Downloads(int page = 1, string? search = null, string? status = null)
         {
             const int PageSize = 50;
-            var query = _context.Downloads.AsQueryable();
+            var query = _context.Downloads.AsNoTracking().AsQueryable();
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(d => d.UserIP.Contains(search));
@@ -87,11 +99,11 @@ namespace MyWebApp.Controllers
                 }
             }
 
-            var total = query.Count();
-            var downloads = query.OrderByDescending(d => d.DownloadTime)
+            var total = await query.CountAsync();
+            var downloads = await query.OrderByDescending(d => d.DownloadTime)
                                   .Skip((page - 1) * PageSize)
                                   .Take(PageSize)
-                                  .ToList();
+                                  .ToListAsync();
             var model = new DownloadStatsViewModel
             {
                 Downloads = downloads,
@@ -103,28 +115,39 @@ namespace MyWebApp.Controllers
             return View(model);
         }
 
-        public IActionResult Stats()
+        public async Task<IActionResult> Stats()
         {
             var startDate = DateTime.UtcNow.AddDays(-30).Date;
-            var daily = _context.Downloads.Where(d => d.IsSuccessful && d.DownloadTime >= startDate)
-                .AsEnumerable()
-                .GroupBy(d => d.DownloadTime.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
-                .OrderBy(g => g.Date)
-                .ToList();
+            var daily = await _cache.GetOrCreateAsync(CacheKeys.DownloadStats, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _context.Downloads.AsNoTracking().Where(d => d.IsSuccessful && d.DownloadTime >= startDate)
+                    .GroupBy(d => d.DownloadTime.Date)
+                    .Select(g => new { Date = g.Key, Count = g.Count() })
+                    .OrderBy(g => g.Date)
+                    .ToListAsync();
+            });
 
-            var country = _context.Downloads.Where(d => d.IsSuccessful && d.Country != null)
-                .GroupBy(d => d.Country)
-                .Select(g => new { Country = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)
-                .ToList();
+            var country = await _cache.GetOrCreateAsync(CacheKeys.TopCountries, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _context.Downloads.AsNoTracking().Where(d => d.IsSuccessful && d.Country != null)
+                    .GroupBy(d => d.Country)
+                    .Select(g => new { Country = g.Key, Count = g.Count() })
+                    .OrderByDescending(g => g.Count)
+                    .ToListAsync();
+            });
 
-            var agents = _context.Downloads.Where(d => d.IsSuccessful)
-                .GroupBy(d => d.UserAgent)
-                .Select(g => new { Agent = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)
-                .Take(10)
-                .ToList();
+            var agents = await _cache.GetOrCreateAsync(CacheKeys.AgentStats, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await _context.Downloads.AsNoTracking().Where(d => d.IsSuccessful)
+                    .GroupBy(d => d.UserAgent)
+                    .Select(g => new { Agent = g.Key, Count = g.Count() })
+                    .OrderByDescending(g => g.Count)
+                    .Take(10)
+                    .ToListAsync();
+            });
 
             ViewBag.DailyData = daily;
             ViewBag.CountryData = country;
@@ -221,6 +244,18 @@ namespace MyWebApp.Controllers
         {
             // For demo purposes, logs are not implemented
             return View();
+        }
+
+        [HttpPost]
+        public IActionResult ClearCache()
+        {
+            _cache.Remove(CacheKeys.AdminDashboard);
+            _cache.Remove(CacheKeys.DownloadStats);
+            _cache.Remove(CacheKeys.TopCountries);
+            _cache.Remove(CacheKeys.AgentStats);
+            _cache.Remove(CacheKeys.TotalDownloads);
+            TempData["SetupResult"] = "Cache cleared.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

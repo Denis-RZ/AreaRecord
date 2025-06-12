@@ -1,16 +1,21 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MyWebApp.Models;
+using MyWebApp.Services;
 
 namespace MyWebApp.Controllers;
 
 public class HomeController : BaseController
 {
-    public HomeController(ILogger<HomeController> logger, MyWebApp.Data.ApplicationDbContext context)
+    private readonly CacheService _cache;
+
+    public HomeController(ILogger<HomeController> logger, MyWebApp.Data.ApplicationDbContext context, CacheService cache)
         : base(context, logger)
     {
+        _cache = cache;
     }
 
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public IActionResult Index()
     {
         if (!CheckDatabase())
@@ -30,11 +35,13 @@ public class HomeController : BaseController
         return View();
     }
 
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public IActionResult Privacy()
     {
         return View();
     }
 
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
     public IActionResult Faq()
     {
         return View();

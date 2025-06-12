@@ -2,6 +2,8 @@ using System.Net.Http;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
+using MyWebApp.Services;
 using MyWebApp.Data;
 using MyWebApp.Models;
 
@@ -10,31 +12,38 @@ namespace MyWebApp.Controllers;
 public class DownloadController : BaseController
 {
     private readonly ILogger<DownloadController> _logger;
-    private readonly IMemoryCache _cache;
+    private readonly IMemoryCache _memoryCache;
+    private readonly CacheService _cache;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
 
     public DownloadController(ApplicationDbContext context,
         ILogger<DownloadController> logger,
-        IMemoryCache cache,
+        IMemoryCache memoryCache,
+        CacheService cache,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration)
         : base(context, logger)
     {
         _logger = logger;
+        _memoryCache = memoryCache;
         _cache = cache;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         if (!CheckDatabase())
         {
             return RedirectToSetup();
         }
-        ViewBag.TotalDownloads = Db.Downloads.Count(d => d.IsSuccessful);
+        ViewBag.TotalDownloads = await _cache.GetOrCreateAsync(CacheKeys.TotalDownloads, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+        });
         ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
         return View();
     }
@@ -68,13 +77,22 @@ public class DownloadController : BaseController
             try
             {
                 await Db.SaveChangesAsync();
+                _cache.Remove(CacheKeys.TotalDownloads);
+                _cache.Remove(CacheKeys.AdminDashboard);
+                _cache.Remove(CacheKeys.DownloadStats);
+                _cache.Remove(CacheKeys.TopCountries);
+                _cache.Remove(CacheKeys.AgentStats);
             }
             catch (Exception ex)
             {
                 return RedirectToSetup(ex);
             }
             ModelState.AddModelError(string.Empty, "Invalid request.");
-            ViewBag.TotalDownloads = Db.Downloads.Count(d => d.IsSuccessful);
+            ViewBag.TotalDownloads = await _cache.GetOrCreateAsync(CacheKeys.TotalDownloads, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+            });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
             return View();
         }
@@ -87,12 +105,21 @@ public class DownloadController : BaseController
             try
             {
                 await Db.SaveChangesAsync();
+                _cache.Remove(CacheKeys.TotalDownloads);
+                _cache.Remove(CacheKeys.AdminDashboard);
+                _cache.Remove(CacheKeys.DownloadStats);
+                _cache.Remove(CacheKeys.TopCountries);
+                _cache.Remove(CacheKeys.AgentStats);
             }
             catch (Exception ex)
             {
                 return RedirectToSetup(ex);
             }
-            ViewBag.TotalDownloads = Db.Downloads.Count(d => d.IsSuccessful);
+            ViewBag.TotalDownloads = await _cache.GetOrCreateAsync(CacheKeys.TotalDownloads, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+            });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
             return View();
         }
@@ -105,12 +132,21 @@ public class DownloadController : BaseController
             try
             {
                 await Db.SaveChangesAsync();
+                _cache.Remove(CacheKeys.TotalDownloads);
+                _cache.Remove(CacheKeys.AdminDashboard);
+                _cache.Remove(CacheKeys.DownloadStats);
+                _cache.Remove(CacheKeys.TopCountries);
+                _cache.Remove(CacheKeys.AgentStats);
             }
             catch (Exception ex)
             {
                 return RedirectToSetup(ex);
             }
-            ViewBag.TotalDownloads = Db.Downloads.Count(d => d.IsSuccessful);
+            ViewBag.TotalDownloads = await _cache.GetOrCreateAsync(CacheKeys.TotalDownloads, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
+            });
             ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
             return View();
         }
@@ -120,6 +156,11 @@ public class DownloadController : BaseController
         try
         {
             await Db.SaveChangesAsync();
+            _cache.Remove(CacheKeys.TotalDownloads);
+            _cache.Remove(CacheKeys.AdminDashboard);
+            _cache.Remove(CacheKeys.DownloadStats);
+            _cache.Remove(CacheKeys.TopCountries);
+            _cache.Remove(CacheKeys.AgentStats);
         }
         catch (Exception ex)
         {
@@ -133,7 +174,7 @@ public class DownloadController : BaseController
 
     private bool IsRateLimited(string ip)
     {
-        if (_cache.TryGetValue(ip, out _))
+        if (_memoryCache.TryGetValue(ip, out _))
         {
             return true;
         }
@@ -146,7 +187,7 @@ public class DownloadController : BaseController
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
         };
-        _cache.Set(ip, true, options);
+        _memoryCache.Set(ip, true, options);
     }
 
     private async Task<bool> VerifyCaptchaAsync(string token, string ip)
