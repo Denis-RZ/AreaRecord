@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using MyWebApp.Controllers;
 using Microsoft.EntityFrameworkCore;
 using MyWebApp.Data;
+using Microsoft.Extensions.Caching.Memory;
+using MyWebApp.Services;
 using Xunit;
 
 public class HomeControllerTests
@@ -14,7 +16,9 @@ public class HomeControllerTests
             .UseInMemoryDatabase("IndexDb")
             .Options;
         using var context = new MyWebApp.Data.ApplicationDbContext(options);
-        var controller = new HomeController(NullLogger<HomeController>.Instance, context);
+        var memory = new MemoryCache(new MemoryCacheOptions());
+        var cache = new CacheService(memory);
+        var controller = new HomeController(NullLogger<HomeController>.Instance, context, cache);
         var result = controller.Index();
         Assert.IsType<ViewResult>(result);
     }
@@ -26,7 +30,9 @@ public class HomeControllerTests
             .UseInMemoryDatabase("PrivacyDb")
             .Options;
         using var context = new MyWebApp.Data.ApplicationDbContext(options);
-        var controller = new HomeController(NullLogger<HomeController>.Instance, context);
+        var memory = new MemoryCache(new MemoryCacheOptions());
+        var cache = new CacheService(memory);
+        var controller = new HomeController(NullLogger<HomeController>.Instance, context, cache);
         var result = controller.Privacy();
         Assert.IsType<ViewResult>(result);
     }
@@ -38,7 +44,9 @@ public class HomeControllerTests
             .UseInMemoryDatabase("FaqDb")
             .Options;
         using var context = new MyWebApp.Data.ApplicationDbContext(options);
-        var controller = new HomeController(NullLogger<HomeController>.Instance, context);
+        var memory = new MemoryCache(new MemoryCacheOptions());
+        var cache = new CacheService(memory);
+        var controller = new HomeController(NullLogger<HomeController>.Instance, context, cache);
         var result = controller.Faq();
         Assert.IsType<ViewResult>(result);
     }
