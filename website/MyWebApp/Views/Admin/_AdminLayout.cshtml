@@ -1,0 +1,30 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Screen Area Recorder Pro</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container-fluid nav-container">
+            <a class="logo" asp-controller="Admin" asp-action="Index">Admin Panel</a>
+            <nav class="site-nav">
+                <a asp-controller="Admin" asp-action="Index">Dashboard</a>
+                <a asp-controller="Admin" asp-action="Downloads">Downloads</a>
+                <a asp-controller="Admin" asp-action="Stats">Stats</a>
+                <a asp-controller="Admin" asp-action="Logs">Logs</a>
+            </nav>
+        </div>
+    </header>
+    <div class="container">
+        @RenderBody()
+    </div>
+</body>
+</html>

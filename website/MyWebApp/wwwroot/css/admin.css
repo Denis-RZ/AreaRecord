@@ -1,0 +1,24 @@
+body {
+    background-color: #181818;
+    color: #e0e0e0;
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th, .table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #444;
+}
+.metrics {
+    display: flex;
+    gap: 1rem;
+}
+.card {
+    background: #222;
+    padding: 1rem;
+    border-radius: 4px;
+}
+.pagination a, .pagination span {
+    margin-right: 0.25rem;
+}

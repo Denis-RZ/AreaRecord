@@ -16,6 +16,7 @@
                 <a asp-area="" asp-controller="Home" asp-action="Faq">FAQ</a>
                 <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                 <a asp-area="" asp-controller="Setup" asp-action="Index">Setup</a>
+                @if (User?.Identity?.IsAuthenticated == true) { <a asp-controller="Admin" asp-action="Index">Admin</a> }
             </nav>
         </div>
     </header>
