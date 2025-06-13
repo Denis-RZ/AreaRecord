@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using MyWebApp.Services;
+using System.Data.Common;
 
 namespace MyWebApp.Controllers;
 
@@ -93,7 +94,11 @@ public class SetupController : BaseController
             }
             TempData["SetupResult"] = connected ? "Connection successful" : "Connection failed";
         }
-        catch (Exception ex)
+        catch (System.Data.Common.DbException ex)
+        {
+            TempData["SetupResult"] = "Connection failed: " + ex.Message;
+        }
+        catch (InvalidOperationException ex)
         {
             TempData["SetupResult"] = "Connection failed: " + ex.Message;
         }
@@ -146,7 +151,15 @@ public class SetupController : BaseController
             context.Database.EnsureCreated();
             TempData["SetupResult"] = "Configuration saved.";
         }
-        catch (Exception ex)
+        catch (System.IO.IOException ex)
+        {
+            TempData["SetupResult"] = "Save failed: " + ex.Message;
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            TempData["SetupResult"] = "Save failed: " + ex.Message;
+        }
+        catch (System.Data.Common.DbException ex)
         {
             TempData["SetupResult"] = "Save failed: " + ex.Message;
         }
@@ -181,7 +194,7 @@ public class SetupController : BaseController
             Db.SaveChanges();
             TempData["SetupResult"] = "Sample data inserted.";
         }
-        catch (Exception ex)
+        catch (DbUpdateException ex)
         {
             TempData["SetupResult"] = "Seeding failed: " + ex.Message;
         }

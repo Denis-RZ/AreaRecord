@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using System.Data.Common;
 using MyWebApp.Data;
 using MyWebApp.Filters;
 using MyWebApp.Models;
@@ -41,7 +42,7 @@ namespace MyWebApp.Controllers
             {
                 return _context.Database.CanConnect();
             }
-            catch (Exception ex)
+            catch (System.Data.Common.DbException ex)
             {
                 _logger.LogError(ex, "Database connectivity check failed");
                 return false;
@@ -200,7 +201,11 @@ namespace MyWebApp.Controllers
                 using var testDb = new ApplicationDbContext(optionsBuilder.Options);
                 TempData["SetupResult"] = testDb.Database.CanConnect() ? "Connection successful" : "Connection failed";
             }
-            catch (Exception ex)
+            catch (System.Data.Common.DbException ex)
+            {
+                TempData["SetupResult"] = "Connection failed: " + ex.Message;
+            }
+            catch (InvalidOperationException ex)
             {
                 TempData["SetupResult"] = "Connection failed: " + ex.Message;
             }
@@ -236,7 +241,15 @@ namespace MyWebApp.Controllers
 
                 TempData["SetupResult"] = "Configuration saved.";
             }
-            catch (Exception ex)
+            catch (System.IO.IOException ex)
+            {
+                TempData["SetupResult"] = "Save failed: " + ex.Message;
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                TempData["SetupResult"] = "Save failed: " + ex.Message;
+            }
+            catch (UnauthorizedAccessException ex)
             {
                 TempData["SetupResult"] = "Save failed: " + ex.Message;
             }

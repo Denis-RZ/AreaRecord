@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using MyWebApp.Services;
 using MyWebApp.Data;
 using MyWebApp.Models;
+using Microsoft.Extensions.Options;
+using MyWebApp.Options;
 
 namespace MyWebApp.Controllers;
 
@@ -15,21 +17,21 @@ public class DownloadController : BaseController
     private readonly IMemoryCache _memoryCache;
     private readonly CacheService _cache;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    private readonly CaptchaOptions _captchaOptions;
 
     public DownloadController(ApplicationDbContext context,
         ILogger<DownloadController> logger,
         IMemoryCache memoryCache,
         CacheService cache,
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        IOptions<CaptchaOptions> captchaOptions)
         : base(context, logger)
     {
         _logger = logger;
         _memoryCache = memoryCache;
         _cache = cache;
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
+        _captchaOptions = captchaOptions.Value;
     }
 
     [HttpGet]
@@ -44,7 +46,7 @@ public class DownloadController : BaseController
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
         });
-        ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+        ViewBag.SiteKey = _captchaOptions.SiteKey;
         var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
         return View(files);
     }
@@ -71,7 +73,7 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+            ViewBag.SiteKey = _captchaOptions.SiteKey;
             var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(files);
         }
@@ -99,7 +101,7 @@ public class DownloadController : BaseController
                 _cache.Remove(CacheKeys.TopCountries);
                 _cache.Remove(CacheKeys.AgentStats);
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
                 return RedirectToSetup(ex);
             }
@@ -109,7 +111,7 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+            ViewBag.SiteKey = _captchaOptions.SiteKey;
             var filesFail = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesFail);
         }
@@ -128,7 +130,7 @@ public class DownloadController : BaseController
                 _cache.Remove(CacheKeys.TopCountries);
                 _cache.Remove(CacheKeys.AgentStats);
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
                 return RedirectToSetup(ex);
             }
@@ -137,7 +139,7 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+            ViewBag.SiteKey = _captchaOptions.SiteKey;
             var filesRate = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesRate);
         }
@@ -156,7 +158,7 @@ public class DownloadController : BaseController
                 _cache.Remove(CacheKeys.TopCountries);
                 _cache.Remove(CacheKeys.AgentStats);
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
                 return RedirectToSetup(ex);
             }
@@ -165,7 +167,7 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _configuration["Captcha:SiteKey"] ?? string.Empty;
+            ViewBag.SiteKey = _captchaOptions.SiteKey;
             var filesCaptcha = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesCaptcha);
         }
@@ -181,7 +183,7 @@ public class DownloadController : BaseController
             _cache.Remove(CacheKeys.TopCountries);
             _cache.Remove(CacheKeys.AgentStats);
         }
-        catch (Exception ex)
+        catch (DbUpdateException ex)
         {
             return RedirectToSetup(ex);
         }
@@ -211,8 +213,8 @@ public class DownloadController : BaseController
 
     private async Task<bool> VerifyCaptchaAsync(string token, string ip)
     {
-        var secret = _configuration["Captcha:SecretKey"];
-        var verifyUrl = _configuration["Captcha:VerifyUrl"];
+        var secret = _captchaOptions.SecretKey;
+        var verifyUrl = _captchaOptions.VerifyUrl;
         if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(verifyUrl))
         {
             _logger.LogWarning("Captcha secret or verify url not configured");
@@ -237,9 +239,13 @@ public class DownloadController : BaseController
                 return true;
             }
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Captcha verification failed");
+            _logger.LogError(ex, "Captcha HTTP request failed");
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Captcha verification JSON parse failed");
         }
         return false;
     }

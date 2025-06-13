@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using MyWebApp.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 using MyWebApp.Controllers;
 using MyWebApp.Data;
@@ -31,15 +32,15 @@ public class DownloadControllerTests
     {
         conn = new SqliteConnection("DataSource=:memory:");
         conn.Open();
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        var dbOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlite(conn)
             .Options;
-        var ctx = new ApplicationDbContext(options);
+        var ctx = new ApplicationDbContext(dbOptions);
         ctx.Database.EnsureCreated();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["Captcha:SiteKey"] = "k" }).Build();
-        var controller = new DownloadController(ctx, NullLogger<DownloadController>.Instance, memory, cache, new FakeHttpClientFactory(), config);
+        var captcha = Microsoft.Extensions.Options.Options.Create(new MyWebApp.Options.CaptchaOptions { SiteKey = "k" });
+        var controller = new DownloadController(ctx, NullLogger<DownloadController>.Instance, memory, cache, new FakeHttpClientFactory(), captcha);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { Session = new DummySession() } };
         return (controller, ctx);
     }

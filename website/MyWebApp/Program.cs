@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
 using MyWebApp.Services;
+using MyWebApp.Options;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System;
 
@@ -41,7 +42,11 @@ try
     using var testCtx = new ApplicationDbContext(testOptions.Options);
     needFallback = !testCtx.Database.CanConnect();
 }
-catch
+catch (System.Data.Common.DbException)
+{
+    needFallback = true;
+}
+catch (InvalidOperationException)
 {
     needFallback = true;
 }
@@ -103,6 +108,15 @@ builder.Services.AddSession();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
+builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
+    .Bind(builder.Configuration.GetSection("AdminAuth"))
+    .Validate(o =>
+        !string.IsNullOrWhiteSpace(o.Username) &&
+        !string.IsNullOrWhiteSpace(o.Password),
+        "Admin credentials required")
+    .ValidateOnStart();
+builder.Services.AddOptions<MyWebApp.Options.CaptchaOptions>()
+    .Bind(builder.Configuration.GetSection("Captcha"));
 
 var app = builder.Build();
 
@@ -126,7 +140,11 @@ using (var scope = app.Services.CreateScope())
             app.Logger.LogWarning("Could not connect to the database. Schema creation may have failed.");
         }
     }
-    catch (Exception ex)
+    catch (System.Data.Common.DbException ex)
+    {
+        app.Logger.LogError(ex, "Database initialization failed during startup.");
+    }
+    catch (InvalidOperationException ex)
     {
         app.Logger.LogError(ex, "Database initialization failed during startup.");
     }
