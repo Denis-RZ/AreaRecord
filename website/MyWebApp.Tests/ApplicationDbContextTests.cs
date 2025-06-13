@@ -28,4 +28,25 @@ public class ApplicationDbContextTests
             Assert.Equal("Test", recording.Name);
         }
     }
+
+    [Fact]
+    public void DownloadEntity_HasExpectedIndexes()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase("IndexCheckDb")
+            .Options;
+
+        using var context = new ApplicationDbContext(options);
+        var entity = context.Model.FindEntityType(typeof(Download));
+        Assert.NotNull(entity);
+        var indexPropertySets = entity!.GetIndexes()
+            .Select(i => string.Join(",", i.Properties.Select(p => p.Name)))
+            .ToList();
+
+        Assert.Contains("DownloadTime", indexPropertySets);
+        Assert.Contains("IsSuccessful", indexPropertySets);
+        Assert.Contains("UserIP", indexPropertySets);
+        Assert.Contains("Country", indexPropertySets);
+        Assert.Contains("IsSuccessful,DownloadTime", indexPropertySets);
+    }
 }
