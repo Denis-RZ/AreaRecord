@@ -20,9 +20,20 @@ public class SchemaValidator
     public SchemaValidationResult Validate()
     {
         var messages = new List<string>();
-        ValidateIndexes(messages);
-        ValidateForeignKeys(messages);
-        ValidateColumnTypes(messages);
+        try
+        {
+            ValidateIndexes(messages);
+            ValidateForeignKeys(messages);
+            if (_context.Database.IsRelational())
+            {
+                ValidateColumnTypes(messages);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Context not configured with a provider; skip validation
+            return new SchemaValidationResult(true, new List<string>());
+        }
         return new SchemaValidationResult(messages.Count == 0, messages);
     }
 

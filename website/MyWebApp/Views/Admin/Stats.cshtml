@@ -1,9 +1,9 @@
 @{
     ViewData["Title"] = "Statistics";
     Layout = "_AdminLayout";
-    var daily = ViewBag.DailyData as IEnumerable<dynamic>;
-    var countries = ViewBag.CountryData as IEnumerable<dynamic>;
-    var agents = ViewBag.AgentData as IEnumerable<dynamic>;
+    var daily = ViewBag.DailyData as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var countries = ViewBag.CountryData as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var agents = ViewBag.AgentData as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
 <h2>Statistics</h2>
 <canvas id="dailyChart" width="400" height="150"></canvas>

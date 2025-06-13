@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyWebApp.Data;
+using MyWebApp.Models;
 using MyWebApp.Services;
 using Xunit;
 
