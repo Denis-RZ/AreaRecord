@@ -29,6 +29,23 @@ else
     </form>
 }
 
+<h2>Schema Validation</h2>
+@if (Model.SchemaMessages?.Count > 0)
+{
+    <div class="alert alert-warning">
+        <ul>
+        @foreach (var m in Model.SchemaMessages)
+        {
+            <li>@m</li>
+        }
+        </ul>
+    </div>
+}
+else
+{
+    <p>Schema configuration is valid.</p>
+}
+
 <h2>Test Connection</h2>
 <form method="post" action="@Url.Action("Test")">
     <div>

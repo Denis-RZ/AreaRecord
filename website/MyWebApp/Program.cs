@@ -97,6 +97,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
+builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 
 var app = builder.Build();
 

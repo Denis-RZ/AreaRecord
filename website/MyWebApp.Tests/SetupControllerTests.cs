@@ -8,6 +8,7 @@ using MyWebApp.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Xunit;
+using MyWebApp.Services;
 
 class FakeEnv : IWebHostEnvironment
 {
@@ -30,7 +31,8 @@ public class SetupControllerTests
         using var context = new ApplicationDbContext(options);
         var config = new ConfigurationBuilder().Build();
         var env = new FakeEnv();
-        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env);
+        var validator = new SchemaValidator(context);
+        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env, validator);
 
         var result = controller.Index();
 
@@ -45,7 +47,8 @@ public class SetupControllerTests
         using var context = new ApplicationDbContext(options);
         var config = new ConfigurationBuilder().Build();
         var env = new FakeEnv();
-        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env);
+        var validator = new SchemaValidator(context);
+        var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env, validator);
 
         var result = controller.Index();
 
