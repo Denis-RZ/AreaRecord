@@ -5,6 +5,7 @@ using MyWebApp.Models;
 using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using MyWebApp.Services;
 
 namespace MyWebApp.Controllers;
 
@@ -12,12 +13,14 @@ public class SetupController : BaseController
 {
     private readonly IConfiguration _config;
     private readonly IWebHostEnvironment _env;
+    private readonly SchemaValidator _validator;
 
-    public SetupController(ApplicationDbContext context, IConfiguration config, ILogger<SetupController> logger, IWebHostEnvironment env)
+    public SetupController(ApplicationDbContext context, IConfiguration config, ILogger<SetupController> logger, IWebHostEnvironment env, SchemaValidator validator)
         : base(context, logger)
     {
         _config = config;
         _env = env;
+        _validator = validator;
     }
 
     public IActionResult Index()
@@ -39,6 +42,9 @@ public class SetupController : BaseController
             ErrorMessage = error,
             ResultMessage = result
         };
+        var validation = _validator.Validate();
+        model.SchemaValid = validation.Success;
+        model.SchemaMessages = validation.Messages;
         return View(model);
     }
 

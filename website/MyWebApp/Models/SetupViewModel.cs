@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 namespace MyWebApp.Models;
 
 public class SetupViewModel
@@ -11,4 +12,6 @@ public class SetupViewModel
     public string Password { get; set; } = string.Empty;
     public string? ErrorMessage { get; set; }
     public string? ResultMessage { get; set; }
+    public bool SchemaValid { get; set; }
+    public IList<string> SchemaMessages { get; set; } = new List<string>();
 }
