@@ -8,6 +8,7 @@ namespace MyWebApp.Models
         public int TotalDownloads { get; set; }
         public int FailedDownloads { get; set; }
         public int DownloadsLast24h { get; set; }
+        public double AverageQueryTimeMs { get; set; }
         public IList<CountryCount> TopCountries { get; set; } = new List<CountryCount>();
         public SystemInfoViewModel SystemInfo { get; set; } = new SystemInfoViewModel();
     }
