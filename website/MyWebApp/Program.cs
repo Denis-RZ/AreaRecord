@@ -70,7 +70,10 @@ else if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
             "Cache=Shared;Journal Mode=WAL;Synchronous=Normal";
     }
 }
-builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
+builder.Services.AddSingleton<QueryMetrics>();
+builder.Services.AddSingleton<QueryLoggingInterceptor>();
+
+builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>((sp, options) =>
 {
     switch (provider.ToLowerInvariant())
     {
@@ -91,6 +94,7 @@ builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
                    .CommandTimeout(60));
             break;
     }
+    options.AddInterceptors(sp.GetRequiredService<QueryLoggingInterceptor>());
 });
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();

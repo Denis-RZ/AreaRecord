@@ -22,15 +22,17 @@ namespace MyWebApp.Controllers
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
         private readonly CacheService _cache;
+        private readonly QueryMetrics _metrics;
         private static readonly DateTime _startTime = DateTime.UtcNow;
 
-        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger, IConfiguration config, IWebHostEnvironment env, CacheService cache)
+        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger, IConfiguration config, IWebHostEnvironment env, CacheService cache, QueryMetrics metrics)
         {
             _context = context;
             _logger = logger;
             _config = config;
             _env = env;
             _cache = cache;
+            _metrics = metrics;
         }
 
         private bool CheckDatabase()
@@ -66,6 +68,7 @@ namespace MyWebApp.Controllers
                     TotalDownloads = total,
                     FailedDownloads = failed,
                     DownloadsLast24h = last24h,
+                    AverageQueryTimeMs = _metrics.AverageMilliseconds,
                     TopCountries = countries,
                     SystemInfo = new SystemInfoViewModel
                     {
