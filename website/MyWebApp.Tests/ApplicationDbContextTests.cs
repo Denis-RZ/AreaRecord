@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using MyWebApp.Data;
 using MyWebApp.Models;
 using Xunit;
@@ -10,18 +11,19 @@ public class ApplicationDbContextTests
     [Fact]
     public void CanAddAndRetrieveRecording()
     {
+        using var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: "RecordingsDb")
+            .UseSqlite(connection)
             .Options;
 
-        // Insert a recording
         using (var context = new ApplicationDbContext(options))
         {
+            context.Database.EnsureCreated();
             context.Recordings.Add(new Recording { Name = "Test", Created = DateTime.UtcNow });
             context.SaveChanges();
         }
 
-        // Retrieve recording
         using (var context = new ApplicationDbContext(options))
         {
             var recording = context.Recordings.Single();
@@ -32,11 +34,14 @@ public class ApplicationDbContextTests
     [Fact]
     public void DownloadEntity_HasExpectedIndexes()
     {
+        using var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase("IndexCheckDb")
+            .UseSqlite(connection)
             .Options;
 
         using var context = new ApplicationDbContext(options);
+        context.Database.EnsureCreated();
         var entity = context.Model.FindEntityType(typeof(Download));
         Assert.NotNull(entity);
         var indexPropertySets = entity!.GetIndexes()

@@ -3,6 +3,7 @@ using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
 using Xunit;
+using Microsoft.Data.Sqlite;
 
 public class SchemaValidatorTests
 {
@@ -31,10 +32,13 @@ public class SchemaValidatorTests
     [Fact]
     public void Validate_DetectsMissingIndexes()
     {
+        using var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase("bad")
+            .UseSqlite(connection)
             .Options;
         using var context = new NoIndexContext(options);
+        context.Database.EnsureCreated();
         var validator = new SchemaValidator(context);
         var result = validator.Validate();
         Assert.False(result.Success);
