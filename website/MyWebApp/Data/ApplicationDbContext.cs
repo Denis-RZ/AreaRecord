@@ -26,6 +26,23 @@ namespace MyWebApp.Data
                 .HasIndex(d => d.UserIP);
             modelBuilder.Entity<DownloadFile>()
                 .HasIndex(f => f.FileName);
+            modelBuilder.Entity<Recording>()
+                .HasIndex(r => r.Created);
+
+            // provider specific optimizations
+            var provider = Database.ProviderName ?? string.Empty;
+            if (provider.Contains("Npgsql"))
+            {
+                modelBuilder.Entity<Download>()
+                    .Property(d => d.UserIP)
+                    .HasColumnType("varchar(45)");
+            }
+            else if (provider.Contains("SqlServer"))
+            {
+                modelBuilder.Entity<Download>()
+                    .Property(d => d.UserIP)
+                    .HasColumnType("nvarchar(45)");
+            }
         }
     }
 }

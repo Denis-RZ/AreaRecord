@@ -19,6 +19,7 @@ public abstract class BaseController : Controller
     {
         try
         {
+            Db.Database.EnsureCreated();
             return Db.Database.CanConnect();
         }
         catch (Exception ex)

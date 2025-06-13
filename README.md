@@ -39,41 +39,20 @@ You can override these values in several ways:
 
 Specify `DatabaseProvider` when switching providers; `Program.cs` will pick the correct `Use*` method automatically.
 
-## Database Migrations
+## Database Initialization
 
-Entity Framework Core migrations are used to create and evolve the database schema. After modifying the `DbContext` or model classes, run the following commands from the `MyWebApp` project directory:
-
-```bash
-# Add a new migration
-dotnet ef migrations add <MigrationName>
-
-# Apply migrations to the configured database
-dotnet ef database update
-```
-
-To generate a SQL script that can be executed manually or on another server, use:
+The schema is created automatically when the application starts using
+`EnsureCreated`. Configure your connection string and provider as described
+above and run:
 
 ```bash
-# Generate a SQL script for all pending migrations
-dotnet ef migrations script > update.sql
+cd website/MyWebApp
+dotnet run
 ```
 
-When the application starts it attempts to connect to the configured database.
-If the connection succeeds, `Program.cs` automatically runs
-`db.Database.Migrate()` to apply any pending migrations. If a connection cannot
-be established, a warning is logged and the app continues to run.
-
-## Deploying Migrations Remotely
-
-1. Build the project and ensure migrations compile.
-2. Copy the generated `update.sql` file to the remote server.
-3. Execute the script using the database's command-line tools (for SQL Server you can use `sqlcmd`):
-
-```bash
-sqlcmd -S <server> -d <database> -i update.sql
-```
-
-This approach avoids installing the .NET SDK on the server while keeping the database schema in sync.
+On first launch the database will be created and indexes added for the selected
+provider. The `/Setup` page lets you test connections or switch providers and
+will recreate the schema if necessary.
 
 ## Running Tests
 
