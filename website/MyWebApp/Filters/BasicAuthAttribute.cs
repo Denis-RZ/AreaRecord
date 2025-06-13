@@ -3,16 +3,26 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using MyWebApp.Options;
 
 namespace MyWebApp.Filters
 {
     public class BasicAuthAttribute : Attribute, IAuthorizationFilter
     {
-        private const string Username = "admin";
-        private const string Password = "SecurePass123";
-
         public void OnAuthorization(AuthorizationFilterContext context)
         {
+            var services = context.HttpContext.RequestServices;
+            var config = services.GetService(typeof(IConfiguration)) as IConfiguration;
+            var options = services.GetService(typeof(IOptions<AdminAuthOptions>)) as IOptions<AdminAuthOptions>;
+            if (config == null || options == null || !config.GetSection("AdminAuth").Exists())
+            {
+                throw new InvalidOperationException("AdminAuth configuration missing");
+            }
+
+            var creds = options.Value;
+
             var request = context.HttpContext.Request;
             if (!request.Headers.TryGetValue("Authorization", out var header))
             {
@@ -36,10 +46,10 @@ namespace MyWebApp.Filters
                 }
 
                 var parts = decoded.Split(':', 2);
-                if (parts.Length == 2 && parts[0] == Username && parts[1] == Password)
+                if (parts.Length == 2 && parts[0] == creds.Username && parts[1] == creds.Password)
                 {
                     var identity = new ClaimsIdentity("Basic");
-                    identity.AddClaim(new Claim(ClaimTypes.Name, Username));
+                    identity.AddClaim(new Claim(ClaimTypes.Name, creds.Username));
                     context.HttpContext.User = new ClaimsPrincipal(identity);
                     return;
                 }

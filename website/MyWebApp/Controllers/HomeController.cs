@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MyWebApp.Models;
 using MyWebApp.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace MyWebApp.Controllers;
 
@@ -28,7 +29,7 @@ public class HomeController : BaseController
         {
             Db.SaveChanges();
         }
-        catch (Exception ex)
+        catch (DbUpdateException ex)
         {
             return RedirectToSetup(ex);
         }
