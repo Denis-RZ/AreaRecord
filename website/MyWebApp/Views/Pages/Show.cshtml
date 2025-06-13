@@ -1,0 +1,5 @@
+@model MyWebApp.Models.Page
+@{
+    ViewData["Title"] = Model.Title;
+}
+@Html.Raw(Model.BodyHtml)

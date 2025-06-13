@@ -1,0 +1,22 @@
+@model IEnumerable<MyWebApp.Models.Page>
+@{
+    ViewData["Title"] = "Pages";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Pages</h2>
+<p><a asp-action="Create">Create New</a></p>
+<table>
+    <thead>
+        <tr><th>Slug</th><th>Title</th><th></th></tr>
+    </thead>
+    <tbody>
+@foreach (var p in Model)
+{
+    <tr>
+        <td>@p.Slug</td>
+        <td>@p.Title</td>
+        <td><a asp-action="Edit" asp-route-id="@p.Id">Edit</a></td>
+    </tr>
+}
+    </tbody>
+</table>

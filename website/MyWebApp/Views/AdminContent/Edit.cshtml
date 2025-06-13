@@ -1,0 +1,15 @@
+@model MyWebApp.Models.Page
+@{
+    ViewData["Title"] = "Edit Page";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Edit Page</h2>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div><label>Slug</label><input asp-for="Slug" /></div>
+    <div><label>Title</label><input asp-for="Title" /></div>
+    <div><label>Header</label><textarea asp-for="HeaderHtml"></textarea></div>
+    <div><label>Body</label><textarea asp-for="BodyHtml"></textarea></div>
+    <div><label>Footer</label><textarea asp-for="FooterHtml"></textarea></div>
+    <button type="submit">Save</button>
+</form>
