@@ -72,7 +72,7 @@ else if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
     if (!connectionString.Contains("Cache=", StringComparison.OrdinalIgnoreCase))
     {
         connectionString += (connectionString.EndsWith(";") ? string.Empty : ";") +
-            "Cache=Shared;Journal Mode=WAL;Synchronous=Normal";
+            "Cache=Shared";
     }
 }
 builder.Services.AddSingleton<QueryMetrics>();
@@ -130,6 +130,11 @@ using (var scope = app.Services.CreateScope())
         if (db.Database.EnsureCreated())
         {
             app.Logger.LogInformation("Database schema created.");
+        }
+        if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
         }
         if (db.Database.CanConnect())
         {

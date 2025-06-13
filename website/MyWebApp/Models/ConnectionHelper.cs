@@ -12,7 +12,7 @@ public static class ConnectionHelper
             case "npgsql":
                 return $"Host={server};Database={database};Username={username};Password={password};Pooling=true;MinPoolSize=1;MaxPoolSize=20;ConnectionIdleLifetime=300;Max Auto Prepare=20;Auto Prepare Min Usages=2";
             case "sqlite":
-                return $"Data Source={database};Cache=Shared;Journal Mode=WAL;Synchronous=Normal";
+                return $"Data Source={database};Cache=Shared";
             default:
                 if (string.IsNullOrEmpty(username))
                 {
