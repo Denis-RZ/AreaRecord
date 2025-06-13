@@ -101,6 +101,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
+builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 
 var app = builder.Build();
@@ -151,5 +152,10 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "pages",
+    pattern: "{*slug}",
+    defaults: new { controller = "Pages", action = "Show" });
 
 app.Run();

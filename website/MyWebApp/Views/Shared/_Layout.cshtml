@@ -6,19 +6,17 @@
     <title>@ViewData["Title"] - Screen Area Recorder Pro</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+@using MyWebApp.Services
+@using MyWebApp.Data
+@inject LayoutService LayoutService
+@inject ApplicationDbContext Db
+@{
+    var headerHtml = ViewBag.HeaderHtml as string ?? await LayoutService.GetHeaderAsync(Db);
+    var footerHtml = ViewBag.FooterHtml as string ?? await LayoutService.GetFooterAsync(Db);
+}
 <body>
     <header class="site-header">
-        <div class="container-fluid nav-container">
-            <a class="logo" asp-area="" asp-controller="Home" asp-action="Index">Screen Area Recorder Pro</a>
-            <nav class="site-nav">
-                <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                <a asp-area="" asp-controller="Download" asp-action="Index">Download</a>
-                <a asp-area="" asp-controller="Home" asp-action="Faq">FAQ</a>
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                <a asp-area="" asp-controller="Setup" asp-action="Index">Setup</a>
-                @if (User?.Identity?.IsAuthenticated == true) { <a asp-controller="Admin" asp-action="Index">Admin</a> }
-            </nav>
-        </div>
+        @Html.Raw(headerHtml)
     </header>
     <div class="container">
         <main role="main" class="pb-3">
@@ -27,9 +25,7 @@
     </div>
 
     <footer class="site-footer">
-        <div class="container">
-            &copy; 2025 - Screen Area Recorder Pro
-        </div>
+        @Html.Raw(footerHtml)
     </footer>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

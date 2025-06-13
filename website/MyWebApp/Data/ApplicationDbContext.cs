@@ -14,6 +14,7 @@ namespace MyWebApp.Data
         public DbSet<Recording> Recordings { get; set; }
         public DbSet<Download> Downloads { get; set; }
         public DbSet<DownloadFile> DownloadFiles { get; set; }
+        public DbSet<Page> Pages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +33,27 @@ namespace MyWebApp.Data
                 .HasIndex(f => f.FileName);
             modelBuilder.Entity<Recording>()
                 .HasIndex(r => r.Created);
+
+            modelBuilder.Entity<Page>()
+                .HasIndex(p => p.Slug)
+                .IsUnique();
+
+            modelBuilder.Entity<Page>().HasData(
+                new Page
+                {
+                    Id = 1,
+                    Slug = "layout",
+                    Title = "Layout",
+                    HeaderHtml = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a></nav></div>",
+                    FooterHtml = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
+                },
+                new Page
+                {
+                    Id = 2,
+                    Slug = "home",
+                    Title = "Home",
+                    BodyHtml = "<p>Welcome to Screen Area Recorder Pro.</p>"
+                });
 
             // provider specific optimizations
             var provider = Database.ProviderName ?? string.Empty;
