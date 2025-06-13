@@ -39,6 +39,8 @@ You can override these values in several ways:
 
 Specify `DatabaseProvider` when switching providers; `Program.cs` will pick the correct `Use*` method automatically.
 
+Connection strings built with `ConnectionHelper` add provider-specific optimizations. PostgreSQL enables pooling and prepared statements, SQLite uses a shared cache with WAL mode, and SQL Server configures retries with a 60 second command timeout.
+
 ## Database Initialization
 
 The schema is created automatically when the application starts using

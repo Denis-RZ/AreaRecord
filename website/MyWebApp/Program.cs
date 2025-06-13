@@ -52,6 +52,24 @@ if (needFallback && provider.ToLowerInvariant() != "sqlite")
     provider = "Sqlite";
     connectionString = "Data Source=mywebapp.db";
 }
+
+// Append provider specific defaults
+if (provider.Equals("postgresql", StringComparison.OrdinalIgnoreCase) || provider.Equals("npgsql", StringComparison.OrdinalIgnoreCase))
+{
+    if (!connectionString.Contains("Pooling", StringComparison.OrdinalIgnoreCase))
+    {
+        connectionString += (connectionString.EndsWith(";") ? string.Empty : ";") +
+            "Pooling=true;MinPoolSize=1;MaxPoolSize=20;ConnectionIdleLifetime=300;Max Auto Prepare=20;Auto Prepare Min Usages=2";
+    }
+}
+else if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+{
+    if (!connectionString.Contains("Cache=", StringComparison.OrdinalIgnoreCase))
+    {
+        connectionString += (connectionString.EndsWith(";") ? string.Empty : ";") +
+            "Cache=Shared;Journal Mode=WAL;Synchronous=Normal";
+    }
+}
 builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
 {
     switch (provider.ToLowerInvariant())
@@ -59,14 +77,18 @@ builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>(options =>
         case "postgresql":
         case "npgsql":
             options.UseNpgsql(connectionString, npgsql =>
-                npgsql.EnableRetryOnFailure());
+            {
+                npgsql.EnableRetryOnFailure();
+                npgsql.CommandTimeout(60);
+            });
             break;
         case "sqlite":
             options.UseSqlite(connectionString);
             break;
         default:
             options.UseSqlServer(connectionString, sql =>
-                sql.EnableRetryOnFailure());
+                sql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null)
+                   .CommandTimeout(60));
             break;
     }
 });

@@ -10,9 +10,9 @@ public static class ConnectionHelper
         {
             case "postgresql":
             case "npgsql":
-                return $"Host={server};Database={database};Username={username};Password={password}";
+                return $"Host={server};Database={database};Username={username};Password={password};Pooling=true;MinPoolSize=1;MaxPoolSize=20;ConnectionIdleLifetime=300;Max Auto Prepare=20;Auto Prepare Min Usages=2";
             case "sqlite":
-                return $"Data Source={database}";
+                return $"Data Source={database};Cache=Shared;Journal Mode=WAL;Synchronous=Normal";
             default:
                 if (string.IsNullOrEmpty(username))
                 {
