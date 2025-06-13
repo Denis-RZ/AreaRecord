@@ -24,6 +24,10 @@ namespace MyWebApp.Data
                 .HasIndex(d => d.IsSuccessful);
             modelBuilder.Entity<Download>()
                 .HasIndex(d => d.UserIP);
+            modelBuilder.Entity<Download>()
+                .HasIndex(d => d.Country);
+            modelBuilder.Entity<Download>()
+                .HasIndex(d => new { d.IsSuccessful, d.DownloadTime });
             modelBuilder.Entity<DownloadFile>()
                 .HasIndex(f => f.FileName);
             modelBuilder.Entity<Recording>()
