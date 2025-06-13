@@ -53,6 +53,7 @@ public class SetupController : BaseController
                 provider.Set("DatabaseProvider", "Sqlite");
             }
         }
+        Db.Database.EnsureCreated();
         TempData["SetupResult"] = "Switched to SQLite.";
         return RedirectToAction(nameof(Index));
     }
@@ -79,7 +80,12 @@ public class SetupController : BaseController
         try
         {
             using var testDb = new ApplicationDbContext(optionsBuilder.Options);
-            TempData["SetupResult"] = testDb.Database.CanConnect() ? "Connection successful" : "Connection failed";
+            var connected = testDb.Database.CanConnect();
+            if (connected)
+            {
+                testDb.Database.EnsureCreated();
+            }
+            TempData["SetupResult"] = connected ? "Connection successful" : "Connection failed";
         }
         catch (Exception ex)
         {
@@ -94,6 +100,20 @@ public class SetupController : BaseController
         try
         {
             var connectionString = ConnectionHelper.BuildConnectionString(provider, server, database, username, password);
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            switch (provider.ToLowerInvariant())
+            {
+                case "npgsql":
+                case "postgresql":
+                    optionsBuilder.UseNpgsql(connectionString);
+                    break;
+                case "sqlite":
+                    optionsBuilder.UseSqlite(connectionString);
+                    break;
+                default:
+                    optionsBuilder.UseSqlServer(connectionString);
+                    break;
+            }
             var path = System.IO.Path.Combine(_env.ContentRootPath, "appsettings.json");
             var json = System.IO.File.ReadAllText(path);
             var obj = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
@@ -115,6 +135,9 @@ public class SetupController : BaseController
                 }
             }
 
+            // ensure schema exists using the new settings
+            using var context = new ApplicationDbContext(optionsBuilder.Options);
+            context.Database.EnsureCreated();
             TempData["SetupResult"] = "Configuration saved.";
         }
         catch (Exception ex)

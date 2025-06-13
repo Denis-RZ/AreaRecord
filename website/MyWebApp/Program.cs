@@ -78,26 +78,29 @@ builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 
 var app = builder.Build();
 
-// Ensure database is up to date
-    using (var scope = app.Services.CreateScope())
+// Ensure database is created and optimized
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
+    try
     {
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var cacheService = scope.ServiceProvider.GetRequiredService<CacheService>();
-        try
+        if (db.Database.EnsureCreated())
         {
-            if (db.Database.CanConnect())
-            {
-                db.Database.Migrate();
-                cacheService.WarmCache(db);
-            }
+            app.Logger.LogInformation("Database schema created.");
+        }
+        if (db.Database.CanConnect())
+        {
+            cacheService.WarmCache(db);
+        }
         else
         {
-            app.Logger.LogWarning("Could not connect to the database. Migrations were not applied.");
+            app.Logger.LogWarning("Could not connect to the database. Schema creation may have failed.");
         }
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "Database migration failed during startup.");
+        app.Logger.LogError(ex, "Database initialization failed during startup.");
     }
 }
 

@@ -4,11 +4,11 @@
 
 <h1>Import Data</h1>
 
-<p>Run the following commands from the <code>website/MyWebApp</code> directory to create or update the database schema and import data:</p>
+<p>The database schema is created automatically when the application starts. To ensure the schema exists and seed sample data run:</p>
 
-<pre><code>dotnet ef database update
-sqlcmd -S <server> -d <database> -i update.sql
+<pre><code>cd website/MyWebApp
+dotnet run
 </code></pre>
 
-<p>The <code>update.sql</code> file can be generated using <code>dotnet ef migrations script &gt; update.sql</code>.</p>
+<p>Visit <code>/Setup</code> after startup to test the connection or insert the provided sample data.</p>
 
