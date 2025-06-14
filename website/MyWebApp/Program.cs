@@ -164,13 +164,14 @@ using (var scope = app.Services.CreateScope())
         {
             app.Logger.LogInformation("Database schema created.");
         }
-        if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
-        {
-            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+            if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+            {
+                db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+                db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
 
-            UpgradeDownloadFilesTable(db);
-        }
+                UpgradeDownloadFilesTable(db);
+                UpgradePageSectionsTable(db);
+            }
         if (db.Database.CanConnect())
         {
             cacheService.WarmCache(db);
@@ -240,6 +241,37 @@ static void UpgradeDownloadFilesTable(ApplicationDbContext db)
         if (!columns.Contains("Data"))
         {
             db.Database.ExecuteSqlRaw("ALTER TABLE DownloadFiles ADD COLUMN Data BLOB");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradePageSectionsTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='PageSections'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE PageSections (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                PageId INTEGER NOT NULL,
+                Area TEXT NOT NULL,
+                Html TEXT,
+                FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
+            )");
+            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_PageSections_PageId_Area ON PageSections(PageId, Area)");
+            db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, Html) VALUES
+                (1, 1, 'header', '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
+                (2, 1, 'footer', '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
         }
     }
     catch (Exception ex)
