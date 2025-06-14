@@ -6,6 +6,8 @@ using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MyWebApp.Options;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace MyWebApp.Filters
 {
@@ -22,6 +24,17 @@ namespace MyWebApp.Filters
             }
 
             var creds = options.Value;
+
+            var feature = context.HttpContext.Features.Get<ISessionFeature>();
+            var session = feature?.Session;
+            var sessionUser = session?.GetString("AdminUser");
+            if (session != null && session.GetString("IsAdmin") == "true" && !string.IsNullOrEmpty(sessionUser))
+            {
+                var identity = new ClaimsIdentity("Session");
+                identity.AddClaim(new Claim(ClaimTypes.Name, sessionUser));
+                context.HttpContext.User = new ClaimsPrincipal(identity);
+                return;
+            }
 
             var request = context.HttpContext.Request;
             if (!request.Headers.TryGetValue("Authorization", out var header))
