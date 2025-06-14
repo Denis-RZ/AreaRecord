@@ -19,9 +19,9 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(HeaderKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await db.Pages.AsNoTracking()
-                .Where(p => p.Slug == "layout")
-                .Select(p => p.HeaderHtml ?? string.Empty)
+            return await db.PageSections.AsNoTracking()
+                .Where(s => s.Page.Slug == "layout" && s.Area == "header")
+                .Select(s => s.Html)
                 .FirstOrDefaultAsync() ?? string.Empty;
         });
     }
@@ -31,11 +31,19 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(FooterKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await db.Pages.AsNoTracking()
-                .Where(p => p.Slug == "layout")
-                .Select(p => p.FooterHtml ?? string.Empty)
+            return await db.PageSections.AsNoTracking()
+                .Where(s => s.Page.Slug == "layout" && s.Area == "footer")
+                .Select(s => s.Html)
                 .FirstOrDefaultAsync() ?? string.Empty;
         });
+    }
+
+    public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
+    {
+        return await db.PageSections.AsNoTracking()
+            .Where(s => s.PageId == pageId && s.Area == area)
+            .Select(s => s.Html)
+            .FirstOrDefaultAsync() ?? string.Empty;
     }
 
     public void Reset()
