@@ -62,16 +62,6 @@ button {
 button:hover {
     background: var(--accent-hover);
 }
-.log-box {
-    background: #111;
-    padding: 1rem;
-    border-radius: 4px;
-    max-height: 400px;
-    overflow: auto;
-    white-space: pre-wrap;
-    font-family: monospace;
-    border: 1px solid #444;
-}
 .pagination a, .pagination span {
     margin-right: 0.25rem;
 }
