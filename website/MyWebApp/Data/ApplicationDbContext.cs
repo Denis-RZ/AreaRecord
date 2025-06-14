@@ -15,6 +15,7 @@ namespace MyWebApp.Data
         public DbSet<Download> Downloads { get; set; }
         public DbSet<DownloadFile> DownloadFiles { get; set; }
         public DbSet<Page> Pages { get; set; }
+        public DbSet<PageSection> PageSections { get; set; }
         public DbSet<AdminCredential> AdminCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,6 +40,10 @@ namespace MyWebApp.Data
                 .HasIndex(p => p.Slug)
                 .IsUnique();
 
+            modelBuilder.Entity<PageSection>()
+                .HasIndex(s => new { s.PageId, s.Area })
+                .IsUnique();
+
             modelBuilder.Entity<Page>().HasData(
                 new Page
                 {
@@ -54,6 +59,22 @@ namespace MyWebApp.Data
                     Slug = "home",
                     Title = "Home",
                     BodyHtml = "<p>Welcome to Screen Area Recorder Pro.</p>"
+                });
+
+            modelBuilder.Entity<PageSection>().HasData(
+                new PageSection
+                {
+                    Id = 1,
+                    PageId = 1,
+                    Area = "header",
+                    Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
+                },
+                new PageSection
+                {
+                    Id = 2,
+                    PageId = 1,
+                    Area = "footer",
+                    Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
                 });
 
             // provider specific optimizations

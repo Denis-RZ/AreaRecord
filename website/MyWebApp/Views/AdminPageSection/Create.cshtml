@@ -1,0 +1,22 @@
+@model MyWebApp.Models.PageSection
+@{
+    ViewData["Title"] = "Create Section";
+    Layout = "../Admin/_AdminLayout";
+    var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
+}
+<h2>Create Section</h2>
+<form asp-action="Create" method="post">
+    <div>
+        <label>Page</label>
+        <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
+    </div>
+    <div>
+        <label>Area</label>
+        <input asp-for="Area" />
+    </div>
+    <div>
+        <label>Html</label>
+        <textarea asp-for="Html"></textarea>
+    </div>
+    <button type="submit">Save</button>
+</form>

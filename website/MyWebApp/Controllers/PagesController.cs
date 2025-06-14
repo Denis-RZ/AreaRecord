@@ -30,8 +30,18 @@ public class PagesController : BaseController
             return NotFound();
         }
 
-        ViewBag.HeaderHtml = await _layout.GetHeaderAsync(Db);
-        ViewBag.FooterHtml = await _layout.GetFooterAsync(Db);
+        var header = await _layout.GetSectionAsync(Db, page.Id, "header");
+        if (string.IsNullOrEmpty(header))
+        {
+            header = await _layout.GetHeaderAsync(Db);
+        }
+        var footer = await _layout.GetSectionAsync(Db, page.Id, "footer");
+        if (string.IsNullOrEmpty(footer))
+        {
+            footer = await _layout.GetFooterAsync(Db);
+        }
+        ViewBag.HeaderHtml = header;
+        ViewBag.FooterHtml = footer;
         return View(page);
     }
 }
