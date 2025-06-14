@@ -86,6 +86,7 @@ public class DownloadControllerTests
         var result = await controller.Index("token", 999);
         var view = Assert.IsType<ViewResult>(result);
         Assert.False(controller.ModelState.IsValid);
-        Assert.Contains(view.Model as IEnumerable<DownloadFile>, f => f.FileName == "f");
+        var list = Assert.IsAssignableFrom<IEnumerable<DownloadFile>>(view.Model);
+        Assert.Contains(list, f => f.FileName == "f");
     }
 }
