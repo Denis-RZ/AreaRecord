@@ -4,7 +4,9 @@ using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
 using MyWebApp.Services;
 using MyWebApp.Options;
+using MyWebApp.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using System.Linq;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -110,11 +112,48 @@ builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
     .Bind(builder.Configuration.GetSection("AdminAuth"))
+    .Configure<ApplicationDbContext>((opts, db) =>
+    {
+        try
+        {
+            db.Database.EnsureCreated();
+            var cred = db.AdminCredentials.FirstOrDefault();
+            if (cred != null)
+            {
+                opts.Username = cred.Username;
+                opts.Password = cred.Password;
+            }
+        }
+        catch (Exception)
+        {
+            // database might not be available yet
+        }
+    })
+    .PostConfigure<ApplicationDbContext>((opts, db) =>
+    {
+        if (string.IsNullOrWhiteSpace(opts.Username) || string.IsNullOrWhiteSpace(opts.Password))
+        {
+            opts.Username = string.IsNullOrWhiteSpace(opts.Username) ? "admin" : opts.Username;
+            opts.Password = string.IsNullOrWhiteSpace(opts.Password) ? "admin" : opts.Password;
+            try
+            {
+                db.Database.EnsureCreated();
+                if (!db.AdminCredentials.Any())
+                {
+                    db.AdminCredentials.Add(new AdminCredential { Username = opts.Username, Password = opts.Password });
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception)
+            {
+                // ignore if we cannot write to the database during startup
+            }
+        }
+    })
     .Validate(o =>
         !string.IsNullOrWhiteSpace(o.Username) &&
         !string.IsNullOrWhiteSpace(o.Password),
-        "Admin credentials required")
-    .ValidateOnStart();
+        "Admin credentials required");
 builder.Services.AddOptions<MyWebApp.Options.CaptchaOptions>()
     .Bind(builder.Configuration.GetSection("Captcha"));
 
