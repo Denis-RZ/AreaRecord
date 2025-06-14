@@ -15,6 +15,7 @@ namespace MyWebApp.Data
         public DbSet<Download> Downloads { get; set; }
         public DbSet<DownloadFile> DownloadFiles { get; set; }
         public DbSet<Page> Pages { get; set; }
+        public DbSet<AdminCredential> AdminCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
