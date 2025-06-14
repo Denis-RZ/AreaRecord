@@ -16,6 +16,8 @@ cd website
 dotnet restore MyWebApp.sln
 libman restore
 ```
+`libman restore` downloads client-side libraries, including the Quill editor
+used on the admin content pages.
 
 ## Configuring the Database Connection
 
