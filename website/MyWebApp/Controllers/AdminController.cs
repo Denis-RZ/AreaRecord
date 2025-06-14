@@ -258,7 +258,24 @@ namespace MyWebApp.Controllers
 
         public IActionResult Logs()
         {
-            // For demo purposes, logs are not implemented
+            var logPath = Path.Combine(_env.ContentRootPath, "Logs", "app.log");
+            string[] lines = Array.Empty<string>();
+            if (System.IO.File.Exists(logPath))
+            {
+                try
+                {
+                    lines = System.IO.File.ReadLines(logPath)
+                        .Reverse()
+                        .Take(200)
+                        .Reverse()
+                        .ToArray();
+                }
+                catch (IOException ex)
+                {
+                    _logger.LogError(ex, "Failed to read log file");
+                }
+            }
+            ViewBag.LogLines = lines;
             return View();
         }
 

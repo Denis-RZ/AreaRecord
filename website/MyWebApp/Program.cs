@@ -9,9 +9,14 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.Extensions.Options;
 using System.Linq;
 using System;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 var startupLogger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Startup");
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "Logs", "app.log")));
 
 // Allow connection string overrides from environment-specific files,
 // environment variables, and command-line arguments
