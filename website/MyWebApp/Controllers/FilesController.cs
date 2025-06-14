@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 using MyWebApp.Data;
 using MyWebApp.Filters;
 using MyWebApp.Models;
@@ -37,11 +39,20 @@ public class FilesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(DownloadFile file)
+    public async Task<IActionResult> Create(DownloadFile file, IFormFile? upload)
     {
         if (ModelState.IsValid)
         {
             file.Created = DateTime.UtcNow;
+            if (upload != null && upload.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await upload.CopyToAsync(ms);
+                file.Data = ms.ToArray();
+                file.ContentType = upload.ContentType;
+                if (string.IsNullOrEmpty(file.FileName))
+                    file.FileName = Path.GetFileName(upload.FileName);
+            }
             _context.DownloadFiles.Add(file);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -58,10 +69,19 @@ public class FilesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(DownloadFile file)
+    public async Task<IActionResult> Edit(DownloadFile file, IFormFile? upload)
     {
         if (ModelState.IsValid)
         {
+            if (upload != null && upload.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await upload.CopyToAsync(ms);
+                file.Data = ms.ToArray();
+                file.ContentType = upload.ContentType;
+                if (string.IsNullOrEmpty(file.FileName))
+                    file.FileName = Path.GetFileName(upload.FileName);
+            }
             _context.Update(file);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

@@ -46,7 +46,7 @@ public class FilesControllerTests
         using var ctx = CreateContext(out var conn);
         var controller = new FilesController(ctx, NullLogger<FilesController>.Instance);
         var file = new DownloadFile { FileName = "new.bin", Description = "x" };
-        var result = await controller.Create(file);
+        var result = await controller.Create(file, null);
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal(nameof(FilesController.Index), redirect.ActionName);
         Assert.Equal(1, ctx.DownloadFiles.Count());

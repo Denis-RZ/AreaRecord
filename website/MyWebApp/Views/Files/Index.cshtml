@@ -12,7 +12,7 @@
     {
         <tr>
             <td>@f.File.FileName</td>
-            <td>@f.File.Description</td>
+            <td>@Html.Raw(f.File.Description)</td>
             <td>@f.DownloadCount</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@f.File.Id">Edit</a> |
