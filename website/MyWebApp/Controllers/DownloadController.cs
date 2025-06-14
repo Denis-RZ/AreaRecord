@@ -3,6 +3,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 using MyWebApp.Services;
 using MyWebApp.Data;
 using MyWebApp.Models;
@@ -188,7 +190,22 @@ public class DownloadController : BaseController
             return RedirectToSetup(ex);
         }
         SetRateLimit(ip);
+        if (file.Data != null)
+        {
+            return File(file.Data, file.ContentType ?? "application/octet-stream", file.FileName);
+        }
         return Redirect("/files/" + file.FileName);
+    }
+
+    [HttpGet("File/{id}")]
+    public async Task<IActionResult> GetFile(int id)
+    {
+        var file = await Db.DownloadFiles.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
+        if (file == null || file.Data == null)
+        {
+            return NotFound();
+        }
+        return File(file.Data, file.ContentType ?? "application/octet-stream", file.FileName);
     }
 
     private bool ValidateUserAgent(string userAgent) => !string.IsNullOrWhiteSpace(userAgent);

@@ -4,15 +4,19 @@
     Layout = "../Admin/_AdminLayout";
 }
 <h2>Edit File</h2>
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
-    <div>
+    <div class="form-group">
         <label>File Name</label>
         <input asp-for="FileName" />
     </div>
-    <div>
+    <div class="form-group">
+        <label>Upload</label>
+        <input type="file" name="upload" />
+    </div>
+    <div class="form-group">
         <label>Description</label>
-        <input asp-for="Description" />
+        <textarea asp-for="Description"></textarea>
     </div>
     <button type="submit">Save</button>
 </form>

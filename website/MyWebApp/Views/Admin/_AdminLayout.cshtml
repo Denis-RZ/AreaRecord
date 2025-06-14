@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header class="site-header">
+    <header class="site-header admin-header">
         <div class="container-fluid nav-container">
             <a class="logo" asp-controller="Admin" asp-action="Index">Admin Panel</a>
             <nav class="site-nav">
@@ -22,12 +22,13 @@
                 <a asp-controller="Admin" asp-action="DbSettings">DB Settings</a>
                 <a asp-controller="Admin" asp-action="Logs">Logs</a>
                 <a asp-controller="Files" asp-action="Index">Files</a>
+                <a asp-controller="AdminContent" asp-action="Index">Pages</a>
                 <a asp-controller="Account" asp-action="Logout">Logout</a>
             </nav>
         </div>
     </header>
-    <div class="container">
+    <main class="admin-main container">
         @RenderBody()
-    </div>
+    </main>
 </body>
 </html>

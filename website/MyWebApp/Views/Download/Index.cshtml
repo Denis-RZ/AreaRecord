@@ -12,7 +12,7 @@
     <select name="fileId">
         @foreach (var f in Model)
         {
-            <option value="@f.Id">@f.FileName - @f.Description</option>
+            <option value="@f.Id">@f.FileName - @Html.Raw(f.Description)</option>
         }
     </select>
     <button class="download-btn" type="submit" id="download-btn" disabled>Download</button>

@@ -1,0 +1,12 @@
+@model MyWebApp.Models.Page
+@{
+    ViewData["Title"] = "Delete Page";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Delete Page</h2>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <p>Are you sure you want to delete <strong>@Model.Title</strong>?</p>
+    <button type="submit">Delete</button>
+    <a asp-action="Index">Cancel</a>
+</form>

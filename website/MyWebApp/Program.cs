@@ -8,10 +8,16 @@ using MyWebApp.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.Extensions.Options;
 using System.Linq;
+using System.Collections.Generic;
 using System;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 var startupLogger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Startup");
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(builder.Environment.ContentRootPath, "Logs", "app.log")));
 
 // Allow connection string overrides from environment-specific files,
 // environment variables, and command-line arguments
@@ -162,6 +168,8 @@ using (var scope = app.Services.CreateScope())
         {
             db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
             db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+
+            UpgradeDownloadFilesTable(db);
         }
         if (db.Database.CanConnect())
         {
@@ -209,3 +217,33 @@ app.MapControllerRoute(
     defaults: new { controller = "Pages", action = "Show" });
 
 app.Run();
+
+static void UpgradeDownloadFilesTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA table_info('DownloadFiles')";
+        using var reader = cmd.ExecuteReader();
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        while (reader.Read())
+        {
+            columns.Add(reader.GetString(1));
+        }
+        if (!columns.Contains("ContentType"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE DownloadFiles ADD COLUMN ContentType TEXT");
+        }
+        if (!columns.Contains("Data"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE DownloadFiles ADD COLUMN Data BLOB");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}

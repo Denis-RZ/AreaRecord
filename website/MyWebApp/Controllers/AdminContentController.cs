@@ -67,4 +67,28 @@ public class AdminContentController : Controller
         _layout.Reset();
         return RedirectToAction(nameof(Index));
     }
+
+    public async Task<IActionResult> Delete(int id)
+    {
+        var page = await _db.Pages.FindAsync(id);
+        if (page == null)
+        {
+            return NotFound();
+        }
+        return View(page);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var page = await _db.Pages.FindAsync(id);
+        if (page != null)
+        {
+            _db.Pages.Remove(page);
+            await _db.SaveChangesAsync();
+            _layout.Reset();
+        }
+        return RedirectToAction(nameof(Index));
+    }
 }
