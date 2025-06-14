@@ -103,7 +103,7 @@ builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>((sp, options) 
             break;
     }
     options.AddInterceptors(sp.GetRequiredService<QueryLoggingInterceptor>());
-});
+}, optionsLifetime: ServiceLifetime.Singleton);
 builder.Services.AddDbContextFactory<MyWebApp.Data.ApplicationDbContext>((sp, options) =>
 {
     switch (provider.ToLowerInvariant())
