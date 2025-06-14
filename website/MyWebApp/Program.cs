@@ -6,6 +6,7 @@ using MyWebApp.Services;
 using MyWebApp.Options;
 using MyWebApp.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Microsoft.Extensions.Options;
 using System.Linq;
 using System;
 
@@ -103,6 +104,29 @@ builder.Services.AddDbContext<MyWebApp.Data.ApplicationDbContext>((sp, options) 
     }
     options.AddInterceptors(sp.GetRequiredService<QueryLoggingInterceptor>());
 });
+builder.Services.AddDbContextFactory<MyWebApp.Data.ApplicationDbContext>((sp, options) =>
+{
+    switch (provider.ToLowerInvariant())
+    {
+        case "postgresql":
+        case "npgsql":
+            options.UseNpgsql(connectionString, npgsql =>
+            {
+                npgsql.EnableRetryOnFailure();
+                npgsql.CommandTimeout(60);
+            });
+            break;
+        case "sqlite":
+            options.UseSqlite(connectionString);
+            break;
+        default:
+            options.UseSqlServer(connectionString, sql =>
+                sql.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null)
+                   .CommandTimeout(60));
+            break;
+    }
+    options.AddInterceptors(sp.GetRequiredService<QueryLoggingInterceptor>());
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
@@ -112,48 +136,12 @@ builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
     .Bind(builder.Configuration.GetSection("AdminAuth"))
-    .Configure<ApplicationDbContext>((opts, db) =>
-    {
-        try
-        {
-            db.Database.EnsureCreated();
-            var cred = db.AdminCredentials.FirstOrDefault();
-            if (cred != null)
-            {
-                opts.Username = cred.Username;
-                opts.Password = cred.Password;
-            }
-        }
-        catch (Exception)
-        {
-            // database might not be available yet
-        }
-    })
-    .PostConfigure<ApplicationDbContext>((opts, db) =>
-    {
-        if (string.IsNullOrWhiteSpace(opts.Username) || string.IsNullOrWhiteSpace(opts.Password))
-        {
-            opts.Username = string.IsNullOrWhiteSpace(opts.Username) ? "admin" : opts.Username;
-            opts.Password = string.IsNullOrWhiteSpace(opts.Password) ? "admin" : opts.Password;
-            try
-            {
-                db.Database.EnsureCreated();
-                if (!db.AdminCredentials.Any())
-                {
-                    db.AdminCredentials.Add(new AdminCredential { Username = opts.Username, Password = opts.Password });
-                    db.SaveChanges();
-                }
-            }
-            catch (Exception)
-            {
-                // ignore if we cannot write to the database during startup
-            }
-        }
-    })
     .Validate(o =>
         !string.IsNullOrWhiteSpace(o.Username) &&
         !string.IsNullOrWhiteSpace(o.Password),
         "Admin credentials required");
+builder.Services.AddSingleton<IConfigureOptions<AdminAuthOptions>, AdminAuthOptionsSetup>();
+builder.Services.AddSingleton<IPostConfigureOptions<AdminAuthOptions>, AdminAuthOptionsSetup>();
 builder.Services.AddOptions<MyWebApp.Options.CaptchaOptions>()
     .Bind(builder.Configuration.GetSection("Captcha"));
 
