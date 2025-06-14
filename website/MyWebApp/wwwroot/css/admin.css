@@ -53,14 +53,14 @@ form input[type="text"], form input[type="file"], form textarea {
 button {
     padding: 0.5rem 1rem;
     border: none;
-    background: #0078d4;
+    background: var(--accent);
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background: #005aa0;
+    background: var(--accent-hover);
 }
 .log-box {
     background: #111;
