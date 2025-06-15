@@ -9,15 +9,16 @@ The repository now separates the codebase into two main parts:
 
 ## Restoring Dependencies
 
-After cloning the repository, restore the required packages for the website:
+After cloning the repository, execute the setup script to restore all
+dependencies:
 
 ```bash
-cd website
-dotnet restore MyWebApp.sln
-libman restore
+./setup.sh
+# On Windows you can run ./setup.ps1 instead
 ```
-`libman restore` downloads client-side libraries, including the Quill editor
-used on the admin content pages.
+The script runs `dotnet restore website/MyWebApp.sln` followed by
+`libman restore` in `website/MyWebApp` to download the client-side
+libraries, including the Quill editor used on the admin content pages.
 
 ## Configuring the Database Connection
 
