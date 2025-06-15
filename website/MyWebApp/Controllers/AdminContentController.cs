@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using MyWebApp.Data;
 using MyWebApp.Filters;
 using MyWebApp.Models;
@@ -38,6 +39,10 @@ public class AdminContentController : Controller
         {
             return View(model);
         }
+        if (model.IsPublished && model.PublishDate == null)
+        {
+            model.PublishDate = DateTime.UtcNow;
+        }
         _db.Pages.Add(model);
         await _db.SaveChangesAsync();
         _layout.Reset();
@@ -61,6 +66,10 @@ public class AdminContentController : Controller
         if (!ModelState.IsValid)
         {
             return View(model);
+        }
+        if (model.IsPublished && model.PublishDate == null)
+        {
+            model.PublishDate = DateTime.UtcNow;
         }
         _db.Update(model);
         await _db.SaveChangesAsync();

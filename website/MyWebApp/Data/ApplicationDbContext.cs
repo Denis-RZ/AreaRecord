@@ -17,6 +17,7 @@ namespace MyWebApp.Data
         public DbSet<Page> Pages { get; set; }
         public DbSet<PageSection> PageSections { get; set; }
         public DbSet<AdminCredential> AdminCredentials { get; set; }
+        public DbSet<Media> MediaItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +34,8 @@ namespace MyWebApp.Data
                 .HasIndex(d => new { d.IsSuccessful, d.DownloadTime });
             modelBuilder.Entity<DownloadFile>()
                 .HasIndex(f => f.FileName);
+            modelBuilder.Entity<Media>()
+                .HasIndex(m => m.FileName);
             modelBuilder.Entity<Recording>()
                 .HasIndex(r => r.Created);
 
