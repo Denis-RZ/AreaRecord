@@ -7,7 +7,7 @@
 <p><a asp-action="Create">Create New</a></p>
 <table>
     <thead>
-        <tr><th>Slug</th><th>Title</th><th colspan="2"></th></tr>
+        <tr><th>Slug</th><th>Title</th><th>Status</th><th colspan="2"></th></tr>
     </thead>
     <tbody>
 @foreach (var p in Model)
@@ -15,6 +15,7 @@
     <tr>
         <td>@p.Slug</td>
         <td>@p.Title</td>
+        <td>@(p.IsPublished ? "Published" : "Draft")</td>
         <td><a asp-action="Edit" asp-route-id="@p.Id">Edit</a></td>
         <td><a asp-action="Delete" asp-route-id="@p.Id">Delete</a></td>
     </tr>

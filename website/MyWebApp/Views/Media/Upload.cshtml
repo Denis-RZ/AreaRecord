@@ -1,0 +1,17 @@
+@model MyWebApp.Models.Media
+@{
+    ViewData["Title"] = "Upload Media";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Upload Media</h2>
+<form asp-action="Upload" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label>File</label>
+        <input type="file" name="file" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="AltText"></label>
+        <input asp-for="AltText" />
+    </div>
+    <button type="submit">Upload</button>
+</form>
