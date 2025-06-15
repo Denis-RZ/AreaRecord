@@ -171,6 +171,7 @@ using (var scope = app.Services.CreateScope())
 
                 UpgradeDownloadFilesTable(db);
                 UpgradePageSectionsTable(db);
+                UpgradePagesTable(db);
             }
         if (db.Database.CanConnect())
         {
@@ -272,6 +273,64 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
             db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, Html) VALUES
                 (1, 1, 'header', '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
                 (2, 1, 'footer', '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradePagesTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA table_info('Pages')";
+        using var reader = cmd.ExecuteReader();
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        while (reader.Read())
+        {
+            columns.Add(reader.GetString(1));
+        }
+        if (!columns.Contains("MetaDescription"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN MetaDescription TEXT");
+        }
+        if (!columns.Contains("MetaKeywords"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN MetaKeywords TEXT");
+        }
+        if (!columns.Contains("OgTitle"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN OgTitle TEXT");
+        }
+        if (!columns.Contains("OgDescription"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN OgDescription TEXT");
+        }
+        if (!columns.Contains("IsPublished"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN IsPublished INTEGER NOT NULL DEFAULT 0");
+        }
+        if (!columns.Contains("PublishDate"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN PublishDate TEXT");
+        }
+        if (!columns.Contains("Category"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN Category TEXT");
+        }
+        if (!columns.Contains("Tags"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN Tags TEXT");
+        }
+        if (!columns.Contains("FeaturedImage"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN FeaturedImage TEXT");
         }
     }
     catch (Exception ex)
