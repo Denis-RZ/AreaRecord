@@ -193,6 +193,30 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Verify Quill client library is present
+var quillPath = Path.Combine(app.Environment.WebRootPath ?? "wwwroot",
+    "lib", "quill", "dist", "quill.js");
+if (!File.Exists(quillPath))
+{
+    app.Logger.LogWarning("Missing Quill library at {Path}", quillPath);
+    try
+    {
+        var dir = Path.GetDirectoryName(quillPath);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        using var http = new HttpClient();
+        var data = http.GetByteArrayAsync(
+            "https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js").GetAwaiter().GetResult();
+        File.WriteAllBytes(quillPath, data);
+        app.Logger.LogInformation("Downloaded Quill library from CDN");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Failed to download Quill library");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
