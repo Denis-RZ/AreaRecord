@@ -1,0 +1,17 @@
+@model MyWebApp.Models.PageSection
+@{
+    var index = ViewData["Index"]?.ToString() ?? "0";
+}
+<div class="section-editor" draggable="true">
+    <input type="hidden" name="Sections[@index].Id" value="@Model.Id" />
+    <div>
+        <label>Area</label>
+        <input type="text" name="Sections[@index].Area" value="@Model.Area" />
+    </div>
+    <div>
+        <label>Html</label>
+        <textarea name="Sections[@index].Html">@Model.Html</textarea>
+    </div>
+    <button type="button" class="duplicate-section">Duplicate Section</button>
+    <button type="button" class="remove-section">Remove Section</button>
+</div>

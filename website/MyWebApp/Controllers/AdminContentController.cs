@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using MyWebApp.Data;
+using System.Collections.Generic;
 using MyWebApp.Filters;
 using MyWebApp.Models;
 using MyWebApp.Services;
@@ -30,7 +31,8 @@ public class AdminContentController : Controller
 
     public IActionResult Create()
     {
-        return View(new Page());
+        ViewBag.Sections = new List<PageSection>();
+        return View("PageEditor", new Page());
     }
 
     [HttpPost]
@@ -39,7 +41,8 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View(model);
+            ViewBag.Sections = new List<PageSection>();
+            return View("PageEditor", model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
@@ -61,7 +64,12 @@ public class AdminContentController : Controller
         {
             return NotFound();
         }
-        return View(page);
+        var sections = await _db.PageSections.AsNoTracking()
+            .Where(s => s.PageId == id)
+            .OrderBy(s => s.Id)
+            .ToListAsync();
+        ViewBag.Sections = sections;
+        return View("PageEditor", page);
     }
 
     [HttpPost]
@@ -70,7 +78,12 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View(model);
+            var sections = await _db.PageSections.AsNoTracking()
+                .Where(s => s.PageId == model.Id)
+                .OrderBy(s => s.Id)
+                .ToListAsync();
+            ViewBag.Sections = sections;
+            return View("PageEditor", model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
