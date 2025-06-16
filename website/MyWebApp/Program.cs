@@ -337,21 +337,9 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
             {
                 columns.Add(reader.GetString(1));
             }
-            if (!columns.Contains("Type"))
-            {
-                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN Type INTEGER NOT NULL DEFAULT 0");
-            }
-        }
-        else
-        {
-            cmd.CommandText = "PRAGMA table_info('PageSections')";
-            using var reader = cmd.ExecuteReader();
-            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            while (reader.Read())
-            {
-                columns.Add(reader.GetString(1));
-            }
             reader.Close();
+            if (!columns.Contains("Type"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN Type INTEGER NOT NULL DEFAULT 0");
             if (!columns.Contains("StartDate"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN StartDate TEXT");
             if (!columns.Contains("EndDate"))
