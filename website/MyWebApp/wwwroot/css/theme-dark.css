@@ -1,0 +1,23 @@
+:root {
+    --bg-dark: #121212;
+    --bg-secondary: #1e1e1e;
+    --text-light: #e0e0e0;
+    --text-muted: #bbb;
+    --accent: #0078d4;
+    --accent-hover: #005aa0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+}
+
+.admin-header {
+    background: var(--bg-secondary);
+    color: var(--text-light);
+}
+
+.admin-main .card {
+    background: var(--bg-secondary);
+    color: var(--text-light);
+}
