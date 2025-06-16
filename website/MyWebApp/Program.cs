@@ -175,6 +175,7 @@ using (var scope = app.Services.CreateScope())
                 UpgradeDownloadFilesTable(db);
                 UpgradePageSectionsTable(db);
                 UpgradePagesTable(db);
+                UpgradeMediaItemsTable(db);
             }
         if (db.Database.CanConnect())
         {
@@ -362,6 +363,36 @@ static void UpgradePagesTable(ApplicationDbContext db)
         if (!columns.Contains("FeaturedImage"))
         {
             db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN FeaturedImage TEXT");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradeMediaItemsTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='MediaItems'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE MediaItems (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                FileName TEXT NOT NULL,
+                FilePath TEXT NOT NULL,
+                ContentType TEXT,
+                Size INTEGER NOT NULL,
+                AltText TEXT,
+                Uploaded TEXT NOT NULL
+            )");
+            db.Database.ExecuteSqlRaw("CREATE INDEX IX_MediaItems_FileName ON MediaItems(FileName)");
         }
     }
     catch (Exception ex)
