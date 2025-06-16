@@ -1255,3 +1255,9 @@ form.mb-3 {
 .admin-main .table tr:has(td:contains("Failed")) {
     border-left: 4px solid var(--error-500);
 }
+
+.layout-thumb {
+    max-width: 200px;
+    margin-top: 0.5rem;
+    display: block;
+}

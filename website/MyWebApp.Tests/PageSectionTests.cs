@@ -18,10 +18,12 @@ public class PageSectionTests
         using (var context = new ApplicationDbContext(options))
         {
             context.Database.EnsureCreated();
-            var page = new Page { Slug = "test", Title = "Test" };
+            var page = new Page { Slug = "test", Title = "Test", Layout = "single-column" };
             context.Pages.Add(page);
             context.SaveChanges();
+ 
             context.PageSections.Add(new PageSection { PageId = page.Id, Area = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
+ 
             context.SaveChanges();
         }
 

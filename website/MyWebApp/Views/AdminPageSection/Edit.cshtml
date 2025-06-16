@@ -3,6 +3,7 @@
     ViewData["Title"] = "Edit Section";
     Layout = "../Admin/_AdminLayout";
     var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
+    var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
 }
 <h2>Edit Section</h2>
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
@@ -15,6 +16,8 @@
         <label>Area</label>
         <input asp-for="Area" />
     </div>
+ 
     @await Html.PartialAsync("_SectionEditor", Model)
+ 
     <button type="submit">Save</button>
 </form>

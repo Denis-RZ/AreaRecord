@@ -2,11 +2,20 @@
 @{
     ViewData["Title"] = "Create Page";
     Layout = "../Admin/_AdminLayout";
+    var templates = ViewBag.Templates as List<MyWebApp.Models.BlockTemplate>;
 }
 <h2>Create Page</h2>
 <form asp-action="Create" method="post">
     <div><label>Slug</label><input asp-for="Slug" /></div>
     <div><label>Title</label><input asp-for="Title" /></div>
+    <div>
+        <label asp-for="Layout"></label>
+        <select asp-for="Layout" id="layout-select">
+            <option value="single-column">Single Column</option>
+            <option value="two-column-sidebar">Two Column Sidebar</option>
+        </select>
+        <img id="layout-preview" class="layout-thumb" src="~/img/layout-single-column.svg" />
+    </div>
     <div><label asp-for="MetaDescription"></label><input asp-for="MetaDescription" /></div>
     <div><label asp-for="MetaKeywords"></label><input asp-for="MetaKeywords" /></div>
     <div><label asp-for="OgTitle"></label><input asp-for="OgTitle" /></div>
@@ -27,6 +36,17 @@
         <input type="hidden" asp-for="BodyHtml" />
     </div>
     <div>
+        <label>Insert Block</label>
+        <select id="template-select">
+            <option value="">--select--</option>
+            @foreach (var t in templates)
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        </select>
+        <button type="button" id="insert-template">Insert</button>
+    </div>
+    <div>
         <label>Footer</label>
         <div id="footer-editor" class="quill-editor"></div>
         <input type="hidden" asp-for="FooterHtml" />
@@ -45,4 +65,13 @@
         document.getElementById('BodyHtml').value = bodyQuill.root.innerHTML;
         document.getElementById('FooterHtml').value = footerQuill.root.innerHTML;
     });
+ 
+    const layoutSelect = document.getElementById('layout-select');
+    const preview = document.getElementById('layout-preview');
+    function updatePreview() {
+        preview.src = `/img/layout-${layoutSelect.value}.svg`;
+    }
+    layoutSelect.addEventListener('change', updatePreview);
+    updatePreview();
+ 
 </script>

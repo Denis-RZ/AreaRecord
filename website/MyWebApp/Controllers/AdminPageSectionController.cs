@@ -25,18 +25,23 @@ public class AdminPageSectionController : Controller
         _sanitizer = sanitizer;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? q)
     {
-        var sections = await _db.PageSections.AsNoTracking()
-            .Include(s => s.Page)
-            .OrderBy(s => s.Page.Slug).ThenBy(s => s.Area)
-            .ToListAsync();
+        var query = _db.PageSections.AsNoTracking().Include(s => s.Page).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            q = q.ToLowerInvariant();
+            query = query.Where(s => s.Area.ToLower().Contains(q) || s.Html.ToLower().Contains(q) || s.Page.Slug.ToLower().Contains(q));
+        }
+        var sections = await query.OrderBy(s => s.Page.Slug).ThenBy(s => s.Area).ToListAsync();
+        ViewBag.Query = q;
         return View(sections);
     }
 
     private async Task LoadPagesAsync()
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
+        ViewBag.Permissions = await _db.Permissions.AsNoTracking().OrderBy(p => p.Name).ToListAsync();
     }
 
     public async Task<IActionResult> Create()

@@ -40,8 +40,27 @@ public class PagesController : BaseController
         {
             footer = await _layout.GetFooterAsync(Db);
         }
+
+        var layoutName = string.IsNullOrWhiteSpace(page.Layout) ? "single-column" : page.Layout;
+        if (!LayoutService.LayoutZones.TryGetValue(layoutName, out var zones))
+        {
+            zones = LayoutService.LayoutZones["single-column"];
+        }
+        var zoneHtml = new Dictionary<string, string>();
+        foreach (var z in zones)
+        {
+            var html = await _layout.GetSectionAsync(Db, page.Id, z);
+            if (z == "main")
+            {
+                html = page.BodyHtml + html;
+            }
+            zoneHtml[z] = html;
+        }
+
         ViewBag.HeaderHtml = header;
         ViewBag.FooterHtml = footer;
+        ViewBag.PageLayout = layoutName;
+        ViewBag.ZoneHtml = zoneHtml;
         return View(page);
     }
 }
