@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace MyWebApp.Controllers;
 
@@ -29,6 +30,11 @@ public abstract class BaseController : Controller
         }
     }
 
+    protected bool IsAdmin()
+    {
+        return HttpContext.Session.GetString("IsAdmin") == "true";
+    }
+
     protected IActionResult RedirectToSetup(Exception? ex = null)
     {
         if (ex != null)
@@ -40,6 +46,13 @@ public abstract class BaseController : Controller
         {
             TempData["DbError"] = "Database connection failed";
         }
-        return RedirectToAction("Index", "Setup");
+
+        if (IsAdmin())
+        {
+            return RedirectToAction("Index", "Setup");
+        }
+
+        var returnUrl = Url.Action("Index", "Setup");
+        return RedirectToAction("Login", "Account", new { returnUrl });
     }
 }

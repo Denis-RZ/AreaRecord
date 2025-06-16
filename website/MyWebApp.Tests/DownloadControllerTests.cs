@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using MyWebApp.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 using MyWebApp.Controllers;
 using MyWebApp.Data;
@@ -18,15 +16,6 @@ using Xunit;
 
 public class DownloadControllerTests
 {
-    private class FakeHttpClientFactory : IHttpClientFactory
-    {
-        public HttpClient CreateClient(string name) => new HttpClient(new HttpMessageHandlerStub());
-    }
-    private class HttpMessageHandlerStub : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent("{}") });
-    }
 
     private static (DownloadController controller, ApplicationDbContext ctx) Create(out SqliteConnection conn)
     {
@@ -39,10 +28,17 @@ public class DownloadControllerTests
         ctx.Database.EnsureCreated();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
-        var captcha = Microsoft.Extensions.Options.Options.Create(new MyWebApp.Options.CaptchaOptions { SiteKey = "k" });
-        var controller = new DownloadController(ctx, NullLogger<DownloadController>.Instance, memory, cache, new FakeHttpClientFactory(), captcha);
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { Session = new DummySession() } };
+        var accessor = new TestAccessor();
+        var captchaService = new CaptchaService(accessor);
+        var controller = new DownloadController(ctx, NullLogger<DownloadController>.Instance, memory, cache, captchaService);
+        accessor.HttpContext = new DefaultHttpContext { Session = new DummySession() };
+        controller.ControllerContext = new ControllerContext { HttpContext = accessor.HttpContext };
         return (controller, ctx);
+    }
+
+    private class TestAccessor : IHttpContextAccessor
+    {
+        public HttpContext? HttpContext { get; set; }
     }
 
     private class DummySession : ISession
@@ -83,7 +79,7 @@ public class DownloadControllerTests
         var ctx = tuple.ctx;
         ctx.DownloadFiles.Add(new DownloadFile { Id = 1, FileName = "f", Description = "d", Created = DateTime.UtcNow });
         ctx.SaveChanges();
-        var result = await controller.Index("token", 999);
+        var result = await controller.Index("code", 999);
         var view = Assert.IsType<ViewResult>(result);
         Assert.False(controller.ModelState.IsValid);
         var list = Assert.IsAssignableFrom<IEnumerable<DownloadFile>>(view.Model);

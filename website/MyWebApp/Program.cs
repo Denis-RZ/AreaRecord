@@ -138,10 +138,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
+builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
     .Bind(builder.Configuration.GetSection("AdminAuth"))
@@ -151,8 +153,6 @@ builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
         "Admin credentials required");
 builder.Services.AddSingleton<IConfigureOptions<AdminAuthOptions>, AdminAuthOptionsSetup>();
 builder.Services.AddSingleton<IPostConfigureOptions<AdminAuthOptions>, AdminAuthOptionsSetup>();
-builder.Services.AddOptions<MyWebApp.Options.CaptchaOptions>()
-    .Bind(builder.Configuration.GetSection("Captcha"));
 
 var app = builder.Build();
 

@@ -11,6 +11,8 @@ using Xunit;
 using MyWebApp.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 class FakeEnv : IWebHostEnvironment
 {
@@ -38,11 +40,14 @@ public class SetupControllerTests
         var env = new FakeEnv();
         var validator = new SchemaValidator(context);
         var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env, validator);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { Session = new DummySession() } };
+        controller.HttpContext.Session.SetString("IsAdmin", "true");
 
         var result = controller.Index();
 
-        var viewResult = Assert.IsType<ViewResult>(result);
-        Assert.IsType<SetupViewModel>(viewResult.Model);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal("Home", redirect.ControllerName);
     }
 
     [Fact]
@@ -54,6 +59,8 @@ public class SetupControllerTests
         var env = new FakeEnv();
         var validator = new SchemaValidator(context);
         var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env, validator);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { Session = new DummySession() } };
+        controller.HttpContext.Session.SetString("IsAdmin", "true");
 
         var result = controller.Index();
 
@@ -75,10 +82,13 @@ public class SetupControllerTests
         var config = new ConfigurationBuilder().Build();
         var env = new FakeEnv();
         var validator = new SchemaValidator(context);
+        var httpContext = new DefaultHttpContext { Session = new DummySession() };
         var controller = new SetupController(context, config, NullLogger<SetupController>.Instance, env, validator)
         {
-            TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(new DefaultHttpContext(), new FakeTempProvider())
+            TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(httpContext, new FakeTempProvider()),
+            ControllerContext = new ControllerContext { HttpContext = httpContext }
         };
+        controller.HttpContext.Session.SetString("IsAdmin", "true");
         var result = controller.Seed();
         Assert.IsType<RedirectToActionResult>(result);
         Assert.NotEmpty(context.Recordings);
@@ -89,5 +99,19 @@ public class SetupControllerTests
     {
         public IDictionary<string, object?> LoadTempData(HttpContext context) => new Dictionary<string, object?>();
         public void SaveTempData(HttpContext context, IDictionary<string, object?> values) { }
+    }
+
+    private class DummySession : ISession
+    {
+        private Dictionary<string, byte[]> _store = new();
+        public bool IsAvailable => true;
+        public string Id { get; } = Guid.NewGuid().ToString();
+        public IEnumerable<string> Keys => _store.Keys;
+        public void Clear() => _store.Clear();
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Remove(string key) => _store.Remove(key);
+        public void Set(string key, byte[] value) => _store[key] = value;
+        public bool TryGetValue(string key, out byte[] value) => _store.TryGetValue(key, out value);
     }
 }

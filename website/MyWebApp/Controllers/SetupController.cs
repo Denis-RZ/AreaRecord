@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using MyWebApp.Services;
 using System.Data.Common;
+using Microsoft.AspNetCore.Http;
 
 namespace MyWebApp.Controllers;
 
@@ -26,6 +27,18 @@ public class SetupController : BaseController
 
     public IActionResult Index()
     {
+        if (CheckDatabase())
+        {
+            // database is available, no need for setup
+            return RedirectToAction("Index", "Home");
+        }
+
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+
         var error = TempData != null ? TempData["DbError"]?.ToString() : null;
         var result = TempData != null ? TempData["SetupResult"]?.ToString() : null;
         var connection = _config.GetConnectionString("DefaultConnection") ?? string.Empty;
@@ -52,6 +65,12 @@ public class SetupController : BaseController
     [HttpPost]
     public IActionResult UseSqlite()
     {
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+
         if (_config is IConfigurationRoot root)
         {
             foreach (var provider in root.Providers)
@@ -68,6 +87,12 @@ public class SetupController : BaseController
     [HttpPost]
     public IActionResult Test(string provider, string server, string database, string username, string password)
     {
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+
         var connectionString = ConnectionHelper.BuildConnectionString(provider, server, database, username, password);
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         switch (provider.ToLowerInvariant())
@@ -108,6 +133,12 @@ public class SetupController : BaseController
     [HttpPost]
     public IActionResult Save(string provider, string server, string database, string username, string password)
     {
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+
         try
         {
             var connectionString = ConnectionHelper.BuildConnectionString(provider, server, database, username, password);
@@ -170,6 +201,12 @@ public class SetupController : BaseController
     [HttpPost]
     public IActionResult Seed()
     {
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+
         if (!CheckDatabase())
         {
             return RedirectToSetup();
@@ -201,5 +238,13 @@ public class SetupController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Import() => View();
+    public IActionResult Import()
+    {
+        if (HttpContext.Session.GetString("IsAdmin") != "true")
+        {
+            var returnUrl = Url.Action(nameof(Index));
+            return RedirectToAction("Login", "Account", new { returnUrl });
+        }
+        return View();
+    }
 }

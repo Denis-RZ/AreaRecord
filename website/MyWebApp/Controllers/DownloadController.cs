@@ -1,15 +1,11 @@
-using System.Net.Http;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
-using System.IO;
 using MyWebApp.Services;
 using MyWebApp.Data;
 using MyWebApp.Models;
-using Microsoft.Extensions.Options;
-using MyWebApp.Options;
+
 
 namespace MyWebApp.Controllers;
 
@@ -18,22 +14,19 @@ public class DownloadController : BaseController
     private readonly ILogger<DownloadController> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly CacheService _cache;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly CaptchaOptions _captchaOptions;
+    private readonly CaptchaService _captchaService;
 
     public DownloadController(ApplicationDbContext context,
         ILogger<DownloadController> logger,
         IMemoryCache memoryCache,
         CacheService cache,
-        IHttpClientFactory httpClientFactory,
-        IOptions<CaptchaOptions> captchaOptions)
+        CaptchaService captchaService)
         : base(context, logger)
     {
         _logger = logger;
         _memoryCache = memoryCache;
         _cache = cache;
-        _httpClientFactory = httpClientFactory;
-        _captchaOptions = captchaOptions.Value;
+        _captchaService = captchaService;
     }
 
     [HttpGet]
@@ -48,14 +41,15 @@ public class DownloadController : BaseController
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
         });
-        ViewBag.SiteKey = _captchaOptions.SiteKey;
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
         return View(files);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(string token, int fileId)
+    public async Task<IActionResult> Index(string captcha, int fileId)
     {
         if (!CheckDatabase())
         {
@@ -75,7 +69,8 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _captchaOptions.SiteKey;
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             var files = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(files);
         }
@@ -113,7 +108,8 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _captchaOptions.SiteKey;
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             var filesFail = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesFail);
         }
@@ -141,12 +137,13 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _captchaOptions.SiteKey;
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             var filesRate = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesRate);
         }
 
-        if (!await VerifyCaptchaAsync(token, ip))
+        if (!_captchaService.Validate(captcha))
         {
             _logger.LogInformation("Captcha failed for {IP}", ip);
             ModelState.AddModelError(string.Empty, "CAPTCHA validation failed.");
@@ -169,7 +166,8 @@ public class DownloadController : BaseController
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
                 return await Db.Downloads.AsNoTracking().CountAsync(d => d.IsSuccessful);
             });
-            ViewBag.SiteKey = _captchaOptions.SiteKey;
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             var filesCaptcha = await Db.DownloadFiles.AsNoTracking().ToListAsync();
             return View(filesCaptcha);
         }
@@ -228,42 +226,4 @@ public class DownloadController : BaseController
         _memoryCache.Set(ip, true, options);
     }
 
-    private async Task<bool> VerifyCaptchaAsync(string token, string ip)
-    {
-        var secret = _captchaOptions.SecretKey;
-        var verifyUrl = _captchaOptions.VerifyUrl;
-        if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(verifyUrl))
-        {
-            _logger.LogWarning("Captcha secret or verify url not configured");
-            return false;
-        }
-
-        var client = _httpClientFactory.CreateClient();
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            { "secret", secret },
-            { "response", token },
-            { "remoteip", ip }
-        });
-
-        try
-        {
-            var response = await client.PostAsync(verifyUrl, content);
-            var json = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("success", out var success) && success.GetBoolean())
-            {
-                return true;
-            }
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Captcha HTTP request failed");
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Captcha verification JSON parse failed");
-        }
-        return false;
-    }
 }

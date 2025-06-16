@@ -89,6 +89,40 @@ body {
     margin-top: 1rem;
 }
 
+.download-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.download-list li {
+    margin-bottom: 0.5rem;
+}
+
+.download-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.download-info {
+    margin-right: 1rem;
+}
+
+.captcha-img {
+    vertical-align: middle;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    border: 1px solid #333;
+}
+
+.download-form input[type="text"] {
+    margin-right: 0.5rem;
+}
+
 .features {
     max-width: 900px;
     margin: 2rem auto;
