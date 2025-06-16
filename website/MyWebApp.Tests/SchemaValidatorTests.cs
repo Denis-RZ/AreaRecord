@@ -25,7 +25,15 @@ public class SchemaValidatorTests
         public NoIndexContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // intentionally omit indexes and column types
+            base.OnModelCreating(modelBuilder);
+            // remove indexes to simulate missing ones
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var index in entity.GetIndexes().ToList())
+                {
+                    entity.RemoveIndex(index);
+                }
+            }
         }
     }
 

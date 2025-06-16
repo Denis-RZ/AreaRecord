@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Mvc;
-using MyWebApp.Controllers;
+using MyWebApp.Controllers.Admin;
 using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
@@ -30,7 +30,7 @@ public class SanitizationTests
     public async Task CreatePage_SanitizesHtml()
     {
         var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminContentController(ctx, layout, sanitizer);
+        var controller = new PagesController(ctx, layout, sanitizer);
         var model = new Page
         {
             Slug = "test",
@@ -51,10 +51,10 @@ public class SanitizationTests
     public async Task CreateSection_SanitizesHtml()
     {
         var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var controller = new PagesController(ctx, layout, sanitizer);
         var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>" };
-        var result = await controller.Create(model);
-        Assert.IsType<RedirectToActionResult>(result);
+        var result = await controller.AddSection(model);
+        Assert.IsType<JsonResult>(result);
         var section = ctx.PageSections.First();
         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
     }
@@ -63,7 +63,7 @@ public class SanitizationTests
     public async Task EditPage_SanitizesHtml()
     {
         var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminContentController(ctx, layout, sanitizer);
+        var controller = new PagesController(ctx, layout, sanitizer);
         var page = ctx.Pages.First();
         page.HeaderHtml = "<script>alert(1)</script><p>h</p>";
         page.BodyHtml = "<p>b</p><script>alert(2)</script>";
