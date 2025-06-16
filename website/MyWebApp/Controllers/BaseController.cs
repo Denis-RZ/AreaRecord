@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MyWebApp.Data;
 using Microsoft.AspNetCore.Http;
+using System;
 
 namespace MyWebApp.Controllers;
 
@@ -30,9 +31,15 @@ public abstract class BaseController : Controller
         }
     }
 
+    protected bool HasRole(string role)
+    {
+        var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
+        return roles.Contains(role);
+    }
+
     protected bool IsAdmin()
     {
-        return HttpContext.Session.GetString("IsAdmin") == "true";
+        return HasRole("Admin");
     }
 
     protected IActionResult RedirectToSetup(Exception? ex = null)

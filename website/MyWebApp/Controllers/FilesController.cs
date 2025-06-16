@@ -8,7 +8,7 @@ using MyWebApp.Models;
 
 namespace MyWebApp.Controllers;
 
-[BasicAuth]
+[RoleAuthorize("Admin")]
 public class FilesController : Controller
 {
     private readonly ApplicationDbContext _context;

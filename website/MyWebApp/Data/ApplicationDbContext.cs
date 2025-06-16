@@ -19,6 +19,12 @@ namespace MyWebApp.Data
         public DbSet<AdminCredential> AdminCredentials { get; set; }
         public DbSet<Media> MediaItems { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<SiteUser> SiteUsers { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +55,25 @@ namespace MyWebApp.Data
                 .IsUnique();
 
             modelBuilder.Entity<PasswordResetToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<SiteUser>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+            modelBuilder.Entity<SiteUser>()
+                .HasIndex(u => u.Email);
+
+            modelBuilder.Entity<Role>()
+                .HasIndex(r => r.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.SiteUserId, ur.RoleId });
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+            modelBuilder.Entity<EmailVerificationToken>()
                 .HasIndex(t => t.Token)
                 .IsUnique();
 
@@ -84,6 +109,11 @@ namespace MyWebApp.Data
                     Area = "footer",
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
                 });
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = "Admin" },
+                new Role { Id = 2, Name = "User" },
+                new Role { Id = 3, Name = "Moderator" });
 
             // provider specific optimizations
             var provider = Database.ProviderName ?? string.Empty;
