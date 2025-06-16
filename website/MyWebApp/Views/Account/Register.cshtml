@@ -1,6 +1,9 @@
 @model MyWebApp.Models.RegisterViewModel
+@using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "Register";
+    var roles = Context.Session.GetString("Roles") ?? string.Empty;
+    bool canSelectType = roles.Contains("Admin") || roles.Contains("Moderator");
 }
 <h2>Register</h2>
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -41,7 +44,20 @@
         <label asp-for="DateOfBirth"></label>
         <input asp-for="DateOfBirth" type="date" class="form-control" />
     </div>
-    <input type="hidden" asp-for="AccountType" value="User" />
+    @if (canSelectType)
+    {
+        <div class="form-group">
+            <label asp-for="AccountType"></label>
+            <select asp-for="AccountType" class="form-select">
+                <option>User</option>
+                <option>Moderator</option>
+            </select>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" asp-for="AccountType" value="User" />
+    }
     <div class="form-check">
         <input asp-for="AcceptTerms" class="form-check-input" type="checkbox" />
         <label asp-for="AcceptTerms" class="form-check-label">Accept Terms of Service</label><span class="text-danger">*</span>
