@@ -8,7 +8,7 @@ using MyWebApp.Services;
 
 namespace MyWebApp.Controllers;
 
-[BasicAuth]
+[RoleAuthorize("Admin")]
 public class AdminPageSectionController : Controller
 {
     private readonly ApplicationDbContext _db;

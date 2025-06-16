@@ -8,9 +8,11 @@ using System.Text.Json.Nodes;
 using MyWebApp.Services;
 using System.Data.Common;
 using Microsoft.AspNetCore.Http;
+using MyWebApp.Filters;
 
 namespace MyWebApp.Controllers;
 
+[RoleAuthorize("Admin")]
 public class SetupController : BaseController
 {
     private readonly IConfiguration _config;

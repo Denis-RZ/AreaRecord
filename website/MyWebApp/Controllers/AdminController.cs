@@ -15,7 +15,7 @@ using MyWebApp.Services;
 
 namespace MyWebApp.Controllers
 {
-    [BasicAuth]
+    [RoleAuthorize("Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
