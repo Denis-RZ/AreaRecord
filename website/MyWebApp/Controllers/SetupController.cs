@@ -36,6 +36,7 @@ public class SetupController : BaseController
         if (HttpContext.Session.GetString("IsAdmin") != "true")
         {
             var returnUrl = Url.Action(nameof(Index));
+            TempData["SetupError"] = "Admin access required";
             return RedirectToAction("Login", "Account", new { returnUrl });
         }
 

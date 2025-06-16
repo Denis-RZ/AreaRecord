@@ -12,11 +12,13 @@
 @inject LayoutService LayoutService
 @inject ThemeService ThemeService
 @inject ApplicationDbContext Db
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
 @{
     var headerHtml = ViewBag.HeaderHtml as string ?? await LayoutService.GetHeaderAsync(Db);
     var footerHtml = ViewBag.FooterHtml as string ?? await LayoutService.GetFooterAsync(Db);
+    ViewBag.SessionTimeout = Config.GetValue<int>("Session:TimeoutMinutes", 30);
 }
-<body>
+<body data-session-timeout="@ViewBag.SessionTimeout">
     <header class="site-header">
         @Html.Raw(headerHtml)
     </header>

@@ -14,7 +14,8 @@
     </div>
     <div class="form-group">
         <label asp-for="Password"></label>
-        <input asp-for="Password" type="password" class="form-control" />
+        <input asp-for="Password" type="password" class="form-control" id="pwd" />
+        <small id="strength" class="text-muted"></small>
     </div>
     <div class="form-group mt-3">
         <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
@@ -25,5 +26,15 @@
 <script>
     document.querySelector('.captcha-img').addEventListener('click', function () {
         this.src = '@Url.Action("Image", "Captcha")?t=' + Date.now();
+    });
+    document.getElementById('pwd').addEventListener('input', function () {
+        const s = document.getElementById('strength');
+        if (this.value.length < 6) s.textContent = 'Weak';
+        else if (this.value.length < 10) s.textContent = 'Medium';
+        else s.textContent = 'Strong';
+    });
+    document.querySelector('form').addEventListener('submit', function () {
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
     });
 </script>
