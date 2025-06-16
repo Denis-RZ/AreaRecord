@@ -17,10 +17,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.113" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\uploads\" />
+ 
+    <PackageReference Include="Markdig" Version="0.30.7" />
+ 
   </ItemGroup>
 
 </Project>

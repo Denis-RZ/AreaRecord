@@ -109,7 +109,9 @@ namespace MyWebApp.Data
                     Id = 1,
                     PageId = 1,
                     Area = "header",
-                    SortOrder = 0,
+ 
+                    Type = PageSectionType.Html,
+ 
                     Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
                     , ViewCount = 0
                 },
@@ -118,7 +120,9 @@ namespace MyWebApp.Data
                     Id = 2,
                     PageId = 1,
                     Area = "footer",
-                    SortOrder = 0,
+ 
+                    Type = PageSectionType.Html,
+ 
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
  
                 });

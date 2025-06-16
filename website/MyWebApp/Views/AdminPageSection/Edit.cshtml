@@ -6,7 +6,7 @@
     var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
 }
 <h2>Edit Section</h2>
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
     <div>
         <label>Page</label>
@@ -16,27 +16,8 @@
         <label>Area</label>
         <input asp-for="Area" />
     </div>
-    <div>
-        <label asp-for="SortOrder"></label>
-        <input asp-for="SortOrder" type="number" />
-    </div>
-    <div>
-        <label>Html</label>
-        <textarea asp-for="Html"></textarea>
-    </div>
-    <div>
-        <label>Start Date</label>
-        <input asp-for="StartDate" type="datetime-local" />
-    </div>
-    <div>
-        <label>End Date</label>
-        <input asp-for="EndDate" type="datetime-local" />
-    </div>
-    <div>
-        <label>Permission</label>
-        <select asp-for="PermissionId" asp-items="@(new SelectList(permissions, "Id", "Name"))">
-            <option value="">(none)</option>
-        </select>
-    </div>
+ 
+    @await Html.PartialAsync("_SectionEditor", Model)
+ 
     <button type="submit">Save</button>
 </form>

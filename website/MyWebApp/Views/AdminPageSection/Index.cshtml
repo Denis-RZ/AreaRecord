@@ -12,7 +12,7 @@
 <table>
     <thead>
  
-        <tr><th>Page</th><th>Area</th><th>Sort</th><th colspan="2"></th></tr>
+        <tr><th>Page</th><th>Area</th><th>Type</th><th colspan="2"></th></tr>
  
     </thead>
     <tbody>
@@ -22,7 +22,7 @@
         <td>@s.Page?.Slug</td>
         <td>@s.Area</td>
  
-        <td>@s.SortOrder</td>
+        <td>@s.Type</td>
  
         <td><a asp-action="Edit" asp-route-id="@s.Id">Edit</a></td>
         <td><a asp-action="Delete" asp-route-id="@s.Id">Delete</a></td>
