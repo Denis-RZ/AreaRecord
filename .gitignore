@@ -9,3 +9,6 @@ dotnet-install.sh
 # Build logs
 *.log
 website/MyWebApp.Tests/TestResults/
+/website/.vs/MyWebApp/CopilotIndices/17.13.444.19527
+/website/.vs
+/.vs
