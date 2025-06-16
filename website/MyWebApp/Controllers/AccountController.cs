@@ -19,6 +19,12 @@ public class AccountController : Controller
     private readonly ILogger<AccountController> _logger;
     private static readonly Dictionary<string, (int Count, DateTime LockoutEnd)> _attempts = new();
 
+    private bool HasRole(string role)
+    {
+        var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
+        return roles.Contains(role);
+    }
+
     public AccountController(ApplicationDbContext db, CaptchaService captchaService, IEmailSender emailSender, ILogger<AccountController> logger)
     {
         _db = db;
@@ -279,6 +285,11 @@ public class AccountController : Controller
             _captchaService.CreateChallenge();
             ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View(model);
+        }
+
+        if (!(HasRole("Admin") || HasRole("Moderator")))
+        {
+            model.AccountType = "User";
         }
 
         var user = new SiteUser
