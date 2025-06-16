@@ -109,6 +109,7 @@ namespace MyWebApp.Data
                     Id = 1,
                     PageId = 1,
                     Area = "header",
+                    SortOrder = 0,
  
                     Type = PageSectionType.Html,
  
@@ -120,6 +121,7 @@ namespace MyWebApp.Data
                     Id = 2,
                     PageId = 1,
                     Area = "footer",
+                    SortOrder = 0,
  
                     Type = PageSectionType.Html,
  
