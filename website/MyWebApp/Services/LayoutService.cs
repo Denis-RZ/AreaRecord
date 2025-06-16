@@ -50,12 +50,14 @@ public class LayoutService
 
     public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
     {
+ 
         var parts = await db.PageSections.AsNoTracking()
             .Where(s => s.PageId == pageId && s.Area == area)
             .OrderBy(s => s.SortOrder)
             .Select(s => s.Html)
             .ToListAsync();
         return string.Join(System.Environment.NewLine, parts);
+ 
     }
 
     public void Reset()

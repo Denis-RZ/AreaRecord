@@ -1,0 +1,11 @@
+@model MyWebApp.Models.BlockTemplate
+@{
+    ViewData["Title"] = "Delete Block";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Delete Block</h2>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+    <button type="submit">Delete</button>
+</form>

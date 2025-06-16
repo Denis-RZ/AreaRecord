@@ -192,6 +192,7 @@ using (var scope = app.Services.CreateScope())
                 UpgradePageSectionsTable(db);
                 UpgradePagesTable(db);
                 UpgradeMediaItemsTable(db);
+                UpgradeBlockTemplatesTable(db);
             }
         if (db.Database.CanConnect())
         {
@@ -315,12 +316,35 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 PageId INTEGER NOT NULL,
                 Area TEXT NOT NULL,
                 Html TEXT,
+                StartDate TEXT,
+                EndDate TEXT,
+                PermissionId INTEGER,
+                ViewCount INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
             )");
             db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_PageSections_PageId_Area ON PageSections(PageId, Area)");
             db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, Html) VALUES
                 (1, 1, 'header', '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
                 (2, 1, 'footer', '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
+        }
+        else
+        {
+            cmd.CommandText = "PRAGMA table_info('PageSections')";
+            using var reader = cmd.ExecuteReader();
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (reader.Read())
+            {
+                columns.Add(reader.GetString(1));
+            }
+            reader.Close();
+            if (!columns.Contains("StartDate"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN StartDate TEXT");
+            if (!columns.Contains("EndDate"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN EndDate TEXT");
+            if (!columns.Contains("PermissionId"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN PermissionId INTEGER");
+            if (!columns.Contains("ViewCount"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN ViewCount INTEGER NOT NULL DEFAULT 0");
         }
     }
     catch (Exception ex)
@@ -409,6 +433,44 @@ static void UpgradeMediaItemsTable(ApplicationDbContext db)
                 Uploaded TEXT NOT NULL
             )");
             db.Database.ExecuteSqlRaw("CREATE INDEX IX_MediaItems_FileName ON MediaItems(FileName)");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradeBlockTemplatesTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='BlockTemplates'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE BlockTemplates (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                Html TEXT
+            )");
+            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_BlockTemplates_Name ON BlockTemplates(Name)");
+        }
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='BlockTemplateVersions'";
+        exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE BlockTemplateVersions (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                BlockTemplateId INTEGER NOT NULL,
+                Html TEXT,
+                Created TEXT NOT NULL,
+                FOREIGN KEY(BlockTemplateId) REFERENCES BlockTemplates(Id) ON DELETE CASCADE
+            )");
         }
     }
     catch (Exception ex)

@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Edit Page";
     Layout = "../Admin/_AdminLayout";
+    var templates = ViewBag.Templates as List<MyWebApp.Models.BlockTemplate>;
 }
 <h2>Edit Page</h2>
 <form asp-action="Edit" method="post">
@@ -36,6 +37,17 @@
         <input type="hidden" asp-for="BodyHtml" />
     </div>
     <div>
+        <label>Insert Block</label>
+        <select id="template-select">
+            <option value="">--select--</option>
+            @foreach (var t in templates)
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        </select>
+        <button type="button" id="insert-template">Insert</button>
+    </div>
+    <div>
         <label>Footer</label>
         <div id="footer-editor" class="quill-editor"></div>
         <input type="hidden" asp-for="FooterHtml" />
@@ -54,7 +66,7 @@
         document.getElementById('BodyHtml').value = bodyQuill.root.innerHTML;
         document.getElementById('FooterHtml').value = footerQuill.root.innerHTML;
     });
-
+ 
     const layoutSelect = document.getElementById('layout-select');
     const preview = document.getElementById('layout-preview');
     function updatePreview() {
@@ -62,4 +74,5 @@
     }
     layoutSelect.addEventListener('change', updatePreview);
     updatePreview();
+ 
 </script>

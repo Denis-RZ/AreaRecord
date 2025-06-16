@@ -25,6 +25,8 @@ namespace MyWebApp.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+        public DbSet<BlockTemplate> BlockTemplates { get; set; }
+        public DbSet<BlockTemplateVersion> BlockTemplateVersions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,7 +53,9 @@ namespace MyWebApp.Data
                 .IsUnique();
 
             modelBuilder.Entity<PageSection>()
+ 
                 .HasIndex(s => new { s.PageId, s.Area, s.SortOrder });
+ 
 
             modelBuilder.Entity<PasswordResetToken>()
                 .HasIndex(t => t.Token)
@@ -74,6 +78,10 @@ namespace MyWebApp.Data
 
             modelBuilder.Entity<EmailVerificationToken>()
                 .HasIndex(t => t.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<BlockTemplate>()
+                .HasIndex(t => t.Name)
                 .IsUnique();
 
             modelBuilder.Entity<Page>().HasData(
@@ -103,6 +111,7 @@ namespace MyWebApp.Data
                     Area = "header",
                     SortOrder = 0,
                     Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
+                    , ViewCount = 0
                 },
                 new PageSection
                 {
@@ -111,6 +120,7 @@ namespace MyWebApp.Data
                     Area = "footer",
                     SortOrder = 0,
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
+ 
                 });
 
             modelBuilder.Entity<Role>().HasData(

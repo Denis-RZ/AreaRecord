@@ -1,8 +1,9 @@
 @model MyWebApp.Models.PageSection
-@{
+@{ 
     ViewData["Title"] = "Create Section";
     Layout = "../Admin/_AdminLayout";
     var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
+    var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
 }
 <h2>Create Section</h2>
 <form asp-action="Create" method="post">
@@ -21,6 +22,20 @@
     <div>
         <label>Html</label>
         <textarea asp-for="Html"></textarea>
+    </div>
+    <div>
+        <label>Start Date</label>
+        <input asp-for="StartDate" type="datetime-local" />
+    </div>
+    <div>
+        <label>End Date</label>
+        <input asp-for="EndDate" type="datetime-local" />
+    </div>
+    <div>
+        <label>Permission</label>
+        <select asp-for="PermissionId" asp-items="@(new SelectList(permissions, "Id", "Name"))">
+            <option value="">(none)</option>
+        </select>
     </div>
     <button type="submit">Save</button>
 </form>
