@@ -33,6 +33,10 @@ public abstract class BaseController : Controller
 
     protected bool HasRole(string role)
     {
+        if (HttpContext == null)
+        {
+            return false;
+        }
         var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
         return roles.Contains(role);
     }
@@ -59,7 +63,7 @@ public abstract class BaseController : Controller
             return RedirectToAction("Index", "Setup");
         }
 
-        var returnUrl = Url.Action("Index", "Setup");
+        var returnUrl = Url?.Action("Index", "Setup") ?? "/Setup";
         return RedirectToAction("Login", "Account", new { returnUrl });
     }
 }
