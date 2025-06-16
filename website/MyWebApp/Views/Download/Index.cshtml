@@ -9,12 +9,17 @@
 
 <form method="post" asp-controller="Download" asp-action="Index" id="download-form">
     <input type="hidden" name="token" id="captcha-token" />
-    <select name="fileId">
+    <ul class="download-list">
         @foreach (var f in Model)
         {
-            <option value="@f.Id">@f.FileName - @Html.Raw(f.Description)</option>
+            <li>
+                <label>
+                    <input type="radio" name="fileId" value="@f.Id" />
+                    <strong>@f.FileName</strong> - @Html.Raw(f.Description)
+                </label>
+            </li>
         }
-    </select>
+    </ul>
     <button class="download-btn" type="submit" id="download-btn" disabled>Download</button>
 </form>
 
