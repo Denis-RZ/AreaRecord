@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using MyWebApp.Data;
+using System.Collections.Generic;
 using MyWebApp.Filters;
 using MyWebApp.Models;
 using MyWebApp.Services;
@@ -36,8 +37,10 @@ public class AdminContentController : Controller
 
     public async Task<IActionResult> Create()
     {
+ 
         await LoadTemplatesAsync();
         return View(new Page());
+ 
     }
 
     [HttpPost]
@@ -46,8 +49,10 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
+ 
             await LoadTemplatesAsync();
             return View(model);
+ 
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
@@ -69,8 +74,10 @@ public class AdminContentController : Controller
         {
             return NotFound();
         }
+ 
         await LoadTemplatesAsync();
         return View(page);
+ 
     }
 
     [HttpPost]
@@ -79,8 +86,10 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
+ 
             await LoadTemplatesAsync();
             return View(model);
+ 
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
