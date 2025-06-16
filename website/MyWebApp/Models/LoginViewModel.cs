@@ -6,5 +6,6 @@ namespace MyWebApp.Models
         public string Password { get; set; } = string.Empty;
         public string? ReturnUrl { get; set; }
         public string? ErrorMessage { get; set; }
+        public string? RecaptchaToken { get; set; }
     }
 }

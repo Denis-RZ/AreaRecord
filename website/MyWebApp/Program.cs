@@ -137,13 +137,21 @@ builder.Services.AddDbContextFactory<MyWebApp.Data.ApplicationDbContext>((sp, op
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
-builder.Services.AddSession();
+var sessionTimeout = builder.Configuration.GetValue<int>("Session:TimeoutMinutes", 30);
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(sessionTimeout);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
 builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();
+builder.Services.AddSingleton<MyWebApp.Services.RecaptchaService>();
+builder.Services.AddSingleton<MyWebApp.Services.IEmailSender, MyWebApp.Services.LoggingEmailSender>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
     .Bind(builder.Configuration.GetSection("AdminAuth"))
