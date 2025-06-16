@@ -21,7 +21,7 @@ public class PageSectionTests
             var page = new Page { Slug = "test", Title = "Test" };
             context.Pages.Add(page);
             context.SaveChanges();
-            context.PageSections.Add(new PageSection { PageId = page.Id, Area = "header", Html = "<p>hi</p>" });
+            context.PageSections.Add(new PageSection { PageId = page.Id, Area = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
             context.SaveChanges();
         }
 

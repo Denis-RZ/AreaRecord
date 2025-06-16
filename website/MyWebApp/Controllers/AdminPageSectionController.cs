@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Http;
+using Markdig;
+using System.IO;
 using MyWebApp.Data;
 using MyWebApp.Filters;
 using MyWebApp.Models;
@@ -44,14 +47,14 @@ public class AdminPageSectionController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(PageSection model)
+    public async Task<IActionResult> Create(PageSection model, IFormFile? file)
     {
         if (!ModelState.IsValid)
         {
             await LoadPagesAsync();
             return View(model);
         }
-        model.Html = _sanitizer.Sanitize(model.Html);
+        await PrepareHtmlAsync(model, file);
         _db.PageSections.Add(model);
         await _db.SaveChangesAsync();
         _layout.Reset();
@@ -68,18 +71,51 @@ public class AdminPageSectionController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(PageSection model)
+    public async Task<IActionResult> Edit(PageSection model, IFormFile? file)
     {
         if (!ModelState.IsValid)
         {
             await LoadPagesAsync();
             return View(model);
         }
-        model.Html = _sanitizer.Sanitize(model.Html);
+        await PrepareHtmlAsync(model, file);
         _db.Update(model);
         await _db.SaveChangesAsync();
         _layout.Reset();
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task PrepareHtmlAsync(PageSection model, IFormFile? file)
+    {
+        switch (model.Type)
+        {
+            case PageSectionType.Html:
+                model.Html = _sanitizer.Sanitize(model.Html);
+                break;
+            case PageSectionType.Markdown:
+                var html = Markdig.Markdown.ToHtml(model.Html ?? string.Empty);
+                model.Html = _sanitizer.Sanitize(html);
+                break;
+            case PageSectionType.Code:
+                model.Html = $"<pre><code>{System.Net.WebUtility.HtmlEncode(model.Html)}</code></pre>";
+                break;
+            case PageSectionType.Image:
+            case PageSectionType.Video:
+                if (file != null && file.Length > 0)
+                {
+                    var uploads = Path.Combine("wwwroot", "uploads");
+                    Directory.CreateDirectory(uploads);
+                    var name = Path.GetFileName(file.FileName);
+                    var path = Path.Combine(uploads, name);
+                    using var stream = new FileStream(path, FileMode.Create);
+                    await file.CopyToAsync(stream);
+                    if (model.Type == PageSectionType.Image)
+                        model.Html = $"<img src='/uploads/{name}' alt='' />";
+                    else
+                        model.Html = $"<video controls src='/uploads/{name}'></video>";
+                }
+                break;
+        }
     }
 
     public async Task<IActionResult> Delete(int id)

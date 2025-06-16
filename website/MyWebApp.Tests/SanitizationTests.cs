@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using MyWebApp.Controllers;
 using MyWebApp.Data;
 using MyWebApp.Models;
@@ -52,8 +53,8 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>" };
-        var result = await controller.Create(model);
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
+        var result = await controller.Create(model, null);
         Assert.IsType<RedirectToActionResult>(result);
         var section = ctx.PageSections.First();
         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
@@ -74,5 +75,45 @@ public class SanitizationTests
         Assert.DoesNotContain("<script", updated.HeaderHtml, System.StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("<script", updated.BodyHtml, System.StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("<script", updated.FooterHtml, System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CreateSection_MarkdownConverted()
+    {
+        var (ctx, layout, sanitizer) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
+        var result = await controller.Create(model, null);
+        Assert.IsType<RedirectToActionResult>(result);
+        var section = ctx.PageSections.First(s => s.Area == "md");
+        Assert.Contains("<h1>", section.Html);
+        Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CreateSection_CodeEncoded()
+    {
+        var (ctx, layout, sanitizer) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
+        var result = await controller.Create(model, null);
+        Assert.IsType<RedirectToActionResult>(result);
+        var section = ctx.PageSections.First(s => s.Area == "code");
+        Assert.Contains("&lt;b&gt;test&lt;/b&gt;", section.Html);
+    }
+
+    [Fact]
+    public async Task CreateSection_ImageStoresTag()
+    {
+        var (ctx, layout, sanitizer) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var bytes = new byte[] {1,2,3};
+        using var stream = new System.IO.MemoryStream(bytes);
+        var file = new FormFile(stream, 0, bytes.Length, "file", "img.png");
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "img", Type = PageSectionType.Image };
+        var result = await controller.Create(model, file);
+        Assert.IsType<RedirectToActionResult>(result);
+        var section = ctx.PageSections.First(s => s.Area == "img");
+        Assert.Contains("<img", section.Html);
     }
 }

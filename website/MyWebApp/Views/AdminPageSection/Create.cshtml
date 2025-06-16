@@ -5,7 +5,7 @@
     var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
 }
 <h2>Create Section</h2>
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     <div>
         <label>Page</label>
         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
@@ -14,9 +14,6 @@
         <label>Area</label>
         <input asp-for="Area" />
     </div>
-    <div>
-        <label>Html</label>
-        <textarea asp-for="Html"></textarea>
-    </div>
+    @await Html.PartialAsync("_SectionEditor", Model)
     <button type="submit">Save</button>
 </form>
