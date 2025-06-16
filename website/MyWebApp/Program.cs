@@ -387,6 +387,11 @@ static void UpgradePagesTable(ApplicationDbContext db)
         {
             columns.Add(reader.GetString(1));
         }
+        if (!columns.Contains("Layout"))
+        {
+            db.Database.ExecuteSqlRaw(
+                "ALTER TABLE Pages ADD COLUMN Layout TEXT NOT NULL DEFAULT 'single-column'");
+        }
         if (!columns.Contains("MetaDescription"))
         {
             db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN MetaDescription TEXT");
