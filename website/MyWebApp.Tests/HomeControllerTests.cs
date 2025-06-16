@@ -76,8 +76,8 @@ public class HomeControllerTests
         };
         var result = controller.Index();
         var redirect = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Index", redirect.ActionName);
-        Assert.Equal("Setup", redirect.ControllerName);
+        Assert.Equal("Login", redirect.ActionName);
+        Assert.Equal("Account", redirect.ControllerName);
     }
 
     private class FakeTempProvider : ITempDataProvider
