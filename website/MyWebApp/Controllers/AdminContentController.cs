@@ -13,11 +13,13 @@ public class AdminContentController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly LayoutService _layout;
+    private readonly HtmlSanitizerService _sanitizer;
 
-    public AdminContentController(ApplicationDbContext db, LayoutService layout)
+    public AdminContentController(ApplicationDbContext db, LayoutService layout, HtmlSanitizerService sanitizer)
     {
         _db = db;
         _layout = layout;
+        _sanitizer = sanitizer;
     }
 
     public async Task<IActionResult> Index()
@@ -39,6 +41,9 @@ public class AdminContentController : Controller
         {
             return View(model);
         }
+        model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
+        model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
+        model.FooterHtml = _sanitizer.Sanitize(model.FooterHtml);
         if (model.IsPublished && model.PublishDate == null)
         {
             model.PublishDate = DateTime.UtcNow;
@@ -67,6 +72,9 @@ public class AdminContentController : Controller
         {
             return View(model);
         }
+        model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
+        model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
+        model.FooterHtml = _sanitizer.Sanitize(model.FooterHtml);
         if (model.IsPublished && model.PublishDate == null)
         {
             model.PublishDate = DateTime.UtcNow;

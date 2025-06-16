@@ -19,6 +19,8 @@ dependencies:
 The script runs `dotnet restore website/MyWebApp.sln` followed by
 `libman restore` in `website/MyWebApp` to download the client-side
 libraries, including the Quill editor used on the admin content pages.
+All submitted HTML is sanitized on the server using the `HtmlSanitizer`
+library before being stored.
 
 ## Configuring the Database Connection
 

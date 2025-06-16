@@ -13,11 +13,13 @@ public class AdminPageSectionController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly LayoutService _layout;
+    private readonly HtmlSanitizerService _sanitizer;
 
-    public AdminPageSectionController(ApplicationDbContext db, LayoutService layout)
+    public AdminPageSectionController(ApplicationDbContext db, LayoutService layout, HtmlSanitizerService sanitizer)
     {
         _db = db;
         _layout = layout;
+        _sanitizer = sanitizer;
     }
 
     public async Task<IActionResult> Index()
@@ -49,6 +51,7 @@ public class AdminPageSectionController : Controller
             await LoadPagesAsync();
             return View(model);
         }
+        model.Html = _sanitizer.Sanitize(model.Html);
         _db.PageSections.Add(model);
         await _db.SaveChangesAsync();
         _layout.Reset();
@@ -72,6 +75,7 @@ public class AdminPageSectionController : Controller
             await LoadPagesAsync();
             return View(model);
         }
+        model.Html = _sanitizer.Sanitize(model.Html);
         _db.Update(model);
         await _db.SaveChangesAsync();
         _layout.Reset();

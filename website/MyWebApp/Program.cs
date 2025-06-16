@@ -139,6 +139,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSession();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
+builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()
     .Bind(builder.Configuration.GetSection("AdminAuth"))
