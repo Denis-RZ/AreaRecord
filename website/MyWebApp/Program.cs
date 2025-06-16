@@ -315,6 +315,7 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 PageId INTEGER NOT NULL,
                 Area TEXT NOT NULL,
+                SortOrder INTEGER NOT NULL DEFAULT 0,
                 Type INTEGER NOT NULL DEFAULT 0,
                 Html TEXT,
                 StartDate TEXT,
@@ -323,10 +324,10 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 ViewCount INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
             )");
-            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_PageSections_PageId_Area ON PageSections(PageId, Area)");
-            db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, Type, Html) VALUES
-                (1, 1, 'header', 0, '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
-                (2, 1, 'footer', 0, '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
+            db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Area_SortOrder ON PageSections(PageId, Area, SortOrder)");
+            db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, SortOrder, Type, Html) VALUES
+                (1, 1, 'header', 0, 0, '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
+                (2, 1, 'footer', 0, 0, '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
         }
         else
         {
@@ -338,6 +339,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 columns.Add(reader.GetString(1));
             }
             reader.Close();
+            if (!columns.Contains("SortOrder"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0");
             if (!columns.Contains("Type"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN Type INTEGER NOT NULL DEFAULT 0");
             if (!columns.Contains("StartDate"))
@@ -348,6 +351,19 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN PermissionId INTEGER");
             if (!columns.Contains("ViewCount"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN ViewCount INTEGER NOT NULL DEFAULT 0");
+
+            cmd.CommandText = "PRAGMA index_list('PageSections')";
+            using var idx = cmd.ExecuteReader();
+            var indexes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (idx.Read())
+            {
+                indexes.Add(idx.GetString(1));
+            }
+            idx.Close();
+            if (indexes.Contains("IX_PageSections_PageId_Area"))
+                db.Database.ExecuteSqlRaw("DROP INDEX IX_PageSections_PageId_Area");
+            if (!indexes.Contains("IX_PageSections_PageId_Area_SortOrder"))
+                db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Area_SortOrder ON PageSections(PageId, Area, SortOrder)");
         }
     }
     catch (Exception ex)
