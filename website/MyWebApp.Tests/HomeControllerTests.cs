@@ -9,6 +9,9 @@ using Xunit;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 
 public class HomeControllerTests
 {
@@ -70,10 +73,13 @@ public class HomeControllerTests
         using var context = new ApplicationDbContext(options);
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
+        var http = new DefaultHttpContext { Session = new DummySession() };
         var controller = new HomeController(NullLogger<HomeController>.Instance, context, cache)
         {
-            TempData = new TempDataDictionary(new DefaultHttpContext(), new FakeTempProvider())
+            TempData = new TempDataDictionary(http, new FakeTempProvider())
         };
+        controller.ControllerContext = new ControllerContext { HttpContext = http };
+        controller.Url = new DummyUrlHelper();
         var result = controller.Index();
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Login", redirect.ActionName);
@@ -84,5 +90,29 @@ public class HomeControllerTests
     {
         public IDictionary<string, object?> LoadTempData(HttpContext context) => new Dictionary<string, object?>();
         public void SaveTempData(HttpContext context, IDictionary<string, object?> values) { }
+    }
+
+    private class DummyUrlHelper : IUrlHelper
+    {
+        public ActionContext ActionContext { get; } = new();
+        public string? Action(UrlActionContext actionContext) => "/";
+        public string Content(string contentPath) => contentPath;
+        public bool IsLocalUrl(string url) => true;
+        public string? Link(string routeName, object? values) => null;
+        public string? RouteUrl(UrlRouteContext routeContext) => "/";
+    }
+
+    private class DummySession : ISession
+    {
+        private readonly Dictionary<string, byte[]> _store = new();
+        public bool IsAvailable => true;
+        public string Id { get; } = Guid.NewGuid().ToString();
+        public IEnumerable<string> Keys => _store.Keys;
+        public void Clear() => _store.Clear();
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task LoadAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Remove(string key) => _store.Remove(key);
+        public void Set(string key, byte[] value) => _store[key] = value;
+        public bool TryGetValue(string key, out byte[] value) => _store.TryGetValue(key, out value);
     }
 }

@@ -25,7 +25,14 @@ public class SchemaValidatorTests
         public NoIndexContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // intentionally omit indexes and column types
+            base.OnModelCreating(modelBuilder);
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var index in entity.GetIndexes().ToList())
+                {
+                    entity.RemoveIndex(index);
+                }
+            }
         }
     }
 
@@ -39,6 +46,7 @@ public class SchemaValidatorTests
             .Options;
         using var context = new NoIndexContext(options);
         context.Database.EnsureCreated();
+        context.Database.ExecuteSqlRaw("DROP INDEX IF EXISTS IX_Downloads_DownloadTime");
         var validator = new SchemaValidator(context);
         var result = validator.Validate();
         Assert.False(result.Success);
