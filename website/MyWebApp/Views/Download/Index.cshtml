@@ -15,10 +15,12 @@
                 <strong>@f.FileName</strong> - @Html.Raw(f.Description)
             </div>
             <form method="post" asp-controller="Download" asp-action="Index" class="download-form">
+ 
                 <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
                 <input type="text" name="captcha" placeholder="Enter code" required />
                 <input type="hidden" name="fileId" value="@f.Id" />
                 <button class="download-btn" type="submit">Download</button>
+ 
             </form>
         </li>
     }
@@ -33,9 +35,11 @@
 
 @section Scripts {
     <script>
+ 
         document.querySelectorAll('.captcha-img').forEach(function (img) {
             img.addEventListener('click', function () {
                 img.src = '@Url.Action("Image", "Captcha")?t=' + Date.now();
+ 
             });
         });
     </script>
