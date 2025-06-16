@@ -58,4 +58,21 @@ public class SanitizationTests
         var section = ctx.PageSections.First();
         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task EditPage_SanitizesHtml()
+    {
+        var (ctx, layout, sanitizer) = CreateServices();
+        var controller = new AdminContentController(ctx, layout, sanitizer);
+        var page = ctx.Pages.First();
+        page.HeaderHtml = "<script>alert(1)</script><p>h</p>";
+        page.BodyHtml = "<p>b</p><script>alert(2)</script>";
+        page.FooterHtml = "<script>alert(3)</script>f";
+        var result = await controller.Edit(page);
+        Assert.IsType<RedirectToActionResult>(result);
+        var updated = ctx.Pages.Single(p => p.Id == page.Id);
+        Assert.DoesNotContain("<script", updated.HeaderHtml, System.StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("<script", updated.BodyHtml, System.StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("<script", updated.FooterHtml, System.StringComparison.OrdinalIgnoreCase);
+    }
 }
