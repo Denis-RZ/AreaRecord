@@ -40,10 +40,14 @@ public class LayoutService
 
     public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
     {
-        return await db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == pageId && s.Area == area)
-            .Select(s => s.Html)
-            .FirstOrDefaultAsync() ?? string.Empty;
+        var section = await db.PageSections
+            .FirstOrDefaultAsync(s => s.PageId == pageId && s.Area == area
+                && (s.StartDate == null || s.StartDate <= DateTime.UtcNow)
+                && (s.EndDate == null || s.EndDate >= DateTime.UtcNow));
+        if (section == null) return string.Empty;
+        section.ViewCount++;
+        await db.SaveChangesAsync();
+        return section.Html;
     }
 
     public void Reset()

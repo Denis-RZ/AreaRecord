@@ -23,16 +23,24 @@ public class AdminContentController : Controller
         _sanitizer = sanitizer;
     }
 
+    private async Task LoadTemplatesAsync()
+    {
+        ViewBag.Templates = await _db.BlockTemplates.AsNoTracking()
+            .OrderBy(t => t.Name).ToListAsync();
+    }
+
     public async Task<IActionResult> Index()
     {
         var pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
         return View(pages);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        ViewBag.Sections = new List<PageSection>();
-        return View("PageEditor", new Page());
+ 
+        await LoadTemplatesAsync();
+        return View(new Page());
+ 
     }
 
     [HttpPost]
@@ -41,8 +49,10 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Sections = new List<PageSection>();
-            return View("PageEditor", model);
+ 
+            await LoadTemplatesAsync();
+            return View(model);
+ 
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
@@ -64,12 +74,10 @@ public class AdminContentController : Controller
         {
             return NotFound();
         }
-        var sections = await _db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == id)
-            .OrderBy(s => s.Id)
-            .ToListAsync();
-        ViewBag.Sections = sections;
-        return View("PageEditor", page);
+ 
+        await LoadTemplatesAsync();
+        return View(page);
+ 
     }
 
     [HttpPost]
@@ -78,12 +86,10 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var sections = await _db.PageSections.AsNoTracking()
-                .Where(s => s.PageId == model.Id)
-                .OrderBy(s => s.Id)
-                .ToListAsync();
-            ViewBag.Sections = sections;
-            return View("PageEditor", model);
+ 
+            await LoadTemplatesAsync();
+            return View(model);
+ 
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);

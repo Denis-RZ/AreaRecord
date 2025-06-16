@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Create Page";
     Layout = "../Admin/_AdminLayout";
+    var templates = ViewBag.Templates as List<MyWebApp.Models.BlockTemplate>;
 }
 <h2>Create Page</h2>
 <form asp-action="Create" method="post">
@@ -27,6 +28,17 @@
         <input type="hidden" asp-for="BodyHtml" />
     </div>
     <div>
+        <label>Insert Block</label>
+        <select id="template-select">
+            <option value="">--select--</option>
+            @foreach (var t in templates)
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        </select>
+        <button type="button" id="insert-template">Insert</button>
+    </div>
+    <div>
         <label>Footer</label>
         <div id="footer-editor" class="quill-editor"></div>
         <input type="hidden" asp-for="FooterHtml" />
@@ -45,4 +57,16 @@
         document.getElementById('BodyHtml').value = bodyQuill.root.innerHTML;
         document.getElementById('FooterHtml').value = footerQuill.root.innerHTML;
     });
+    const templates = JSON.parse(document.getElementById('templates-data').textContent);
+    document.getElementById('insert-template').addEventListener('click', function () {
+        const sel = document.getElementById('template-select');
+        const id = parseInt(sel.value);
+        const tpl = templates.find(t => t.id === id);
+        if (tpl) {
+            bodyQuill.clipboard.dangerouslyPasteHTML(bodyQuill.getLength(), tpl.html);
+        }
+    });
+</script>
+<script id="templates-data" type="application/json">
+@Html.Raw(System.Text.Json.JsonSerializer.Serialize(templates))
 </script>

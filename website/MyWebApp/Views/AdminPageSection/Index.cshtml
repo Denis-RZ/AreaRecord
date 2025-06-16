@@ -4,10 +4,14 @@
     Layout = "../Admin/_AdminLayout";
 }
 <h2>Page Sections</h2>
+<form method="get" asp-action="Index">
+    <input type="text" name="q" value="@ViewBag.Query" placeholder="Search" />
+    <button type="submit">Search</button>
+</form>
 <p><a asp-action="Create">Create New</a></p>
 <table>
     <thead>
-        <tr><th>Page</th><th>Area</th><th colspan="2"></th></tr>
+        <tr><th>Page</th><th>Area</th><th>Views</th><th colspan="2"></th></tr>
     </thead>
     <tbody>
 @foreach (var s in Model)
@@ -15,6 +19,7 @@
     <tr>
         <td>@s.Page?.Slug</td>
         <td>@s.Area</td>
+        <td>@s.ViewCount</td>
         <td><a asp-action="Edit" asp-route-id="@s.Id">Edit</a></td>
         <td><a asp-action="Delete" asp-route-id="@s.Id">Delete</a></td>
     </tr>

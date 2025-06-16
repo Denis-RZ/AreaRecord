@@ -1,0 +1,12 @@
+@model MyWebApp.Models.BlockTemplate
+@{
+    ViewData["Title"] = "Edit Block";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Edit Block</h2>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div><label>Name</label><input asp-for="Name" /></div>
+    <div><label>Html</label><textarea asp-for="Html"></textarea></div>
+    <button type="submit">Save</button>
+</form>
