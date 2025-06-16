@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Screen Area Recorder Pro</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@(ThemeService.GetCssPath())" asp-append-version="true" />
 </head>
 @using MyWebApp.Services
 @using MyWebApp.Data
 @inject LayoutService LayoutService
+@inject ThemeService ThemeService
 @inject ApplicationDbContext Db
 @{
     var headerHtml = ViewBag.HeaderHtml as string ?? await LayoutService.GetHeaderAsync(Db);
@@ -17,9 +19,6 @@
 <body>
     <header class="site-header">
         @Html.Raw(headerHtml)
-        <nav class="site-nav login-nav">
-            <a href="/Account/Login">Login</a>
-        </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
