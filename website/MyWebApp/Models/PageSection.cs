@@ -23,6 +23,8 @@ public class PageSection
     [MaxLength(64)]
     public string Area { get; set; } = string.Empty;
 
+    public int SortOrder { get; set; }
+
  
     public PageSectionType Type { get; set; } = PageSectionType.Html;
  
