@@ -41,7 +41,7 @@ public class AdminBlockTemplateController : Controller
         if (!ModelState.IsValid) return View(model);
         model.Html = _sanitizer.Sanitize(model.Html);
         _db.BlockTemplates.Add(model);
-        _db.BlockTemplateVersions.Add(new BlockTemplateVersion { BlockTemplate = model, Html = model.Html });
+        _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = model, Html = model.Html });
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -105,7 +105,7 @@ public class AdminBlockTemplateController : Controller
             t.Id = 0;
             t.Html = _sanitizer.Sanitize(t.Html);
             _db.BlockTemplates.Add(t);
-            _db.BlockTemplateVersions.Add(new BlockTemplateVersion { BlockTemplate = t, Html = t.Html });
+            _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = t, Html = t.Html });
         }
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
