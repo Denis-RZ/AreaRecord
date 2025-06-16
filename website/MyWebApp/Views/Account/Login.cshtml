@@ -7,6 +7,7 @@
 {
     <div class="error">@Model.ErrorMessage</div>
 }
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 <form method="post" asp-action="Login" asp-controller="Account">
     <input type="hidden" asp-for="ReturnUrl" />
     <div class="form-group">
@@ -17,5 +18,13 @@
         <label asp-for="Password"></label>
         <input asp-for="Password" type="password" class="form-control" />
     </div>
-    <button type="submit" class="btn btn-primary">Login</button>
+    <div class="form-group mt-3">
+        <div class="g-recaptcha" data-sitekey="@Configuration["Captcha:SiteKey"]"></div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Login</button>
 </form>
+<div class="mt-2">
+    <a asp-action="ForgotPassword" asp-controller="Account">Forgot Password?</a>
+</div>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>

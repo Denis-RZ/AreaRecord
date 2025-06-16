@@ -18,6 +18,7 @@ namespace MyWebApp.Data
         public DbSet<PageSection> PageSections { get; set; }
         public DbSet<AdminCredential> AdminCredentials { get; set; }
         public DbSet<Media> MediaItems { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,10 @@ namespace MyWebApp.Data
 
             modelBuilder.Entity<PageSection>()
                 .HasIndex(s => new { s.PageId, s.Area })
+                .IsUnique();
+
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasIndex(t => t.Token)
                 .IsUnique();
 
             modelBuilder.Entity<Page>().HasData(
