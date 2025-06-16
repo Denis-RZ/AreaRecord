@@ -3,7 +3,7 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "twitter-bootstrap@5.3.2",
+      "library": "bootstrap@5.3.3",
       "destination": "wwwroot/lib/bootstrap/"
     },
     {
@@ -11,13 +11,8 @@
       "destination": "wwwroot/lib/jquery/"
     },
     {
-      "library": "quill@2.0.2",
+      "library": "quill@2.0.3",
       "destination": "wwwroot/lib/quill/"
-    },
-    {
-      "provider": "unpkg",
-      "library": "tinymce@6.8.2",
-      "destination": "wwwroot/lib/tinymce/"
     }
   ]
 }

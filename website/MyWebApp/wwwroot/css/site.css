@@ -1,163 +1,250 @@
-:root {
-    --bg-dark: #121212;
-    --bg-secondary: #1e1e1e;
-    --text-light: #e0e0e0;
-    --text-muted: #bbb;
-    --accent: #0078d4;
-    --accent-hover: #005aa0;
+﻿/* ==========================================
+   UNIFIED FORM + LINKS BLOCK
+   ========================================== */
+
+/* Form container */
+form[method="post"] {
+    max-width: 400px !important;
+    width: 400px !important;
+    margin: 1rem auto 0 auto !important; /* Remove bottom margin */
+    padding: 2rem !important;
+    background: #ffffff !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 12px 12px 0 0 !important; /* Remove bottom border radius */
+    box-shadow: none !important; /* Remove shadow from form */
+    box-sizing: border-box !important;
+    position: relative !important;
 }
 
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
+/* Wide forms */
+form[action*="Register"] {
+    max-width: 500px !important;
+    width: 500px !important;
 }
 
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 1rem;
+/* Input fields remain as is */
+form[method="post"] input[type="text"],
+form[method="post"] input[type="email"],
+form[method="post"] input[type="password"],
+form[method="post"] input[type="number"],
+form[method="post"] input[type="date"],
+form[method="post"] textarea,
+form[method="post"] select {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid #ced4da !important;
+    background: #ffffff !important;
+    color: #212529 !important;
+    border-radius: 6px !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    outline: none !important;
+    box-sizing: border-box !important;
 }
 
-.container-fluid {
-    width: 100%;
-    padding: 0 1rem;
+    /* Фокус и placeholder остаются как есть */
+    form[method="post"] input::placeholder,
+    form[method="post"] textarea::placeholder {
+        color: #adb5bd !important;
+        opacity: 1 !important;
+    }
+
+    form[method="post"] input:focus,
+    form[method="post"] textarea:focus,
+    form[method="post"] select:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+    }
+
+/* Labels остаются как есть */
+form[method="post"] label {
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+    color: #212529 !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
 }
 
-.site-header {
-    background: var(--bg-secondary);
-    padding: 1rem 0;
+/* Buttons remain as is */
+form[method="post"] button,
+form[method="post"] input[type="submit"] {
+    width: 100% !important;
+    padding: 0.875rem 1.5rem !important;
+    margin: 1.5rem 0 1rem 0 !important;
+    border: 1px solid #0d6efd !important;
+    border-radius: 6px !important;
+    background: #0d6efd !important;
+    color: #ffffff !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+    box-sizing: border-box !important;
 }
 
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 1rem;
+    form[method="post"] button:hover,
+    form[method="post"] input[type="submit"]:hover {
+        background: #0b5ed7 !important;
+        border-color: #0a58ca !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+
+/* Checkboxes remain as is */
+form[method="post"] input[type="checkbox"] {
+    width: 1rem !important;
+    height: 1rem !important;
+    margin: 0 0.5rem 0 0 !important;
+    cursor: pointer !important;
+    accent-color: #0d6efd !important;
 }
 
-.logo {
-    color: #fff;
-    font-size: 1.25rem;
-    text-decoration: none;
+form[method="post"] > div:has(input[type="checkbox"]) {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 1.5rem !important;
+    cursor: pointer !important;
 }
 
-.site-nav a {
-    margin-left: 1rem;
-    color: var(--text-muted);
-    text-decoration: none;
+    form[method="post"] > div:has(input[type="checkbox"]) label {
+        margin: 0 !important;
+        cursor: pointer !important;
+        font-size: 0.9rem !important;
+    }
+
+/* Captcha remains as is */
+form[method="post"] > div:has(img[src*="captcha"]) {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    padding: 1rem !important;
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 8px !important;
 }
 
-.site-nav a:hover {
-    color: #fff;
+form[method="post"] img[src*="captcha" i] {
+    width: 90px !important;
+    height: 32px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: border-color 0.15s ease-in-out !important;
+    flex-shrink: 0 !important;
 }
 
-.hero {
-    padding: 4rem 0;
-    text-align: center;
+    form[method="post"] img[src*="captcha" i]:hover {
+        border-color: #0d6efd !important;
+    }
+
+form[method="post"] > div:has(img[src*="captcha"]) input[type="text"] {
+    flex: 1 !important;
+    margin-bottom: 0 !important;
+    min-width: 100px !important;
 }
 
-.hero-content {
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* ==========================================
+   LINKS AS PART OF UNIFIED BLOCK
+   ========================================== */
+
+/* Links block - FULLY MERGED with form */
+form[method="post"] + div:has(a) {
+    width: 400px !important;
+    max-width: 400px !important;
+    margin: 0 auto 2rem auto !important; /* WITHOUT negative margin */
+    text-align: center !important;
+    padding: 1rem 2rem 1.5rem 2rem !important;
+    background: #ffffff !important;
+    border: 1px solid #e9ecef !important;
+    border-top: none !important; /* Remove top border */
+    border-radius: 0 0 12px 12px !important; /* Only bottom border radius */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; /* Common shadow */
+    box-sizing: border-box !important;
+    position: relative !important;
+    top: -1px !important; /* Small overlap for complete merging */
 }
 
-.hero-img {
-    width: 200px;
-    height: auto;
-    margin-bottom: 1rem;
+/* For wide forms */
+form[action*="Register"] + div:has(a) {
+    width: 500px !important;
+    max-width: 500px !important;
 }
 
-.hero-text h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+/* Link styles remain as is */
+form[method="post"] + div a {
+    color: #0d6efd !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    margin: 0 0.5rem !important;
 }
 
-.download-btn {
-    background: var(--accent);
-    color: #fff;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    display: inline-block;
-    margin-top: 1rem;
+    form[method="post"] + div a:hover {
+        color: #0b5ed7 !important;
+        text-decoration: underline !important;
+    }
+
+form[method="post"] + div {
+    color: #6c757d !important;
+    font-size: 0.9rem !important;
 }
 
-.download-list {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
+/* ==========================================
+   RESPONSIVENESS
+   ========================================== */
+
+@media (max-width: 768px) {
+    form[method="post"] {
+        width: calc(100vw - 2rem) !important;
+        max-width: none !important;
+        margin: 1rem !important;
+        padding: 1.5rem !important;
+    }
+
+        form[method="post"] + div:has(a) {
+            width: calc(100vw - 2rem) !important;
+            max-width: none !important;
+            margin: 0 1rem 2rem 1rem !important;
+            top: -1px !important;
+        }
+
+        form[method="post"] input,
+        form[method="post"] textarea,
+        form[method="post"] select {
+            font-size: 16px !important;
+        }
+
+        form[method="post"] > div:has(img[src*="captcha"]) {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+        }
+
+            form[method="post"] > div:has(img[src*="captcha"]) input[type="text"] {
+                width: 100% !important;
+            }
 }
 
-.download-list li {
-    margin-bottom: 0.5rem;
+/* ==========================================
+   ADDITIONAL FIXES
+   ========================================== */
+
+/* Remove any margins between form and links block */
+form[method="post"]:has(+ div:has(a)) {
+    margin-bottom: 0 !important;
 }
 
-.download-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #333;
-    border-radius: 4px;
-    padding: 0.5rem;
-}
-
-.download-info {
-    margin-right: 1rem;
-}
-
- 
-.captcha-img {
-    vertical-align: middle;
-    cursor: pointer;
-    margin-right: 0.5rem;
-    border: 1px solid #333;
-}
-
-.download-form input[type="text"] {
-    margin-right: 0.5rem;
-}
-
- 
-.features {
-    max-width: 900px;
-    margin: 2rem auto;
-}
-
-.feature-list {
-    list-style: none;
-    padding: 0;
-}
-
-.feature-list li {
-    padding: 0.5rem 0;
-    font-size: 1.1rem;
-}
-
-.faq-section {
-    max-width: 900px;
-    margin: 2rem auto;
-}
-
-.site-footer {
-    text-align: center;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    color: #aaa;
-}
-
-.error {
-    color: #ff6b6b;
-    margin-bottom: 0.5rem;
-}
-
-.captcha-img {
-    width: 120px;
-    height: 40px;
+/* Ensure smooth transition */
+form[method="post"] + div:has(a):before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #ffffff;
+    z-index: 1;
 }
