@@ -1,0 +1,24 @@
+@model IEnumerable<MyWebApp.Models.BlockTemplate>
+@{
+    ViewData["Title"] = "Block Templates";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Block Templates</h2>
+<p><a asp-action="Create">Create New</a> | <a asp-action="Export">Export</a></p>
+<form asp-action="Import" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <button type="submit">Import</button>
+</form>
+<table>
+    <thead><tr><th>Name</th><th></th><th></th></tr></thead>
+    <tbody>
+@foreach (var t in Model)
+{
+    <tr>
+        <td>@t.Name</td>
+        <td><a asp-action="Edit" asp-route-id="@t.Id">Edit</a></td>
+        <td><a asp-action="Delete" asp-route-id="@t.Id">Delete</a></td>
+    </tr>
+}
+    </tbody>
+</table>

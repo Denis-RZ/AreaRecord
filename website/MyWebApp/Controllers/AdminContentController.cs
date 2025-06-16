@@ -22,14 +22,21 @@ public class AdminContentController : Controller
         _sanitizer = sanitizer;
     }
 
+    private async Task LoadTemplatesAsync()
+    {
+        ViewBag.Templates = await _db.BlockTemplates.AsNoTracking()
+            .OrderBy(t => t.Name).ToListAsync();
+    }
+
     public async Task<IActionResult> Index()
     {
         var pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
         return View(pages);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        await LoadTemplatesAsync();
         return View(new Page());
     }
 
@@ -39,6 +46,7 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
+            await LoadTemplatesAsync();
             return View(model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
@@ -61,6 +69,7 @@ public class AdminContentController : Controller
         {
             return NotFound();
         }
+        await LoadTemplatesAsync();
         return View(page);
     }
 
@@ -70,6 +79,7 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
+            await LoadTemplatesAsync();
             return View(model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
