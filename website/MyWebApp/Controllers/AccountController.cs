@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
+using Microsoft.Extensions.Logging;
 using System.Data.Common;
 
 namespace MyWebApp.Controllers;
@@ -10,19 +11,23 @@ namespace MyWebApp.Controllers;
 public class AccountController : Controller
 {
     private readonly ApplicationDbContext _db;
-    private readonly RecaptchaService _recaptcha;
+    private readonly CaptchaService _captchaService;
     private readonly IEmailSender _emailSender;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(ApplicationDbContext db, RecaptchaService recaptcha, IEmailSender emailSender)
+    public AccountController(ApplicationDbContext db, CaptchaService captchaService, IEmailSender emailSender, ILogger<AccountController> logger)
     {
         _db = db;
-        _recaptcha = recaptcha;
+        _captchaService = captchaService;
         _emailSender = emailSender;
+        _logger = logger;
     }
 
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 
@@ -32,13 +37,17 @@ public class AccountController : Controller
         if (!ModelState.IsValid)
         {
             model.ErrorMessage = "Invalid data";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View(model);
         }
 
-        var captchaResponse = Request.Form["g-recaptcha-response"].ToString();
-        if (!await _recaptcha.VerifyAsync(captchaResponse))
+        var captchaResponse = Request.Form["captcha"].ToString();
+        if (!_captchaService.Validate(captchaResponse))
         {
             model.ErrorMessage = "CAPTCHA validation failed.";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View(model);
         }
 
@@ -49,7 +58,8 @@ public class AccountController : Controller
             dbAvailable = await _db.Database.CanConnectAsync();
             if (dbAvailable)
             {
-                cred = await _db.AdminCredentials.AsNoTracking().FirstOrDefaultAsync();
+                cred = await _db.AdminCredentials.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Username == model.Username);
             }
         }
         catch (DbException)
@@ -62,14 +72,17 @@ public class AccountController : Controller
 
         if (model.Username == username && model.Password == password)
         {
+            _logger.LogInformation("User {User} logged in successfully", model.Username);
             HttpContext.Session.SetString("IsAdmin", "true");
             HttpContext.Session.SetString("AdminUser", username);
             if (!string.IsNullOrEmpty(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
             return RedirectToAction("Index", "Admin");
         }
-
+        _logger.LogWarning("Failed login for {User}", model.Username);
         model.ErrorMessage = "Invalid username or password";
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         return View(model);
     }
 
@@ -83,6 +96,8 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult ForgotPassword()
     {
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         return View();
     }
 
@@ -90,10 +105,12 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ForgotPassword(string username)
     {
-        var captcha = Request.Form["g-recaptcha-response"].ToString();
-        if (!await _recaptcha.VerifyAsync(captcha))
+        var captcha = Request.Form["captcha"].ToString();
+        if (!_captchaService.Validate(captcha))
         {
             ModelState.AddModelError(string.Empty, "CAPTCHA validation failed.");
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View();
         }
 
@@ -122,6 +139,8 @@ public class AccountController : Controller
         }
 
         ViewBag.Message = "If the account exists, a recovery link was sent.";
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         return View();
     }
 
@@ -134,6 +153,8 @@ public class AccountController : Controller
         if (reset == null)
             return RedirectToAction(nameof(Login));
         ViewBag.Token = token;
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
         return View();
     }
 
@@ -141,11 +162,13 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResetPassword(string token, string password)
     {
-        var captcha = Request.Form["g-recaptcha-response"].ToString();
-        if (!await _recaptcha.VerifyAsync(captcha))
+        var captcha = Request.Form["captcha"].ToString();
+        if (!_captchaService.Validate(captcha))
         {
             ModelState.AddModelError(string.Empty, "CAPTCHA validation failed.");
             ViewBag.Token = token;
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View();
         }
 
@@ -162,6 +185,49 @@ public class AccountController : Controller
             await _db.SaveChangesAsync();
         }
 
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        _captchaService.CreateChallenge();
+        ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
+        return View(new RegisterViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        var captcha = Request.Form["captcha"].ToString();
+        if (!_captchaService.Validate(captcha))
+        {
+            model.ErrorMessage = "CAPTCHA validation failed.";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
+            return View(model);
+        }
+
+        if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            model.ErrorMessage = "Invalid data";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
+            return View(model);
+        }
+
+        if (await _db.AdminCredentials.AnyAsync(c => c.Username == model.Username))
+        {
+            model.ErrorMessage = "User already exists.";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
+            return View(model);
+        }
+
+        _db.AdminCredentials.Add(new AdminCredential { Username = model.Username, Password = model.Password });
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("New user {User} registered", model.Username);
         return RedirectToAction(nameof(Login));
     }
 }
