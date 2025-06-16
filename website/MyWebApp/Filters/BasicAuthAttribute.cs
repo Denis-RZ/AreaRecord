@@ -36,6 +36,29 @@ namespace MyWebApp.Filters
                 return;
             }
 
+            var remember = context.HttpContext.Request.Cookies["RememberMe"];
+            if (session != null && string.IsNullOrEmpty(sessionUser) && !string.IsNullOrEmpty(remember))
+            {
+                try
+                {
+                    var data = Encoding.UTF8.GetString(Convert.FromBase64String(remember));
+                    var parts = data.Split(':', 2);
+                    if (parts.Length == 2 && parts[0] == creds.Username && parts[1] == creds.Password)
+                    {
+                        session.SetString("IsAdmin", "true");
+                        session.SetString("AdminUser", creds.Username);
+                        var identity = new ClaimsIdentity("Cookie");
+                        identity.AddClaim(new Claim(ClaimTypes.Name, creds.Username));
+                        context.HttpContext.User = new ClaimsPrincipal(identity);
+                        return;
+                    }
+                }
+                catch
+                {
+                    // ignore invalid cookie
+                }
+            }
+
             var request = context.HttpContext.Request;
             if (!request.Headers.TryGetValue("Authorization", out var header))
             {

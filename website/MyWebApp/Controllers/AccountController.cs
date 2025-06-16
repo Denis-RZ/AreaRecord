@@ -5,6 +5,9 @@ using MyWebApp.Models;
 using MyWebApp.Services;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace MyWebApp.Controllers;
 
@@ -14,6 +17,7 @@ public class AccountController : Controller
     private readonly CaptchaService _captchaService;
     private readonly IEmailSender _emailSender;
     private readonly ILogger<AccountController> _logger;
+    private static readonly Dictionary<string, (int Count, DateTime LockoutEnd)> _attempts = new();
 
     public AccountController(ApplicationDbContext db, CaptchaService captchaService, IEmailSender emailSender, ILogger<AccountController> logger)
     {
@@ -28,12 +32,35 @@ public class AccountController : Controller
     {
         _captchaService.CreateChallenge();
         ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
-        return View(new LoginViewModel { ReturnUrl = returnUrl });
+        var remember = Request.Cookies["RememberMe"];
+        string user = string.Empty;
+        if (!string.IsNullOrEmpty(remember))
+        {
+            try
+            {
+                var data = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(remember));
+                var parts = data.Split(':', 2);
+                if (parts.Length == 2)
+                    user = parts[0];
+            }
+            catch { }
+        }
+        return View(new LoginViewModel { ReturnUrl = returnUrl, Username = user, RememberMe = !string.IsNullOrEmpty(user) });
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
+        var captchaResponse = Request.Form["captcha"].ToString();
+        if (!_captchaService.Validate(captchaResponse))
+        {
+            model.ErrorMessage = "CAPTCHA validation failed.";
+            _captchaService.CreateChallenge();
+            ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
+            return View(model);
+        }
+
         if (!ModelState.IsValid)
         {
             model.ErrorMessage = "Invalid data";
@@ -42,10 +69,9 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var captchaResponse = Request.Form["captcha"].ToString();
-        if (!_captchaService.Validate(captchaResponse))
+        if (_attempts.TryGetValue(model.Username, out var info) && info.LockoutEnd > DateTime.UtcNow)
         {
-            model.ErrorMessage = "CAPTCHA validation failed.";
+            model.ErrorMessage = "Account locked. Try again later.";
             _captchaService.CreateChallenge();
             ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
             return View(model);
@@ -75,11 +101,34 @@ public class AccountController : Controller
             _logger.LogInformation("User {User} logged in successfully", model.Username);
             HttpContext.Session.SetString("IsAdmin", "true");
             HttpContext.Session.SetString("AdminUser", username);
+            _attempts.Remove(model.Username);
+            if (model.RememberMe)
+            {
+                var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}"));
+                Response.Cookies.Append("RememberMe", token, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddDays(7), HttpOnly = true, IsEssential = true });
+            }
+            else
+            {
+                Response.Cookies.Delete("RememberMe");
+            }
             if (!string.IsNullOrEmpty(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
             return RedirectToAction("Index", "Admin");
         }
         _logger.LogWarning("Failed login for {User}", model.Username);
+        if (_attempts.TryGetValue(model.Username, out info))
+        {
+            info.Count++;
+        }
+        else
+        {
+            info = (1, DateTime.MinValue);
+        }
+        if (info.Count >= 5)
+        {
+            info = (0, DateTime.UtcNow.AddMinutes(15));
+        }
+        _attempts[model.Username] = info;
         model.ErrorMessage = "Invalid username or password";
         _captchaService.CreateChallenge();
         ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
@@ -135,7 +184,8 @@ public class AccountController : Controller
             await _db.SaveChangesAsync();
 
             var link = Url.Action(nameof(ResetPassword), "Account", new { token = token.Token }, Request.Scheme);
-            await _emailSender.SendEmailAsync(cred.Username, "Password Reset", $"Reset your password: {link}");
+            var body = $"<p>Click <a href='{link}'>here</a> to reset your password.</p>";
+            await _emailSender.SendEmailAsync(cred.Username, "Password Reset", body);
         }
 
         ViewBag.Message = "If the account exists, a recovery link was sent.";

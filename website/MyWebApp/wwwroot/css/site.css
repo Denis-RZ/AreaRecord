@@ -151,3 +151,13 @@ body {
     background: var(--bg-secondary);
     color: #aaa;
 }
+
+.error {
+    color: #ff6b6b;
+    margin-bottom: 0.5rem;
+}
+
+.captcha-img {
+    width: 120px;
+    height: 40px;
+}
