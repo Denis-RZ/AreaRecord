@@ -112,6 +112,19 @@ body {
     margin-right: 1rem;
 }
 
+ 
+.captcha-img {
+    vertical-align: middle;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    border: 1px solid #333;
+}
+
+.download-form input[type="text"] {
+    margin-right: 0.5rem;
+}
+
+ 
 .features {
     max-width: 900px;
     margin: 2rem auto;

@@ -15,9 +15,12 @@
                 <strong>@f.FileName</strong> - @Html.Raw(f.Description)
             </div>
             <form method="post" asp-controller="Download" asp-action="Index" class="download-form">
-                <input type="hidden" name="token" class="captcha-token" />
+ 
+                <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
+                <input type="text" name="captcha" placeholder="Enter code" required />
                 <input type="hidden" name="fileId" value="@f.Id" />
-                <button class="download-btn" type="submit" disabled>Download</button>
+                <button class="download-btn" type="submit">Download</button>
+ 
             </form>
         </li>
     }
@@ -31,16 +34,12 @@
 </div>
 
 @section Scripts {
-    <script src="https://www.google.com/recaptcha/api.js?render=@ViewBag.SiteKey"></script>
     <script>
-        grecaptcha.ready(function () {
-            grecaptcha.execute('@ViewBag.SiteKey', { action: 'download' }).then(function (token) {
-                document.querySelectorAll('.captcha-token').forEach(function (el) {
-                    el.value = token;
-                });
-                document.querySelectorAll('.download-btn').forEach(function (btn) {
-                    btn.disabled = false;
-                });
+ 
+        document.querySelectorAll('.captcha-img').forEach(function (img) {
+            img.addEventListener('click', function () {
+                img.src = '@Url.Action("Image", "Captcha")?t=' + Date.now();
+ 
             });
         });
     </script>
