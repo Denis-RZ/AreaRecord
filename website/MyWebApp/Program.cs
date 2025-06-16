@@ -11,6 +11,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using System.IO;
+using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 var startupLogger = LoggerFactory.Create(b => b.AddConsole()).CreateLogger("Startup");
@@ -194,26 +195,30 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Verify Quill client library is present
-var quillPath = Path.Combine(app.Environment.WebRootPath ?? "wwwroot",
-    "lib", "quill", "dist", "quill.js");
-if (!File.Exists(quillPath))
+var quillFiles = new[] { "quill.js", "quill.snow.css" };
+foreach (var name in quillFiles)
 {
-    app.Logger.LogWarning("Missing Quill library at {Path}", quillPath);
+    var path = Path.Combine(app.Environment.WebRootPath ?? "wwwroot",
+        "lib", "quill", "dist", name);
+    if (File.Exists(path))
+        continue;
+
+    app.Logger.LogWarning("Missing Quill asset at {Path}", path);
     try
     {
-        var dir = Path.GetDirectoryName(quillPath);
-        if (!string.IsNullOrEmpty(dir))
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             Directory.CreateDirectory(dir);
 
         using var http = new HttpClient();
-        var data = http.GetByteArrayAsync(
-            "https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js").GetAwaiter().GetResult();
-        File.WriteAllBytes(quillPath, data);
-        app.Logger.LogInformation("Downloaded Quill library from CDN");
+        var url = $"https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/{name}";
+        var data = http.GetByteArrayAsync(url).GetAwaiter().GetResult();
+        File.WriteAllBytes(path, data);
+        app.Logger.LogInformation("Downloaded Quill asset {Name} from CDN", name);
     }
     catch (Exception ex)
     {
-        app.Logger.LogWarning(ex, "Failed to download Quill library");
+        app.Logger.LogWarning(ex, "Failed to download Quill asset {Name}", name);
     }
 }
 
