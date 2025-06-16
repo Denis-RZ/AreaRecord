@@ -14,6 +14,8 @@ public class PageSection
     [MaxLength(64)]
     public string Area { get; set; } = string.Empty;
 
+    public int SortOrder { get; set; }
+
     public string Html { get; set; } = string.Empty;
 
     public DateTime? StartDate { get; set; }

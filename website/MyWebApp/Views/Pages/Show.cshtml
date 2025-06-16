@@ -1,5 +1,22 @@
 @model MyWebApp.Models.Page
 @{
     ViewData["Title"] = Model.Title;
+    var layout = ViewBag.PageLayout as string ?? "single-column";
+    var zones = ViewBag.ZoneHtml as Dictionary<string, string> ?? new();
 }
-@Html.Raw(Model.BodyHtml)
+
+@if (layout == "two-column-sidebar")
+{
+    <div class="row">
+        <div class="col-md-8">
+            @Html.Raw(zones.GetValueOrDefault("main"))
+        </div>
+        <aside class="col-md-4">
+            @Html.Raw(zones.GetValueOrDefault("sidebar"))
+        </aside>
+    </div>
+}
+else
+{
+    @Html.Raw(zones.GetValueOrDefault("main"))
+}

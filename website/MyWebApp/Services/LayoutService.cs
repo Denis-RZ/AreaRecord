@@ -9,6 +9,12 @@ public class LayoutService
     private const string HeaderKey = "layout_header";
     private const string FooterKey = "layout_footer";
 
+    public static readonly Dictionary<string, string[]> LayoutZones = new()
+    {
+        ["single-column"] = new[] { "main" },
+        ["two-column-sidebar"] = new[] { "main", "sidebar" }
+    };
+
     public LayoutService(CacheService cache)
     {
         _cache = cache;
@@ -19,10 +25,12 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(HeaderKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await db.PageSections.AsNoTracking()
+            var parts = await db.PageSections.AsNoTracking()
                 .Where(s => s.Page.Slug == "layout" && s.Area == "header")
+                .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
-                .FirstOrDefaultAsync() ?? string.Empty;
+                .ToListAsync();
+            return string.Join(System.Environment.NewLine, parts);
         });
     }
 
@@ -31,23 +39,25 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(FooterKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await db.PageSections.AsNoTracking()
+            var parts = await db.PageSections.AsNoTracking()
                 .Where(s => s.Page.Slug == "layout" && s.Area == "footer")
+                .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
-                .FirstOrDefaultAsync() ?? string.Empty;
+                .ToListAsync();
+            return string.Join(System.Environment.NewLine, parts);
         });
     }
 
     public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
     {
-        var section = await db.PageSections
-            .FirstOrDefaultAsync(s => s.PageId == pageId && s.Area == area
-                && (s.StartDate == null || s.StartDate <= DateTime.UtcNow)
-                && (s.EndDate == null || s.EndDate >= DateTime.UtcNow));
-        if (section == null) return string.Empty;
-        section.ViewCount++;
-        await db.SaveChangesAsync();
-        return section.Html;
+ 
+        var parts = await db.PageSections.AsNoTracking()
+            .Where(s => s.PageId == pageId && s.Area == area)
+            .OrderBy(s => s.SortOrder)
+            .Select(s => s.Html)
+            .ToListAsync();
+        return string.Join(System.Environment.NewLine, parts);
+ 
     }
 
     public void Reset()

@@ -9,6 +9,14 @@
     <input type="hidden" asp-for="Id" />
     <div><label>Slug</label><input asp-for="Slug" /></div>
     <div><label>Title</label><input asp-for="Title" /></div>
+    <div>
+        <label asp-for="Layout"></label>
+        <select asp-for="Layout" id="layout-select">
+            <option value="single-column">Single Column</option>
+            <option value="two-column-sidebar">Two Column Sidebar</option>
+        </select>
+        <img id="layout-preview" class="layout-thumb" src="~/img/layout-single-column.svg" />
+    </div>
     <div><label asp-for="MetaDescription"></label><input asp-for="MetaDescription" /></div>
     <div><label asp-for="MetaKeywords"></label><input asp-for="MetaKeywords" /></div>
     <div><label asp-for="OgTitle"></label><input asp-for="OgTitle" /></div>
@@ -58,16 +66,13 @@
         document.getElementById('BodyHtml').value = bodyQuill.root.innerHTML;
         document.getElementById('FooterHtml').value = footerQuill.root.innerHTML;
     });
-    const templates = JSON.parse(document.getElementById('templates-data').textContent);
-    document.getElementById('insert-template').addEventListener('click', function () {
-        const sel = document.getElementById('template-select');
-        const id = parseInt(sel.value);
-        const tpl = templates.find(t => t.id === id);
-        if (tpl) {
-            bodyQuill.clipboard.dangerouslyPasteHTML(bodyQuill.getLength(), tpl.html);
-        }
-    });
-</script>
-<script id="templates-data" type="application/json">
-@Html.Raw(System.Text.Json.JsonSerializer.Serialize(templates))
+ 
+    const layoutSelect = document.getElementById('layout-select');
+    const preview = document.getElementById('layout-preview');
+    function updatePreview() {
+        preview.src = `/img/layout-${layoutSelect.value}.svg`;
+    }
+    layoutSelect.addEventListener('change', updatePreview);
+    updatePreview();
+ 
 </script>

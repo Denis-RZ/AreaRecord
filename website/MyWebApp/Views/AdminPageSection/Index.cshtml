@@ -11,7 +11,9 @@
 <p><a asp-action="Create">Create New</a></p>
 <table>
     <thead>
-        <tr><th>Page</th><th>Area</th><th>Views</th><th colspan="2"></th></tr>
+ 
+        <tr><th>Page</th><th>Area</th><th>Sort</th><th colspan="2"></th></tr>
+ 
     </thead>
     <tbody>
 @foreach (var s in Model)
@@ -19,7 +21,9 @@
     <tr>
         <td>@s.Page?.Slug</td>
         <td>@s.Area</td>
-        <td>@s.ViewCount</td>
+ 
+        <td>@s.SortOrder</td>
+ 
         <td><a asp-action="Edit" asp-route-id="@s.Id">Edit</a></td>
         <td><a asp-action="Delete" asp-route-id="@s.Id">Delete</a></td>
     </tr>

@@ -15,6 +15,9 @@ namespace MyWebApp.Models
         [MaxLength(256)]
         public string Title { get; set; } = string.Empty;
 
+        [MaxLength(64)]
+        public string Layout { get; set; } = "single-column";
+
         public string? HeaderHtml { get; set; }
 
         public string BodyHtml { get; set; } = string.Empty;
