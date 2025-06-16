@@ -175,7 +175,7 @@ using (var scope = app.Services.CreateScope())
                 UpgradeDownloadFilesTable(db);
                 UpgradePageSectionsTable(db);
                 UpgradePagesTable(db);
-                UpgradeMediaTable(db);
+                UpgradeMediaItemsTable(db);
             }
         if (db.Database.CanConnect())
         {
@@ -371,7 +371,7 @@ static void UpgradePagesTable(ApplicationDbContext db)
     }
 }
 
-static void UpgradeMediaTable(ApplicationDbContext db)
+static void UpgradeMediaItemsTable(ApplicationDbContext db)
 {
     try
     {
@@ -379,11 +379,11 @@ static void UpgradeMediaTable(ApplicationDbContext db)
         if (conn.State != System.Data.ConnectionState.Open)
             conn.Open();
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Media'";
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='MediaItems'";
         var exists = cmd.ExecuteScalar() != null;
         if (!exists)
         {
-            db.Database.ExecuteSqlRaw(@"CREATE TABLE Media (
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE MediaItems (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 FileName TEXT NOT NULL,
                 FilePath TEXT NOT NULL,
@@ -392,7 +392,7 @@ static void UpgradeMediaTable(ApplicationDbContext db)
                 AltText TEXT,
                 Uploaded TEXT NOT NULL
             )");
-            db.Database.ExecuteSqlRaw("CREATE INDEX IX_Media_FileName ON Media(FileName)");
+            db.Database.ExecuteSqlRaw("CREATE INDEX IX_MediaItems_FileName ON MediaItems(FileName)");
         }
     }
     catch (Exception ex)
