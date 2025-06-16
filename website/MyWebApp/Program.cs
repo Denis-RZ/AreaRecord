@@ -150,7 +150,6 @@ builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
 builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();
-builder.Services.AddSingleton<MyWebApp.Services.RecaptchaService>();
 builder.Services.AddSingleton<MyWebApp.Services.IEmailSender, MyWebApp.Services.LoggingEmailSender>();
 builder.Services.AddScoped<MyWebApp.Services.SchemaValidator>();
 builder.Services.AddOptions<MyWebApp.Options.AdminAuthOptions>()

@@ -1,14 +1,13 @@
-@model MyWebApp.Models.LoginViewModel
+@model MyWebApp.Models.RegisterViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Register";
 }
-<h2>Admin Login</h2>
+<h2>Register</h2>
 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
 {
     <div class="error">@Model.ErrorMessage</div>
 }
-<form method="post" asp-action="Login" asp-controller="Account">
-    <input type="hidden" asp-for="ReturnUrl" />
+<form method="post" asp-action="Register" asp-controller="Account">
     <div class="form-group">
         <label asp-for="Username"></label>
         <input asp-for="Username" class="form-control" />
@@ -21,13 +20,8 @@
         <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
         <input type="text" name="captcha" class="form-control mt-1" placeholder="Enter code" />
     </div>
-    <button type="submit" class="btn btn-primary mt-2">Login</button>
+    <button type="submit" class="btn btn-primary mt-2">Register</button>
 </form>
-<div class="mt-2">
-    <a asp-action="ForgotPassword" asp-controller="Account">Forgot Password?</a>
-    |
-    <a asp-action="Register" asp-controller="Account">Register</a>
-</div>
 <script>
     document.querySelector('.captcha-img').addEventListener('click', function () {
         this.src = '@Url.Action("Image", "Captcha")?t=' + Date.now();
