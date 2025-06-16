@@ -20,7 +20,8 @@ namespace MyWebApp.Filters
             var roles = session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
             if (!_roles.Any(r => roles.Contains(r)))
             {
-                context.Result = new ForbidResult();
+                var returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                context.Result = new RedirectToActionResult("Login", "Account", new { returnUrl });
             }
         }
     }
