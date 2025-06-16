@@ -7,21 +7,21 @@
 
 <p>Total downloads: @ViewBag.TotalDownloads</p>
 
-<form method="post" asp-controller="Download" asp-action="Index" id="download-form">
-    <input type="hidden" name="token" id="captcha-token" />
-    <ul class="download-list">
-        @foreach (var f in Model)
-        {
-            <li>
-                <label>
-                    <input type="radio" name="fileId" value="@f.Id" />
-                    <strong>@f.FileName</strong> - @Html.Raw(f.Description)
-                </label>
-            </li>
-        }
-    </ul>
-    <button class="download-btn" type="submit" id="download-btn" disabled>Download</button>
-</form>
+<ul class="download-list">
+    @foreach (var f in Model)
+    {
+        <li class="download-item">
+            <div class="download-info">
+                <strong>@f.FileName</strong> - @Html.Raw(f.Description)
+            </div>
+            <form method="post" asp-controller="Download" asp-action="Index" class="download-form">
+                <input type="hidden" name="token" class="captcha-token" />
+                <input type="hidden" name="fileId" value="@f.Id" />
+                <button class="download-btn" type="submit" disabled>Download</button>
+            </form>
+        </li>
+    }
+</ul>
 
 <div class="validation-summary">
     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
@@ -35,8 +35,12 @@
     <script>
         grecaptcha.ready(function () {
             grecaptcha.execute('@ViewBag.SiteKey', { action: 'download' }).then(function (token) {
-                document.getElementById('captcha-token').value = token;
-                document.getElementById('download-btn').disabled = false;
+                document.querySelectorAll('.captcha-token').forEach(function (el) {
+                    el.value = token;
+                });
+                document.querySelectorAll('.download-btn').forEach(function (btn) {
+                    btn.disabled = false;
+                });
             });
         });
     </script>
