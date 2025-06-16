@@ -35,6 +35,7 @@ public class SanitizationTests
         {
             Slug = "test",
             Title = "Test",
+            Layout = "single-column",
             HeaderHtml = "<script>alert(1)</script><p>h</p>",
             BodyHtml = "<p>b</p><script>alert(2)</script>",
             FooterHtml = "<script>alert(3)</script>f"
@@ -52,7 +53,7 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>" };
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", SortOrder = 0, Html = "<div>hi</div><script>bad()</script>" };
         var result = await controller.Create(model);
         Assert.IsType<RedirectToActionResult>(result);
         var section = ctx.PageSections.First();

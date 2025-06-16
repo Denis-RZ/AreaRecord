@@ -51,8 +51,7 @@ namespace MyWebApp.Data
                 .IsUnique();
 
             modelBuilder.Entity<PageSection>()
-                .HasIndex(s => new { s.PageId, s.Area })
-                .IsUnique();
+                .HasIndex(s => new { s.PageId, s.Area, s.SortOrder });
 
             modelBuilder.Entity<PasswordResetToken>()
                 .HasIndex(t => t.Token)
@@ -83,6 +82,7 @@ namespace MyWebApp.Data
                     Id = 1,
                     Slug = "layout",
                     Title = "Layout",
+                    Layout = "single-column",
                     HeaderHtml = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>",
                     FooterHtml = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
                 },
@@ -91,6 +91,7 @@ namespace MyWebApp.Data
                     Id = 2,
                     Slug = "home",
                     Title = "Home",
+                    Layout = "single-column",
                     BodyHtml = "<p>Welcome to Screen Area Recorder Pro.</p>"
                 });
 
@@ -100,6 +101,7 @@ namespace MyWebApp.Data
                     Id = 1,
                     PageId = 1,
                     Area = "header",
+                    SortOrder = 0,
                     Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
                 },
                 new PageSection
@@ -107,6 +109,7 @@ namespace MyWebApp.Data
                     Id = 2,
                     PageId = 1,
                     Area = "footer",
+                    SortOrder = 0,
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
                 });
 
