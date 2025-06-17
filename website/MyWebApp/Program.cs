@@ -193,6 +193,7 @@ using (var scope = app.Services.CreateScope())
                 UpgradePagesTable(db);
                 UpgradeMediaItemsTable(db);
                 UpgradeBlockTemplatesTable(db);
+                UpgradePermissionsTable(db);
             }
         if (db.Database.CanConnect())
         {
@@ -500,6 +501,43 @@ static void UpgradeBlockTemplatesTable(ApplicationDbContext db)
                 Html TEXT,
                 Created TEXT NOT NULL,
                 FOREIGN KEY(BlockTemplateId) REFERENCES BlockTemplates(Id) ON DELETE CASCADE
+            )");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradePermissionsTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Permissions'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE Permissions (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL
+            )");
+            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_Permissions_Name ON Permissions(Name)");
+        }
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='RolePermissions'";
+        exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE RolePermissions (
+                RoleId INTEGER NOT NULL,
+                PermissionId INTEGER NOT NULL,
+                PRIMARY KEY(RoleId, PermissionId),
+                FOREIGN KEY(RoleId) REFERENCES Roles(Id) ON DELETE CASCADE,
+                FOREIGN KEY(PermissionId) REFERENCES Permissions(Id) ON DELETE CASCADE
             )");
         }
     }
