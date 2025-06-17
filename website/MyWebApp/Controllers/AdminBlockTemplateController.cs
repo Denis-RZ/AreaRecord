@@ -135,7 +135,7 @@ public class AdminBlockTemplateController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddToPage(int id, int pageId, string area)
+    public async Task<IActionResult> AddToPage(int id, int pageId, string zone)
     {
         var template = await _db.BlockTemplates.FindAsync(id);
         var page = await _db.Pages.FindAsync(pageId);
@@ -143,23 +143,23 @@ public class AdminBlockTemplateController : Controller
         {
             return NotFound();
         }
-        area = area?.Trim() ?? string.Empty;
-        if (string.IsNullOrEmpty(area))
+        zone = zone?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(zone))
         {
             await LoadPagesAsync();
             ViewBag.BlockId = id;
-            ModelState.AddModelError("area", "Area required");
+            ModelState.AddModelError("zone", "Zone required");
             return View();
         }
         var sort = await _db.PageSections
-            .Where(s => s.PageId == pageId && s.Area == area)
+            .Where(s => s.PageId == pageId && s.Zone == zone)
             .Select(s => s.SortOrder)
             .DefaultIfEmpty(-1)
             .MaxAsync() + 1;
         var section = new PageSection
         {
             PageId = pageId,
-            Area = area,
+            Zone = zone,
             SortOrder = sort,
             Html = template.Html,
             Type = PageSectionType.Html
@@ -192,12 +192,12 @@ public class AdminBlockTemplateController : Controller
     [HttpGet]
     public async Task<IActionResult> GetSections(int id)
     {
-        var areas = await _db.PageSections.AsNoTracking()
+        var zones = await _db.PageSections.AsNoTracking()
             .Where(s => s.PageId == id)
-            .Select(s => s.Area)
+            .Select(s => s.Zone)
             .Distinct()
             .OrderBy(a => a)
             .ToListAsync();
-        return Json(areas);
+        return Json(zones);
     }
 }

@@ -40,7 +40,7 @@ public class SanitizationTests
             Layout = "single-column",
             Sections = new List<PageSection>
             {
-                new PageSection { Area = "main", Html = "<p>b</p><script>alert(2)</script>" }
+                new PageSection { Zone = "main", Html = "<p>b</p><script>alert(2)</script>" }
             }
         };
         var result = await controller.Create(model);
@@ -55,7 +55,7 @@ public class SanitizationTests
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
  
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "main", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
         var result = await controller.Create(model, null);
  
         Assert.IsType<RedirectToActionResult>(result);
@@ -73,7 +73,7 @@ public class SanitizationTests
             Slug = "edit",
             Title = "Edit",
             Layout = "single-column",
-            Sections = new List<PageSection> { new PageSection { Area = "main", Html = "<p>a</p>" } }
+            Sections = new List<PageSection> { new PageSection { Zone = "main", Html = "<p>a</p>" } }
         };
         await controller.Create(createModel);
         var page = ctx.Pages.Single(p => p.Slug == "edit");
@@ -83,7 +83,7 @@ public class SanitizationTests
             Slug = page.Slug,
             Title = page.Title,
             Layout = page.Layout,
-            Sections = new List<PageSection> { new PageSection { Area = "main", Html = "<p>b</p><script>alert(2)</script>" } }
+            Sections = new List<PageSection> { new PageSection { Zone = "main", Html = "<p>b</p><script>alert(2)</script>" } }
         };
         var result = await controller.Edit(model);
         var section = ctx.PageSections.Single(s => s.PageId == page.Id);
@@ -96,10 +96,10 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
         var result = await controller.Create(model, null);
         Assert.IsType<RedirectToActionResult>(result);
-        var section = ctx.PageSections.First(s => s.Area == "md");
+        var section = ctx.PageSections.First(s => s.Zone == "md");
         Assert.Contains("<h1>", section.Html);
         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
     }
@@ -109,10 +109,10 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
         var result = await controller.Create(model, null);
         Assert.IsType<RedirectToActionResult>(result);
-        var section = ctx.PageSections.First(s => s.Area == "code");
+        var section = ctx.PageSections.First(s => s.Zone == "code");
         Assert.Contains("&lt;b&gt;test&lt;/b&gt;", section.Html);
     }
 
@@ -124,10 +124,10 @@ public class SanitizationTests
         var bytes = new byte[] {1,2,3};
         using var stream = new System.IO.MemoryStream(bytes);
         var file = new FormFile(stream, 0, bytes.Length, "file", "img.png");
-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "img", Type = PageSectionType.Image };
+        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "img", Type = PageSectionType.Image };
         var result = await controller.Create(model, file);
         Assert.IsType<RedirectToActionResult>(result);
-        var section = ctx.PageSections.First(s => s.Area == "img");
+        var section = ctx.PageSections.First(s => s.Zone == "img");
         Assert.Contains("<img", section.Html);
     }
 }

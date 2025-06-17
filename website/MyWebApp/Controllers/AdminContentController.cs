@@ -65,11 +65,11 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
-        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
+        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
         {
             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }
-        if (!sections.Any(s => s.Area == "main"))
+        if (!sections.Any(s => s.Zone == "main"))
         {
             ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
         }
@@ -131,11 +131,11 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
-        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
+        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
         {
             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }
-        if (!sections.Any(s => s.Area == "main"))
+        if (!sections.Any(s => s.Zone == "main"))
         {
             ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
         }
