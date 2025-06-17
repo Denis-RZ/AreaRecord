@@ -64,15 +64,17 @@ public class AdminContentController : Controller
         {
             model.PublishDate = DateTime.UtcNow;
         }
+        var sections = model.Sections?.ToList() ?? new List<PageSection>();
+        model.Sections = new List<PageSection>();
         _db.Pages.Add(model);
         await _db.SaveChangesAsync();
-        if (model.Sections != null && model.Sections.Count > 0)
+        if (sections.Count > 0)
         {
             var files = HttpContext.Request.Form.Files;
-            var sections = model.Sections.ToList();
             for (int i = 0; i < sections.Count; i++)
             {
                 var s = sections[i];
+                s.Id = 0;
                 s.PageId = model.Id;
                 var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
                 await PrepareHtmlAsync(s, file);
@@ -113,17 +115,19 @@ public class AdminContentController : Controller
         {
             model.PublishDate = DateTime.UtcNow;
         }
+        var sections = model.Sections?.ToList() ?? new List<PageSection>();
+        model.Sections = new List<PageSection>();
         _db.Update(model);
         await _db.SaveChangesAsync();
-        if (model.Sections != null && model.Sections.Count > 0)
+        var existing = _db.PageSections.Where(s => s.PageId == model.Id);
+        _db.PageSections.RemoveRange(existing);
+        if (sections.Count > 0)
         {
-            var existing = _db.PageSections.Where(s => s.PageId == model.Id);
-            _db.PageSections.RemoveRange(existing);
             var files = HttpContext.Request.Form.Files;
-            var sections = model.Sections.ToList();
             for (int i = 0; i < sections.Count; i++)
             {
                 var s = sections[i];
+                s.Id = 0;
                 s.PageId = model.Id;
                 var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
                 await PrepareHtmlAsync(s, file);
