@@ -40,6 +40,18 @@
     @await Html.PartialAsync("_SectionEditor", sections[i], vd)
 }
     </div>
+    @if (ViewBag.Templates is List<BlockTemplate> templates && templates.Count > 0)
+    {
+        <div class="my-2">
+            <select id="template-selector">
+                <option value="">Insert template...</option>
+                @foreach (var t in templates)
+                {
+                    <option value="@t.Id">@t.Name</option>
+                }
+            </select>
+        </div>
+    }
     <button type="button" id="add-section">Add Section</button>
     <div id="section-template" style="display:none">
         @await Html.PartialAsync("_SectionEditor", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })

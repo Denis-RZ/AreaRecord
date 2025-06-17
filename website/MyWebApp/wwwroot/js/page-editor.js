@@ -4,6 +4,29 @@ window.addEventListener('load', () => {
     const templateHtml = document.getElementById('section-template').innerHTML.trim();
     let sectionCount = container.querySelectorAll('.section-editor').length;
     const editors = {};
+    let activeIndex = null;
+
+    const templateSelect = document.getElementById('template-selector');
+    if (templateSelect) {
+        templateSelect.addEventListener('change', () => {
+            const id = templateSelect.value;
+            if (!id) return;
+            if (activeIndex === null || !editors[activeIndex]) {
+                alert('Select a section first');
+                templateSelect.value = '';
+                return;
+            }
+            fetch(`/AdminBlockTemplate/Html/${id}`)
+                .then(r => r.text())
+                .then(html => {
+                    const quill = editors[activeIndex];
+                    quill.root.innerHTML = html;
+                    const input = document.getElementById(`Html-${activeIndex}`);
+                    if (input) input.value = html;
+                    templateSelect.value = '';
+                });
+        });
+    }
 
     container.querySelectorAll('.section-editor').forEach(el => {
         const idx = el.dataset.index;
@@ -119,6 +142,8 @@ window.addEventListener('load', () => {
         const code = codeDiv ? codeDiv.querySelector('textarea') : null;
         const quill = new Quill(`#quill-editor-${index}`, { theme: 'snow' });
         quill.root.innerHTML = quillInput.value || '';
+        quill.root.addEventListener('click', () => { activeIndex = index; });
+        quill.root.addEventListener('focus', () => { activeIndex = index; });
         editors[index] = quill;
 
         function update() {

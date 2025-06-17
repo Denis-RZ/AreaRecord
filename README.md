@@ -73,6 +73,15 @@ dotnet test MyWebApp.sln
 
 This will build the solution and run all tests.
 
+## Block Templates
+
+Reusable page blocks can be managed under the **Blocks** section of the admin
+panel. Each block stores a fragment of HTML that can be inserted while editing a
+page. When working in the page editor click inside a section so the Quill editor
+is focused, then choose a block from the "Insert template" dropdown. The HTML is
+loaded from `/AdminBlockTemplate/Html/{id}` and placed directly into the active
+editor.
+
 ## Chrome Extension
 
 The extension source resides in the `extension/` folder. Load this folder in
