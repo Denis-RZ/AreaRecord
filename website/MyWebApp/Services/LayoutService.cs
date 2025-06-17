@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
+using Markdig;
 using MyWebApp.Data;
+using MyWebApp.Models;
 
 namespace MyWebApp.Services;
 
@@ -38,12 +40,18 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(HeaderKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var parts = await db.PageSections.AsNoTracking()
+            var sections = await db.PageSections.AsNoTracking()
                 .Where(s => s.Page.Slug == "layout" && s.Zone == "header")
                 .OrderBy(s => s.SortOrder)
-                .Select(s => s.Html)
+                .Select(s => new { s.Html, s.Type })
                 .ToListAsync();
-            var html = string.Join(System.Environment.NewLine, parts);
+            var htmlParts = sections.Select(section =>
+            {
+                if (section.Type == PageSectionType.Markdown)
+                    return Markdig.Markdown.ToHtml(section.Html);
+                return section.Html;
+            });
+            var html = string.Join(System.Environment.NewLine, htmlParts);
             return await _tokens.RenderAsync(db, html);
         });
     }
@@ -53,12 +61,18 @@ public class LayoutService
         return await _cache.GetOrCreateAsync(FooterKey, async e =>
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var parts = await db.PageSections.AsNoTracking()
+            var sections = await db.PageSections.AsNoTracking()
                 .Where(s => s.Page.Slug == "layout" && s.Zone == "footer")
                 .OrderBy(s => s.SortOrder)
-                .Select(s => s.Html)
+                .Select(s => new { s.Html, s.Type })
                 .ToListAsync();
-            var html = string.Join(System.Environment.NewLine, parts);
+            var htmlParts = sections.Select(section =>
+            {
+                if (section.Type == PageSectionType.Markdown)
+                    return Markdig.Markdown.ToHtml(section.Html);
+                return section.Html;
+            });
+            var html = string.Join(System.Environment.NewLine, htmlParts);
             return await _tokens.RenderAsync(db, html);
         });
     }
@@ -66,12 +80,18 @@ public class LayoutService
     public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string zone)
     {
 
-        var parts = await db.PageSections.AsNoTracking()
+        var sections = await db.PageSections.AsNoTracking()
             .Where(s => s.PageId == pageId && s.Zone == zone)
             .OrderBy(s => s.SortOrder)
-            .Select(s => s.Html)
+            .Select(s => new { s.Html, s.Type })
             .ToListAsync();
-        var html = string.Join(System.Environment.NewLine, parts);
+        var htmlParts = sections.Select(section =>
+        {
+            if (section.Type == PageSectionType.Markdown)
+                return Markdig.Markdown.ToHtml(section.Html);
+            return section.Html;
+        });
+        var html = string.Join(System.Environment.NewLine, htmlParts);
         return await _tokens.RenderAsync(db, html);
  
     }
