@@ -6,6 +6,7 @@ namespace MyWebApp.Services;
 public class LayoutService
 {
     private readonly CacheService _cache;
+    private readonly TokenRenderService _tokens;
     private const string HeaderKey = "layout_header";
     private const string FooterKey = "layout_footer";
 
@@ -15,9 +16,10 @@ public class LayoutService
         ["two-column-sidebar"] = new[] { "main", "sidebar" }
     };
 
-    public LayoutService(CacheService cache)
+    public LayoutService(CacheService cache, TokenRenderService tokens)
     {
         _cache = cache;
+        _tokens = tokens;
     }
 
     public async Task<string> GetHeaderAsync(ApplicationDbContext db)
@@ -30,7 +32,8 @@ public class LayoutService
                 .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
                 .ToListAsync();
-            return string.Join(System.Environment.NewLine, parts);
+            var html = string.Join(System.Environment.NewLine, parts);
+            return await _tokens.RenderAsync(db, html);
         });
     }
 
@@ -44,7 +47,8 @@ public class LayoutService
                 .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
                 .ToListAsync();
-            return string.Join(System.Environment.NewLine, parts);
+            var html = string.Join(System.Environment.NewLine, parts);
+            return await _tokens.RenderAsync(db, html);
         });
     }
 
@@ -56,7 +60,8 @@ public class LayoutService
             .OrderBy(s => s.SortOrder)
             .Select(s => s.Html)
             .ToListAsync();
-        return string.Join(System.Environment.NewLine, parts);
+        var html = string.Join(System.Environment.NewLine, parts);
+        return await _tokens.RenderAsync(db, html);
  
     }
 

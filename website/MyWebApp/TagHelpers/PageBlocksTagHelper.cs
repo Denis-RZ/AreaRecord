@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using MyWebApp.Data;
+using MyWebApp.Services;
 
 namespace MyWebApp.TagHelpers;
 
@@ -8,9 +9,11 @@ namespace MyWebApp.TagHelpers;
 public class PageBlocksTagHelper : TagHelper
 {
     private readonly ApplicationDbContext _db;
-    public PageBlocksTagHelper(ApplicationDbContext db)
+    private readonly TokenRenderService _tokens;
+    public PageBlocksTagHelper(ApplicationDbContext db, TokenRenderService tokens)
     {
         _db = db;
+        _tokens = tokens;
     }
 
     public int PageId { get; set; }
@@ -24,6 +27,8 @@ public class PageBlocksTagHelper : TagHelper
             .OrderBy(s => s.SortOrder)
             .Select(s => s.Html)
             .ToListAsync();
-        output.Content.SetHtmlContent(string.Join(System.Environment.NewLine, htmlParts));
+        var html = string.Join(System.Environment.NewLine, htmlParts);
+        html = await _tokens.RenderAsync(_db, html);
+        output.Content.SetHtmlContent(html);
     }
 }
