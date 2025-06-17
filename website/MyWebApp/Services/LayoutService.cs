@@ -17,12 +17,12 @@ public class LayoutService
         ["two-column-sidebar"] = new[] { "main", "sidebar" }
     };
 
-    public static bool IsValidArea(string layout, string area)
+    public static bool IsValidZone(string layout, string zone)
     {
-        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(area);
+        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(zone);
     }
 
-    public static string[] GetAreas(string layout)
+    public static string[] GetZones(string layout)
     {
         return LayoutZones.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
     }
@@ -39,7 +39,7 @@ public class LayoutService
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             var parts = await db.PageSections.AsNoTracking()
-                .Where(s => s.Page.Slug == "layout" && s.Area == "header")
+                .Where(s => s.Page.Slug == "layout" && s.Zone == "header")
                 .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
                 .ToListAsync();
@@ -54,7 +54,7 @@ public class LayoutService
         {
             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             var parts = await db.PageSections.AsNoTracking()
-                .Where(s => s.Page.Slug == "layout" && s.Area == "footer")
+                .Where(s => s.Page.Slug == "layout" && s.Zone == "footer")
                 .OrderBy(s => s.SortOrder)
                 .Select(s => s.Html)
                 .ToListAsync();
@@ -63,11 +63,11 @@ public class LayoutService
         });
     }
 
-    public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
+    public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string zone)
     {
- 
+
         var parts = await db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == pageId && s.Area == area)
+            .Where(s => s.PageId == pageId && s.Zone == zone)
             .OrderBy(s => s.SortOrder)
             .Select(s => s.Html)
             .ToListAsync();

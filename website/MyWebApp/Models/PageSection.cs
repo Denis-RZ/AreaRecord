@@ -21,7 +21,7 @@ public class PageSection
 
     [Required]
     [MaxLength(64)]
-    public string Area { get; set; } = string.Empty;
+    public string Zone { get; set; } = string.Empty;
 
     public int SortOrder { get; set; }
 

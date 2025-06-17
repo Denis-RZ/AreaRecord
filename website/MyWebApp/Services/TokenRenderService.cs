@@ -50,9 +50,9 @@ public class TokenRenderService
                 var parts = param.Split(':', 2);
                 if (parts.Length == 2 && int.TryParse(parts[0], out var pageId))
                 {
-                    var area = parts[1];
+                    var zone = parts[1];
                     var htmlParts = await db.PageSections.AsNoTracking()
-                        .Where(s => s.PageId == pageId && s.Area == area)
+                        .Where(s => s.PageId == pageId && s.Zone == zone)
                         .OrderBy(s => s.SortOrder)
                         .Select(s => s.Html)
                         .ToListAsync();
