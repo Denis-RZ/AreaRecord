@@ -14,10 +14,11 @@
     </div>
     <div>
         <label>Area</label>
-        <input asp-for="Area" />
+        <select id="area-select" asp-for="Area" data-selected="@Model.Area"></select>
     </div>
  
-    @await Html.PartialAsync("_SectionEditor", Model)
- 
+@await Html.PartialAsync("_SectionEditor", Model)
+
     <button type="submit">Save</button>
 </form>
+<script src="~/js/page-section-area.js" asp-append-version="true"></script>

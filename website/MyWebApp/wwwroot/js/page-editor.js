@@ -5,6 +5,65 @@ window.addEventListener('load', () => {
     let sectionCount = container.querySelectorAll('.section-editor').length;
     const editors = {};
     let activeIndex = null;
+    const layoutSelect = document.getElementById('layout-select');
+    let currentLayout = layoutSelect ? layoutSelect.value : 'single-column';
+
+    function buildGroups() {
+        container.innerHTML = '';
+        (layoutZones[currentLayout] || []).forEach(a => {
+            const group = document.createElement('div');
+            group.className = 'area-group';
+            group.dataset.area = a;
+            const h = document.createElement('h3');
+            h.textContent = a;
+            const div = document.createElement('div');
+            div.className = 'area-sections';
+            group.appendChild(h);
+            group.appendChild(div);
+            container.appendChild(group);
+        });
+    }
+
+    function populateAreas(select) {
+        if (!select) return;
+        const current = select.dataset.selected || select.value;
+        select.innerHTML = (layoutZones[currentLayout] || []).map(a => `<option value="${a}">${a}</option>`).join('');
+        if (current) select.value = current;
+        select.dataset.selected = '';
+    }
+
+    function placeSection(section) {
+        const select = section.querySelector('.area-select');
+        const area = select ? select.value : 'main';
+        const group = container.querySelector(`.area-group[data-area='${area}'] .area-sections`);
+        if (group) group.appendChild(section);
+    }
+
+    function updatePreview() {
+        const preview = document.getElementById('layout-preview');
+        if (!preview) return;
+        preview.innerHTML = '';
+        (layoutZones[currentLayout] || []).forEach(a => {
+            const div = document.createElement('div');
+            div.className = 'preview-zone';
+            div.dataset.area = a;
+            div.textContent = a;
+            preview.appendChild(div);
+        });
+    }
+
+    document.getElementById('layout-preview')?.addEventListener('click', e => {
+        const zone = e.target.closest('.preview-zone');
+        if (!zone) return;
+        if (activeIndex !== null) {
+            const select = document.querySelector(`.area-select[data-index='${activeIndex}']`);
+            if (select) {
+                select.value = zone.dataset.area;
+                placeSection(select.closest('.section-editor'));
+                updateIndexes();
+            }
+        }
+    });
 
     const templateSelect = document.getElementById('template-selector');
     if (templateSelect) {
@@ -28,13 +87,29 @@ window.addEventListener('load', () => {
         });
     }
 
-    container.querySelectorAll('.section-editor').forEach(el => {
+    const existing = Array.from(container.querySelectorAll('.section-editor'));
+    buildGroups();
+    existing.forEach(el => {
         const idx = el.dataset.index;
+        populateAreas(el.querySelector('.area-select'));
+        placeSection(el);
         initSectionEditor(idx);
     });
+    updatePreview();
 
     document.getElementById('add-section').addEventListener('click', () => {
         addSection();
+    });
+
+    layoutSelect?.addEventListener('change', () => {
+        currentLayout = layoutSelect.value;
+        buildGroups();
+        document.querySelectorAll('.section-editor').forEach(sec => {
+            populateAreas(sec.querySelector('.area-select'));
+            placeSection(sec);
+        });
+        updateIndexes();
+        updatePreview();
     });
 
     container.addEventListener('click', e => {
@@ -47,6 +122,14 @@ window.addEventListener('load', () => {
         }
     });
 
+    container.addEventListener('change', e => {
+        if (e.target.classList.contains('area-select')) {
+            const section = e.target.closest('.section-editor');
+            placeSection(section);
+            updateIndexes();
+        }
+    });
+
     function addSection() {
         const index = sectionCount++;
         const html = templateHtml.replace(/__index__/g, index);
@@ -54,9 +137,11 @@ window.addEventListener('load', () => {
         temp.innerHTML = html;
         const section = temp.firstElementChild;
         section.dataset.index = index;
-        container.appendChild(section);
+        populateAreas(section.querySelector('.area-select'));
+        placeSection(section);
         initSectionEditor(index);
         updateIndexes();
+        updatePreview();
     }
 
     function duplicateSection(original) {
@@ -78,7 +163,8 @@ window.addEventListener('load', () => {
                 dest.value = src.value;
             }
         });
-        container.insertBefore(clone, original.nextSibling);
+        populateAreas(clone.querySelector('.area-select'));
+        placeSection(clone);
         initSectionEditor(index);
         if (editors[original.dataset.index]) {
             editors[index].root.innerHTML = editors[original.dataset.index].root.innerHTML;
@@ -86,6 +172,7 @@ window.addEventListener('load', () => {
             if (destInput) destInput.value = editors[index].root.innerHTML;
         }
         updateIndexes();
+        updatePreview();
     }
 
     function updateIndexes() {
@@ -110,7 +197,7 @@ window.addEventListener('load', () => {
         if (dragged && target && target !== dragged) {
             const rect = target.getBoundingClientRect();
             const next = (e.clientY - rect.top) > (rect.height / 2);
-            container.insertBefore(dragged, next ? target.nextSibling : target);
+            target.parentNode.insertBefore(dragged, next ? target.nextSibling : target);
         }
     });
     container.addEventListener('drop', e => {

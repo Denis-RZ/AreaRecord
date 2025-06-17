@@ -16,7 +16,7 @@
     <input type="hidden" name="Sections[@index].ViewCount" value="@Model.ViewCount" />
     <div>
         <label>Area</label>
-        <input type="text" name="Sections[@index].Area" value="@Model.Area" />
+        <select class="area-select" data-index="@index" name="Sections[@index].Area" data-selected="@Model.Area"></select>
     </div>
     <div>
         <label>Type</label>

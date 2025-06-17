@@ -1,5 +1,6 @@
 @model MyWebApp.Models.Page
 @using MyWebApp.Models
+@using MyWebApp.Services
 @using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     var sections = ViewBag.Sections as List<PageSection> ?? new List<PageSection>();
@@ -15,10 +16,11 @@
         <div><label>Title</label><input asp-for="Title" id="title-input" /></div>
         <div>
             <label asp-for="Layout">Layout</label>
-            <select asp-for="Layout">
+            <select asp-for="Layout" id="layout-select">
                 <option value="single-column">Single Column</option>
                 <option value="two-column-sidebar">Two Column with Sidebar</option>
             </select>
+            <div id="layout-preview" class="layout-preview"></div>
         </div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
         <div><label asp-for="PublishDate"></label><input asp-for="PublishDate" type="datetime-local" /></div>
@@ -59,6 +61,9 @@
     <button type="submit">Save</button>
 </form>
 @section Scripts {
+    <script>
+        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(LayoutService.LayoutZones));
+    </script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
     <script>
         const titleInput = document.getElementById('title-input');
