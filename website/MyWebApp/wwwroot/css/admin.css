@@ -1290,3 +1290,28 @@ form.mb-3 {
 .zone-sections {
     min-height: 10px;
 }
+.zone-group.drag-over {
+    border-color: #0ea5e9;
+    background: #f0f9ff;
+}
+.drop-indicator {
+    height: 4px;
+    background: #0ea5e9;
+    margin: 4px 0;
+    border-radius: 2px;
+}
+.section-editor {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.section-editor:hover {
+    box-shadow: 0 0 0 2px #0ea5e9 inset;
+}
+.layout-preview {
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+}
+.zone-group[data-zone="main"] { border-color: #2563eb; }
+.zone-group[data-zone="sidebar"] { border-color: #16a34a; }
