@@ -158,7 +158,7 @@ public class AdminPageSectionController : Controller
     public async Task<IActionResult> GetZonesForPage(int id)
     {
         var layout = await _db.Pages.Where(p => p.Id == id).Select(p => p.Layout).FirstOrDefaultAsync() ?? "single-column";
-        var zones = LayoutService.GetZones(layout);
+        var zones = _layout.GetZones(layout);
         return Json(zones);
     }
 }

@@ -42,9 +42,9 @@ public class PagesController : BaseController
         }
 
         var layoutName = string.IsNullOrWhiteSpace(page.Layout) ? "single-column" : page.Layout;
-        if (!LayoutService.LayoutZones.TryGetValue(layoutName, out var zones))
+        if (!_layout.LayoutZones.TryGetValue(layoutName, out var zones))
         {
-            zones = LayoutService.LayoutZones["single-column"];
+            zones = _layout.LayoutZones["single-column"];
         }
         var zoneHtml = new Dictionary<string, string>();
         foreach (var z in zones)

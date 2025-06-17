@@ -33,6 +33,7 @@ public class AdminContentController : Controller
             .OrderBy(t => t.Name).ToListAsync();
         ViewBag.Permissions = await _db.Permissions.AsNoTracking()
             .OrderBy(p => p.Name).ToListAsync();
+        ViewBag.LayoutZones = _layout.LayoutZones;
     }
 
     public async Task<IActionResult> Index()
@@ -65,7 +66,7 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
-        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
+        if (sections.Any(s => !_layout.IsValidZone(model.Layout, s.Zone)))
         {
             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }
@@ -131,7 +132,7 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
-        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
+        if (sections.Any(s => !_layout.IsValidZone(model.Layout, s.Zone)))
         {
             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
 using MyWebApp.Data;
 
@@ -8,29 +9,28 @@ public class LayoutService
 {
     private readonly CacheService _cache;
     private readonly TokenRenderService _tokens;
+    private readonly Dictionary<string, string[]> _zoneMap;
     private const string HeaderKey = "layout_header";
     private const string FooterKey = "layout_footer";
 
-    public static readonly Dictionary<string, string[]> LayoutZones = new()
-    {
-        ["single-column"] = new[] { "main" },
-        ["two-column-sidebar"] = new[] { "main", "sidebar" }
-    };
+    public IReadOnlyDictionary<string, string[]> LayoutZones => _zoneMap;
 
-    public static bool IsValidZone(string layout, string zone)
+    public bool IsValidZone(string layout, string zone)
     {
-        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(zone);
+        return _zoneMap.TryGetValue(layout, out var zones) && zones.Contains(zone);
     }
 
-    public static string[] GetZones(string layout)
+    public string[] GetZones(string layout)
     {
-        return LayoutZones.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
+        return _zoneMap.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
     }
 
-    public LayoutService(CacheService cache, TokenRenderService tokens)
+    public LayoutService(CacheService cache, TokenRenderService tokens, IConfiguration configuration)
     {
         _cache = cache;
         _tokens = tokens;
+        _zoneMap = configuration.GetSection("Layouts").Get<Dictionary<string, string[]>>()
+            ?? new Dictionary<string, string[]>();
     }
 
     public async Task<string> GetHeaderAsync(ApplicationDbContext db)

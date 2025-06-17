@@ -17,8 +17,13 @@
         <div>
             <label asp-for="Layout">Layout</label>
             <select asp-for="Layout" id="layout-select">
-                <option value="single-column">Single Column</option>
-                <option value="two-column-sidebar">Two Column with Sidebar</option>
+@if (ViewBag.LayoutZones is IReadOnlyDictionary<string, string[]> layouts)
+{
+    foreach (var entry in layouts)
+    {
+            <option value="@entry.Key">@entry.Key</option>
+    }
+}
             </select>
             <div id="layout-preview" class="layout-preview"></div>
         </div>
@@ -62,7 +67,7 @@
 </form>
 @section Scripts {
     <script>
-        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(LayoutService.LayoutZones));
+        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.LayoutZones));
     </script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
     <script>
