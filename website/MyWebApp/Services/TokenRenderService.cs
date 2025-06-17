@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using MyWebApp.Data;
 
 namespace MyWebApp.Services;
 
 public class TokenRenderService
 {
-    private static readonly Regex TokenRegex = new(@"\{\{(block|section):([^{}]+)\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex TokenRegex = new(@"\{\{(block|section):([^{}]+)\}\}|\{\{nav\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public Task<string> RenderAsync(ApplicationDbContext db, string html)
     {
@@ -17,6 +18,21 @@ public class TokenRenderService
     {
         async Task<string> Replace(Match match)
         {
+            if (match.Value.StartsWith("{{nav", StringComparison.OrdinalIgnoreCase))
+            {
+                var pages = await db.Pages.AsNoTracking()
+                    .Where(p => p.IsPublished && p.Slug != "layout")
+                    .OrderBy(p => p.Title)
+                    .Select(p => new { p.Slug, p.Title })
+                    .ToListAsync();
+                var links = pages.Select(p =>
+                {
+                    var href = p.Slug.Equals("home", StringComparison.OrdinalIgnoreCase) ? "/" : "/" + p.Slug;
+                    return $"<a href=\"{href}\">{System.Net.WebUtility.HtmlEncode(p.Title)}</a>";
+                });
+                return string.Join(" ", links);
+            }
+
             var type = match.Groups[1].Value.ToLowerInvariant();
             var param = match.Groups[2].Value;
             if (type == "block")
