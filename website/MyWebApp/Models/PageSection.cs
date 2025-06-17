@@ -25,9 +25,9 @@ public class PageSection
 
     public int SortOrder { get; set; }
 
- 
+
     public PageSectionType Type { get; set; } = PageSectionType.Html;
- 
+
 
     public string Html { get; set; } = string.Empty;
 

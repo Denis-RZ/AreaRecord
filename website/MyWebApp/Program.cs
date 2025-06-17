@@ -184,19 +184,19 @@ using (var scope = app.Services.CreateScope())
         {
             app.Logger.LogInformation("Database schema created.");
         }
-            if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
-            {
-                db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-                db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+        if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
 
-                UpgradeDownloadFilesTable(db);
-                UpgradePageSectionsTable(db);
-                UpgradePagesTable(db);
-                UpgradeMediaItemsTable(db);
-                UpgradeBlockTemplatesTable(db);
-                UpgradePermissionsTable(db);
-                UpgradeLayoutHeader(db);
-            }
+            UpgradeDownloadFilesTable(db);
+            UpgradePageSectionsTable(db);
+            UpgradePagesTable(db);
+            UpgradeMediaItemsTable(db);
+            UpgradeBlockTemplatesTable(db);
+            UpgradePermissionsTable(db);
+            UpgradeLayoutHeader(db);
+        }
         if (db.Database.CanConnect())
         {
             cacheService.WarmCache(db);

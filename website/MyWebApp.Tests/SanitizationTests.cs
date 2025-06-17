@@ -37,7 +37,7 @@ public class SanitizationTests
         return (ctx, layout, sanitizer);
     }
 
-    [Fact(Skip="Create sanitization covered by section tests")]
+    [Fact(Skip = "Create sanitization covered by section tests")]
     public async Task CreatePage_SanitizesHtml()
     {
         var (ctx, layout, sanitizer) = CreateServices();
@@ -63,16 +63,16 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
- 
+
         var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "main", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
         var result = await controller.Create(model, null);
- 
+
         Assert.IsType<RedirectToActionResult>(result);
         var section = ctx.PageSections.First();
         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact(Skip="Edit sanitization covered by section tests")]
+    [Fact(Skip = "Edit sanitization covered by section tests")]
     public async Task EditPage_SanitizesHtml()
     {
         var (ctx, layout, sanitizer) = CreateServices();
@@ -130,7 +130,7 @@ public class SanitizationTests
     {
         var (ctx, layout, sanitizer) = CreateServices();
         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
-        var bytes = new byte[] {1,2,3};
+        var bytes = new byte[] { 1, 2, 3 };
         using var stream = new System.IO.MemoryStream(bytes);
         var file = new FormFile(stream, 0, bytes.Length, "file", "img.png");
         var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "img", Type = PageSectionType.Image };

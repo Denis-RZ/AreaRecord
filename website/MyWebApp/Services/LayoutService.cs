@@ -73,7 +73,7 @@ public class LayoutService
             .ToListAsync();
         var html = string.Join(System.Environment.NewLine, parts);
         return await _tokens.RenderAsync(db, html);
- 
+
     }
 
     public void Reset()
