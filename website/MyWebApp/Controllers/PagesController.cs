@@ -50,10 +50,6 @@ public class PagesController : BaseController
         foreach (var z in zones)
         {
             var html = await _layout.GetSectionAsync(Db, page.Id, z);
-            if (z == "main")
-            {
-                html = page.BodyHtml + html;
-            }
             zoneHtml[z] = html;
         }
 

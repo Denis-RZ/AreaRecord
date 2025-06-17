@@ -9,8 +9,18 @@
         <input type="text" name="Sections[@index].Area" value="@Model.Area" />
     </div>
     <div>
+        <label>Type</label>
+        <select name="Sections[@index].Type">
+@foreach (var v in Enum.GetValues(typeof(MyWebApp.Models.PageSectionType)))
+{
+            <option value="@v" selected="@(Model.Type == (MyWebApp.Models.PageSectionType)v)">@v</option>
+}
+        </select>
+    </div>
+    <div>
         <label>Html</label>
         <textarea name="Sections[@index].Html">@Model.Html</textarea>
+        <div class="preview">@Html.Raw(Model.Html)</div>
     </div>
     <button type="button" class="duplicate-section">Duplicate Section</button>
     <button type="button" class="remove-section">Remove Section</button>

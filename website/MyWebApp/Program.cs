@@ -387,6 +387,12 @@ static void UpgradePagesTable(ApplicationDbContext db)
         {
             columns.Add(reader.GetString(1));
         }
+        if (columns.Contains("HeaderHtml"))
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages DROP COLUMN HeaderHtml");
+        if (columns.Contains("BodyHtml"))
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages DROP COLUMN BodyHtml");
+        if (columns.Contains("FooterHtml"))
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages DROP COLUMN FooterHtml");
         if (!columns.Contains("Layout"))
         {
             db.Database.ExecuteSqlRaw(

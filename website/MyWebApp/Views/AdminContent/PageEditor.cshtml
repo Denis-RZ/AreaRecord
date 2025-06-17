@@ -8,13 +8,9 @@
     ViewData["Title"] = isNew ? "Create Page" : "Edit Page";
 }
 <h2>@ViewData["Title"]</h2>
-<div class="tabs">
-    <button type="button" class="tab-link active" data-target="#tab-settings">Page Settings</button>
-    <button type="button" class="tab-link" data-target="#tab-sections">Content Sections</button>
-</div>
 <form asp-action="@(isNew ? "Create" : "Edit")" method="post">
     <input type="hidden" asp-for="Id" />
-    <div id="tab-settings" class="tab-content active">
+    <div>
         <div><label>Slug</label><input asp-for="Slug" id="slug-input" /></div>
         <div><label>Title</label><input asp-for="Title" id="title-input" /></div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
@@ -29,74 +25,23 @@
             <div><label asp-for="Tags" title="Comma separated tags"></label><input asp-for="Tags" /></div>
             <div><label asp-for="FeaturedImage" title="URL of featured image"></label><input asp-for="FeaturedImage" /></div>
         </details>
-        <div>
-            <label>Header</label>
-            <div id="header-editor" class="quill-editor"></div>
-            <input type="hidden" asp-for="HeaderHtml" />
-        </div>
-        <div>
-            <label>Body</label>
-            <div id="body-editor" class="quill-editor"></div>
-            <input type="hidden" asp-for="BodyHtml" />
-        </div>
-        <div>
-            <label>Insert Block</label>
-            <select id="template-select">
-                <option value="">--select--</option>
-                @foreach (var t in ViewBag.Templates as List<BlockTemplate>)
-                {
-                    <option value="@t.Id">@t.Name</option>
-                }
-            </select>
-            <button type="button" id="insert-template">Insert</button>
-        </div>
-        <div>
-            <label>Footer</label>
-            <div id="footer-editor" class="quill-editor"></div>
-            <input type="hidden" asp-for="FooterHtml" />
-        </div>
     </div>
-    <div id="tab-sections" class="tab-content" style="display:none">
-        <div id="sections-container">
+    <div class="mt-3" id="sections-container">
 @for (int i = 0; i < sections.Count; i++)
 {
     var vd = new ViewDataDictionary(ViewData) { ["Index"] = i };
     @await Html.PartialAsync("_SectionEditor", sections[i], vd)
 }
-        </div>
-        <button type="button" id="add-section">Add Section</button>
-        <div id="section-template" style="display:none">
-            @await Html.PartialAsync("_SectionEditor", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
-        </div>
+    </div>
+    <button type="button" id="add-section">Add Section</button>
+    <div id="section-template" style="display:none">
+        @await Html.PartialAsync("_SectionEditor", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
     </div>
     <button type="submit">Save</button>
 </form>
 @section Scripts {
-    <script>
-        const headerQuill = new Quill('#header-editor', { theme: 'snow' });
-        const bodyQuill = new Quill('#body-editor', { theme: 'snow' });
-        const footerQuill = new Quill('#footer-editor', { theme: 'snow' });
-        headerQuill.root.innerHTML = document.getElementById('HeaderHtml').value;
-        bodyQuill.root.innerHTML = document.getElementById('BodyHtml').value;
-        footerQuill.root.innerHTML = document.getElementById('FooterHtml').value;
-        document.querySelector('form').addEventListener('submit', function () {
-            document.getElementById('HeaderHtml').value = headerQuill.root.innerHTML;
-            document.getElementById('BodyHtml').value = bodyQuill.root.innerHTML;
-            document.getElementById('FooterHtml').value = footerQuill.root.innerHTML;
-        });
-    </script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
     <script>
-        document.querySelectorAll('.tab-link').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-                btn.classList.add('active');
-                const target = document.querySelector(btn.dataset.target);
-                if (target) target.style.display = 'block';
-            });
-        });
-
         const titleInput = document.getElementById('title-input');
         const slugInput = document.getElementById('slug-input');
         function slugify(text) {
@@ -107,18 +52,6 @@
         titleInput.addEventListener('input', () => {
             if (!slugInput.value) {
                 slugInput.value = slugify(titleInput.value);
-            }
-        });
-
-        document.getElementById('insert-template').addEventListener('click', async () => {
-            const id = document.getElementById('template-select').value;
-            if (!id) return;
-            const resp = await fetch(`/AdminBlockTemplate/Html/${id}`);
-            if (resp.ok) {
-                const html = await resp.text();
-                bodyQuill.focus();
-                const range = bodyQuill.getSelection(true);
-                bodyQuill.clipboard.dangerouslyPasteHTML(range.index, html);
             }
         });
     </script>

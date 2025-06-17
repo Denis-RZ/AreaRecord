@@ -90,17 +90,14 @@ namespace MyWebApp.Data
                     Id = 1,
                     Slug = "layout",
                     Title = "Layout",
-                    Layout = "single-column",
-                    HeaderHtml = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>",
-                    FooterHtml = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
+                    Layout = "single-column"
                 },
                 new Page
                 {
                     Id = 2,
                     Slug = "home",
                     Title = "Home",
-                    Layout = "single-column",
-                    BodyHtml = "<p>Welcome to Screen Area Recorder Pro.</p>"
+                    Layout = "single-column"
                 });
 
             modelBuilder.Entity<PageSection>().HasData(
