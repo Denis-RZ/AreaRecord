@@ -23,6 +23,11 @@ public class AdminBlockTemplateController : Controller
         _sanitizer = sanitizer;
     }
 
+    private async Task LoadPagesAsync()
+    {
+        ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
+    }
+
     public async Task<IActionResult> Index()
     {
         var items = await _db.BlockTemplates.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
@@ -115,6 +120,51 @@ public class AdminBlockTemplateController : Controller
             _db.BlockTemplates.Add(t);
             _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = t, Html = t.Html });
         }
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> AddToPage(int id)
+    {
+        var item = await _db.BlockTemplates.FindAsync(id);
+        if (item == null) return NotFound();
+        await LoadPagesAsync();
+        ViewBag.BlockId = id;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddToPage(int id, int pageId, string area)
+    {
+        var template = await _db.BlockTemplates.FindAsync(id);
+        var page = await _db.Pages.FindAsync(pageId);
+        if (template == null || page == null)
+        {
+            return NotFound();
+        }
+        area = area?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(area))
+        {
+            await LoadPagesAsync();
+            ViewBag.BlockId = id;
+            ModelState.AddModelError("area", "Area required");
+            return View();
+        }
+        var sort = await _db.PageSections
+            .Where(s => s.PageId == pageId && s.Area == area)
+            .Select(s => s.SortOrder)
+            .DefaultIfEmpty(-1)
+            .MaxAsync() + 1;
+        var section = new PageSection
+        {
+            PageId = pageId,
+            Area = area,
+            SortOrder = sort,
+            Html = template.Html,
+            Type = PageSectionType.Html
+        };
+        _db.PageSections.Add(section);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
