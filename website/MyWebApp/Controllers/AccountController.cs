@@ -34,7 +34,7 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null)
     {
         _captchaService.CreateChallenge();
         ViewBag.CaptchaToken = DateTime.UtcNow.Ticks;
@@ -47,7 +47,36 @@ public class AccountController : Controller
                 var data = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(remember));
                 var parts = data.Split(':', 2);
                 if (parts.Length == 2)
+                {
                     user = parts[0];
+                    var pass = parts[1];
+                    AdminCredential? cred = null;
+                    bool dbAvailable = true;
+                    try
+                    {
+                        dbAvailable = await _db.Database.CanConnectAsync();
+                        if (dbAvailable)
+                        {
+                            cred = await _db.AdminCredentials.AsNoTracking()
+                                .FirstOrDefaultAsync(c => c.Username == user);
+                        }
+                    }
+                    catch (DbException)
+                    {
+                        dbAvailable = false;
+                    }
+                    var username = cred?.Username ?? "admin";
+                    var password = cred?.Password ?? "admin";
+                    if (user == username && pass == password)
+                    {
+                        HttpContext.Session.SetString("IsAdmin", "true");
+                        HttpContext.Session.SetString("AdminUser", username);
+                        HttpContext.Session.SetString("Roles", "Admin");
+                        if (!string.IsNullOrEmpty(returnUrl))
+                            return Redirect(returnUrl);
+                        return RedirectToAction("Index", "Admin");
+                    }
+                }
             }
             catch { }
         }
