@@ -17,7 +17,7 @@
         <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
     </div>
  
-@await Html.PartialAsync("_SectionEditor", Model)
+@await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", Model)
 
     <button type="submit">Save</button>
 </form>
