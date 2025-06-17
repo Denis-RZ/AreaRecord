@@ -9,20 +9,13 @@ public class LayoutServiceTests
     [Fact]
     public void CanReadZonesFromConfig()
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                {"Layouts:single-column:0", "main"},
-                {"Layouts:two-column-sidebar:0", "main"},
-                {"Layouts:two-column-sidebar:1", "sidebar"}
-            })
-            .Build();
+        var config = new ConfigurationBuilder().Build();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
         var tokens = new TokenRenderService();
-        var service = new LayoutService(cache, tokens, config);
+        var service = new LayoutService(cache, tokens);
 
-        Assert.True(service.LayoutZones.ContainsKey("single-column"));
-        Assert.Contains("sidebar", service.LayoutZones["two-column-sidebar"]);
+        Assert.True(LayoutService.LayoutZones.ContainsKey("single-column"));
+        Assert.Contains("sidebar", LayoutService.LayoutZones["two-column-sidebar"]);
     }
 }

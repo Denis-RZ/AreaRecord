@@ -32,7 +32,7 @@ public class SanitizationTests
                 {"Layouts:two-column-sidebar:1", "sidebar"}
             })
             .Build();
-        var layout = new LayoutService(cache, tokens, config);
+        var layout = new LayoutService(cache, tokens);
         var sanitizer = new HtmlSanitizerService();
         return (ctx, layout, sanitizer);
     }

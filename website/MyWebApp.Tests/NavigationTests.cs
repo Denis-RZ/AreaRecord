@@ -32,7 +32,7 @@ public class NavigationTests
                 {"Layouts:two-column-sidebar:1", "sidebar"}
             })
             .Build();
-        var layout = new LayoutService(cache, tokens, config);
+        var layout = new LayoutService(cache, tokens);
 
         context.Pages.Add(new Page { Slug = "about", Title = "About", Layout = "single-column", IsPublished = true });
         context.SaveChanges();
