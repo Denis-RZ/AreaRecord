@@ -1,0 +1,66 @@
+@model MyWebApp.Models.PageSection
+@using MyWebApp.Models
+@{
+    var index = ViewData["Index"]?.ToString() ?? "0";
+    var quillId = $"quill-editor-{index}";
+    var typeSelectId = $"type-select-{index}";
+    var htmlInputId = $"Html-{index}";
+    var htmlEditorId = $"html-editor-{index}";
+    var markdownId = $"markdown-editor-{index}";
+    var codeId = $"code-editor-{index}";
+    var fileId = $"file-editor-{index}";
+}
+<div class="section-editor" draggable="true" data-index="@index">
+    <input type="hidden" name="Sections[@index].Id" value="@Model.Id" />
+    <input type="hidden" name="Sections[@index].SortOrder" value="@Model.SortOrder" class="sort-order" />
+    <input type="hidden" name="Sections[@index].ViewCount" value="@Model.ViewCount" />
+    <div>
+        <label>Zone</label>
+        <select class="zone-select" data-index="@index" name="Sections[@index].Zone" data-selected="@Model.Zone"></select>
+    </div>
+    <div>
+        <label>Type</label>
+        <select name="Sections[@index].Type" id="@typeSelectId">
+@foreach (var v in Enum.GetValues(typeof(PageSectionType)))
+{
+            <option value="@v" selected="@(Model.Type == (PageSectionType)v)">@v</option>
+}
+        </select>
+    </div>
+    <div id="@htmlEditorId" class="type-editor">
+        <div class="quill-editor" id="@quillId"></div>
+        <input type="hidden" name="Sections[@index].Html" id="@htmlInputId" value="@Model.Html" />
+    </div>
+    <div id="@markdownId" class="type-editor">
+        <textarea name="Sections[@index].Html">@Model.Html</textarea>
+    </div>
+    <div id="@codeId" class="type-editor">
+        <textarea name="Sections[@index].Html">@Model.Html</textarea>
+    </div>
+    <div id="@fileId" class="type-editor">
+        <input type="file" name="Sections[@index].File" />
+    </div>
+    <div>
+        <label>Start Date</label>
+        <input type="datetime-local" name="Sections[@index].StartDate" value="@(Model.StartDate?.ToString("yyyy-MM-ddTHH:mm"))" />
+    </div>
+    <div>
+        <label>End Date</label>
+        <input type="datetime-local" name="Sections[@index].EndDate" value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm"))" />
+    </div>
+    <div>
+        <label>Permission</label>
+        <select name="Sections[@index].PermissionId">
+            <option value="">None</option>
+@if (ViewBag.Permissions is List<Permission> perms)
+{
+    foreach (var p in perms)
+    {
+            <option value="@p.Id" selected="@(Model.PermissionId == p.Id)">@p.Name</option>
+    }
+}
+        </select>
+    </div>
+    <button type="button" class="duplicate-section">Duplicate Section</button>
+    <button type="button" class="remove-section">Remove Section</button>
+</div>

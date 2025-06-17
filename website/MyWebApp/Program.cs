@@ -342,6 +342,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 columns.Add(reader.GetString(1));
             }
             reader.Close();
+            if (columns.Contains("Area") && !columns.Contains("Zone"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections RENAME COLUMN Area TO Zone");
             if (!columns.Contains("SortOrder"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0");
             if (!columns.Contains("Type"))
