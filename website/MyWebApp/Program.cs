@@ -195,6 +195,7 @@ using (var scope = app.Services.CreateScope())
                 UpgradeMediaItemsTable(db);
                 UpgradeBlockTemplatesTable(db);
                 UpgradePermissionsTable(db);
+                UpgradeLayoutHeader(db);
             }
         if (db.Database.CanConnect())
         {
@@ -540,6 +541,43 @@ static void UpgradePermissionsTable(ApplicationDbContext db)
                 FOREIGN KEY(RoleId) REFERENCES Roles(Id) ON DELETE CASCADE,
                 FOREIGN KEY(PermissionId) REFERENCES Permissions(Id) ON DELETE CASCADE
             )");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradeLayoutHeader(ApplicationDbContext db)
+{
+    try
+    {
+        var layoutId = db.Pages
+            .AsNoTracking()
+            .Where(p => p.Slug == "layout")
+            .Select(p => p.Id)
+            .FirstOrDefault();
+        if (layoutId == 0)
+            return;
+
+        var section = db.PageSections
+            .FirstOrDefault(s => s.PageId == layoutId && s.Area == "header");
+        if (section == null)
+            return;
+
+        if (section.Html != null &&
+            !section.Html.Contains("{{nav}}", StringComparison.OrdinalIgnoreCase))
+        {
+            if (section.Html.Contains("</nav>", StringComparison.OrdinalIgnoreCase))
+            {
+                section.Html = section.Html.Replace("</nav>", " {{nav}} </nav>", StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                section.Html += " {{nav}}";
+            }
+            db.SaveChanges();
         }
     }
     catch (Exception ex)

@@ -103,3 +103,5 @@ dotnet run
 3. For a quick reminder on how to import data manually,
    visit `/Setup/Import` while the site is running. The page shows the shell
    commands used to run the project and seed sample data.
+4. Restart the application (or open `/Setup`) after updating to ensure database
+   upgrades like the navigation token are applied.

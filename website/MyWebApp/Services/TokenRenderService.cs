@@ -21,7 +21,7 @@ public class TokenRenderService
             if (match.Value.StartsWith("{{nav", StringComparison.OrdinalIgnoreCase))
             {
                 var pages = await db.Pages.AsNoTracking()
-                    .Where(p => p.IsPublished && p.Slug != "layout")
+                    .Where(p => p.IsPublished && p.Slug != "layout" && p.Slug != "home")
                     .OrderBy(p => p.Title)
                     .Select(p => new { p.Slug, p.Title })
                     .ToListAsync();
