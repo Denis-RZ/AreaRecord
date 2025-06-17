@@ -15,12 +15,20 @@ window.addEventListener('load', () => {
             group.className = 'zone-group';
             group.dataset.zone = z;
             const h = document.createElement('h3');
-            h.textContent = z;
+            h.innerHTML = `<span class="zone-name">${z}</span> <span class="zone-count"></span>`;
             const div = document.createElement('div');
             div.className = 'zone-sections';
             group.appendChild(h);
             group.appendChild(div);
             container.appendChild(group);
+        });
+    }
+
+    function updateZoneCounts() {
+        document.querySelectorAll('.zone-group').forEach(g => {
+            const count = g.querySelectorAll('.section-editor').length;
+            const span = g.querySelector('.zone-count');
+            if (span) span.textContent = `(${count})`;
         });
     }
 
@@ -47,7 +55,8 @@ window.addEventListener('load', () => {
             const div = document.createElement('div');
             div.className = 'preview-zone';
             div.dataset.zone = z;
-            div.textContent = z;
+            const count = container.querySelectorAll(`.zone-group[data-zone='${z}'] .section-editor`).length;
+            div.textContent = `${z} (${count})`;
             preview.appendChild(div);
         });
     }
@@ -55,6 +64,8 @@ window.addEventListener('load', () => {
     document.getElementById('layout-preview')?.addEventListener('click', e => {
         const zone = e.target.closest('.preview-zone');
         if (!zone) return;
+        const group = container.querySelector(`.zone-group[data-zone='${zone.dataset.zone}']`);
+        if (group) group.scrollIntoView({ behavior: 'smooth' });
         if (activeIndex !== null) {
             const select = document.querySelector(`.zone-select[data-index='${activeIndex}']`);
             if (select) {
@@ -96,6 +107,7 @@ window.addEventListener('load', () => {
         initSectionEditor(idx);
     });
     updatePreview();
+    updateZoneCounts();
 
     document.getElementById('add-section').addEventListener('click', () => {
         addSection();
@@ -110,12 +122,14 @@ window.addEventListener('load', () => {
         });
         updateIndexes();
         updatePreview();
+        updateZoneCounts();
     });
 
     container.addEventListener('click', e => {
         if (e.target.classList.contains('remove-section')) {
             e.target.closest('.section-editor').remove();
             updateIndexes();
+            updateZoneCounts();
         } else if (e.target.classList.contains('duplicate-section')) {
             const original = e.target.closest('.section-editor');
             duplicateSection(original);
@@ -127,6 +141,7 @@ window.addEventListener('load', () => {
             const section = e.target.closest('.section-editor');
             placeSection(section);
             updateIndexes();
+            updateZoneCounts();
         }
     });
 
@@ -142,6 +157,7 @@ window.addEventListener('load', () => {
         initSectionEditor(index);
         updateIndexes();
         updatePreview();
+        updateZoneCounts();
     }
 
     function duplicateSection(original) {
@@ -173,6 +189,7 @@ window.addEventListener('load', () => {
         }
         updateIndexes();
         updatePreview();
+        updateZoneCounts();
     }
 
     function updateIndexes() {
@@ -187,22 +204,48 @@ window.addEventListener('load', () => {
     }
 
     let dragged = null;
+    const dropIndicator = document.createElement('div');
+    dropIndicator.className = 'drop-indicator';
+
     container.addEventListener('dragstart', e => {
         dragged = e.target.closest('.section-editor');
+        if (dragged) {
+            dragged.classList.add('dragging');
+            document.querySelectorAll('.zone-group').forEach(z => z.classList.add('drag-over'));
+        }
         e.dataTransfer.effectAllowed = 'move';
     });
+
     container.addEventListener('dragover', e => {
         e.preventDefault();
+        const zone = e.target.closest('.zone-group');
         const target = e.target.closest('.section-editor');
+        if (zone) zone.classList.add('drag-over');
         if (dragged && target && target !== dragged) {
             const rect = target.getBoundingClientRect();
             const next = (e.clientY - rect.top) > (rect.height / 2);
-            target.parentNode.insertBefore(dragged, next ? target.nextSibling : target);
+            target.parentNode.insertBefore(dropIndicator, next ? target.nextSibling : target);
         }
     });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        container.addEventListener(evt, e => {
+            const zone = e.target.closest('.zone-group');
+            if (zone) zone.classList.remove('drag-over');
+        });
+    });
+
     container.addEventListener('drop', e => {
         e.preventDefault();
+        if (dropIndicator.parentNode) {
+            dropIndicator.parentNode.insertBefore(dragged, dropIndicator);
+            dropIndicator.remove();
+        }
+        document.querySelectorAll('.zone-group.drag-over').forEach(z => z.classList.remove('drag-over'));
+        if (dragged) dragged.classList.remove('dragging');
+        dragged = null;
         updateIndexes();
+        updateZoneCounts();
     });
 
     const form = document.querySelector('form');
