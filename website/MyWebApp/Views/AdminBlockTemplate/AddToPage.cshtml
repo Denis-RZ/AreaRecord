@@ -1,0 +1,23 @@
+@using MyWebApp.Models
+@{
+    ViewData["Title"] = "Add Block To Page";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>@ViewData["Title"]</h2>
+<form asp-action="AddToPage" method="post">
+    <input type="hidden" name="id" value="@ViewBag.BlockId" />
+    <div>
+        <label>Page</label>
+        <select name="pageId">
+            @foreach (var p in ViewBag.Pages as List<Page>)
+            {
+                <option value="@p.Id">@p.Slug</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label>Area</label>
+        <input type="text" name="area" />
+    </div>
+    <button type="submit">Add</button>
+</form>
