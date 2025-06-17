@@ -39,7 +39,8 @@ public class AdminContentController : Controller
     {
  
         await LoadTemplatesAsync();
-        return View(new Page());
+        ViewBag.Sections = new List<PageSection>();
+        return View("PageEditor", new Page());
  
     }
 
@@ -49,10 +50,9 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
- 
             await LoadTemplatesAsync();
-            return View(model);
- 
+            ViewBag.Sections = model.Sections;
+            return View("PageEditor", model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
@@ -63,6 +63,16 @@ public class AdminContentController : Controller
         }
         _db.Pages.Add(model);
         await _db.SaveChangesAsync();
+        if (model.Sections != null && model.Sections.Count > 0)
+        {
+            foreach (var s in model.Sections)
+            {
+                s.PageId = model.Id;
+                s.Html = _sanitizer.Sanitize(s.Html);
+                _db.PageSections.Add(s);
+            }
+            await _db.SaveChangesAsync();
+        }
         _layout.Reset();
         return RedirectToAction(nameof(Index));
     }
@@ -74,9 +84,11 @@ public class AdminContentController : Controller
         {
             return NotFound();
         }
- 
+
         await LoadTemplatesAsync();
-        return View(page);
+        ViewBag.Sections = await _db.PageSections.Where(s => s.PageId == id)
+            .OrderBy(s => s.SortOrder).ToListAsync();
+        return View("PageEditor", page);
  
     }
 
@@ -86,10 +98,9 @@ public class AdminContentController : Controller
     {
         if (!ModelState.IsValid)
         {
- 
             await LoadTemplatesAsync();
-            return View(model);
- 
+            ViewBag.Sections = model.Sections;
+            return View("PageEditor", model);
         }
         model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
         model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
@@ -100,6 +111,18 @@ public class AdminContentController : Controller
         }
         _db.Update(model);
         await _db.SaveChangesAsync();
+        if (model.Sections != null && model.Sections.Count > 0)
+        {
+            var existing = _db.PageSections.Where(s => s.PageId == model.Id);
+            _db.PageSections.RemoveRange(existing);
+            foreach (var s in model.Sections)
+            {
+                s.PageId = model.Id;
+                s.Html = _sanitizer.Sanitize(s.Html);
+                _db.PageSections.Add(s);
+            }
+            await _db.SaveChangesAsync();
+        }
         _layout.Reset();
         return RedirectToAction(nameof(Index));
     }

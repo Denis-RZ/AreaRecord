@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MyWebApp.Models
@@ -48,5 +49,7 @@ namespace MyWebApp.Models
 
         [MaxLength(256)]
         public string? FeaturedImage { get; set; }
+
+        public ICollection<PageSection> Sections { get; set; } = new List<PageSection>();
     }
 }
