@@ -31,9 +31,9 @@ public class AdminPageSectionController : Controller
         if (!string.IsNullOrWhiteSpace(q))
         {
             q = q.ToLowerInvariant();
-            query = query.Where(s => s.Area.ToLower().Contains(q) || s.Html.ToLower().Contains(q) || s.Page.Slug.ToLower().Contains(q));
+            query = query.Where(s => s.Zone.ToLower().Contains(q) || s.Html.ToLower().Contains(q) || s.Page.Slug.ToLower().Contains(q));
         }
-        var sections = await query.OrderBy(s => s.Page.Slug).ThenBy(s => s.Area).ToListAsync();
+        var sections = await query.OrderBy(s => s.Page.Slug).ThenBy(s => s.Zone).ToListAsync();
         ViewBag.Query = q;
         return View(sections);
     }
@@ -58,11 +58,6 @@ public class AdminPageSectionController : Controller
         {
             await LoadPagesAsync();
             return View(model);
-        }
-        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
-        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
-        {
-            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }
         if (!ModelState.IsValid)
         {
@@ -92,11 +87,6 @@ public class AdminPageSectionController : Controller
         {
             await LoadPagesAsync();
             return View(model);
-        }
-        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
-        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
-        {
-            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
         }
         if (!ModelState.IsValid)
         {
@@ -165,10 +155,10 @@ public class AdminPageSectionController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAreasForPage(int id)
+    public async Task<IActionResult> GetZonesForPage(int id)
     {
         var layout = await _db.Pages.Where(p => p.Id == id).Select(p => p.Layout).FirstOrDefaultAsync() ?? "single-column";
-        var areas = LayoutService.GetAreas(layout);
-        return Json(areas);
+        var zones = LayoutService.GetZones(layout);
+        return Json(zones);
     }
 }

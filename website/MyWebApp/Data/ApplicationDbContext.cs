@@ -54,7 +54,7 @@ namespace MyWebApp.Data
 
             modelBuilder.Entity<PageSection>()
  
-                .HasIndex(s => new { s.PageId, s.Area, s.SortOrder });
+                .HasIndex(s => new { s.PageId, s.Zone, s.SortOrder });
  
 
             modelBuilder.Entity<PasswordResetToken>()
@@ -105,7 +105,7 @@ namespace MyWebApp.Data
                 {
                     Id = 1,
                     PageId = 1,
-                    Area = "header",
+                    Zone = "header",
                     SortOrder = 0,
  
                     Type = PageSectionType.Html,
@@ -117,7 +117,7 @@ namespace MyWebApp.Data
                 {
                     Id = 2,
                     PageId = 1,
-                    Area = "footer",
+                    Zone = "footer",
                     SortOrder = 0,
  
                     Type = PageSectionType.Html,

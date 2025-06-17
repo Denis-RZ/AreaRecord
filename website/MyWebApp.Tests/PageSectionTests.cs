@@ -22,7 +22,7 @@ public class PageSectionTests
             context.Pages.Add(page);
             context.SaveChanges();
  
-            context.PageSections.Add(new PageSection { PageId = page.Id, Area = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
+            context.PageSections.Add(new PageSection { PageId = page.Id, Zone = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
  
             context.SaveChanges();
         }
@@ -30,7 +30,7 @@ public class PageSectionTests
         using (var context = new ApplicationDbContext(options))
         {
             var section = context.PageSections.Include(s => s.Page)
-                .Single(s => s.Area == "header" && s.Page!.Slug == "test");
+                .Single(s => s.Zone == "header" && s.Page!.Slug == "test");
             Assert.Equal("<p>hi</p>", section.Html);
             Assert.Equal("test", section.Page!.Slug);
         }

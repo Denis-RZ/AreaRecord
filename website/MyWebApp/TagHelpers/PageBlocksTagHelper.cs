@@ -17,13 +17,13 @@ public class PageBlocksTagHelper : TagHelper
     }
 
     public int PageId { get; set; }
-    public string Area { get; set; } = string.Empty;
+    public string Zone { get; set; } = string.Empty;
 
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
         output.TagName = null;
         var htmlParts = await _db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == PageId && s.Area == Area)
+            .Where(s => s.PageId == PageId && s.Zone == Zone)
             .OrderBy(s => s.SortOrder)
             .Select(s => s.Html)
             .ToListAsync();
