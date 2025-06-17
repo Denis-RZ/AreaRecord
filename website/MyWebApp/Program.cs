@@ -328,7 +328,7 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
             )");
             db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Area_SortOrder ON PageSections(PageId, Area, SortOrder)");
             db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, SortOrder, Type, Html) VALUES
-                (1, 1, 'header', 0, 0, '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
+                (1, 1, 'header', 0, 0, '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> {{nav}} <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
                 (2, 1, 'footer', 0, 0, '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
         }
         else
