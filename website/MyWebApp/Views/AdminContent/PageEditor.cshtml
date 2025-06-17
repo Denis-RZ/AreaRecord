@@ -1,6 +1,5 @@
 @model MyWebApp.Models.Page
 @using MyWebApp.Models
-@using MyWebApp.Services
 @using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     var sections = ViewBag.Sections as List<PageSection> ?? new List<PageSection>();
@@ -44,7 +43,7 @@
 @for (int i = 0; i < sections.Count; i++)
 {
     var vd = new ViewDataDictionary(ViewData) { ["Index"] = i };
-    @await Html.PartialAsync("_SectionEditor", sections[i], vd)
+    @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", sections[i], vd)
 }
     </div>
     @if (ViewBag.Templates is List<BlockTemplate> templates && templates.Count > 0)
@@ -61,7 +60,7 @@
     }
     <button type="button" id="add-section">Add Section</button>
     <div id="section-template" style="display:none">
-        @await Html.PartialAsync("_SectionEditor", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
+        @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
     </div>
     <button type="submit">Save</button>
 </form>
