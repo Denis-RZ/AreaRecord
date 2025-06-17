@@ -161,4 +161,20 @@ public class AdminPageSectionController : Controller
         var zones = _layout.GetZones(layout);
         return Json(zones);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Reorder([FromForm] IList<int> ids)
+    {
+        using var tx = _db.Database.BeginTransaction();
+        for (int i = 0; i < ids.Count; i++)
+        {
+            var sec = await _db.PageSections.FindAsync(ids[i]);
+            if (sec == null) continue;
+            sec.SortOrder = (i + 1) * 10;
+            _db.PageSections.Update(sec);
+        }
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
+        return Ok();
+    }
 }
