@@ -12,7 +12,7 @@ using Xunit;
 
 public class SanitizationTests
 {
-    private static (ApplicationDbContext ctx, LayoutService layout, HtmlSanitizerService sanitizer) CreateServices()
+    private static (ApplicationDbContext ctx, LayoutService layout, ContentProcessingService content) CreateServices()
     {
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
@@ -34,14 +34,15 @@ public class SanitizationTests
             .Build();
         var layout = new LayoutService(cache, tokens);
         var sanitizer = new HtmlSanitizerService();
-        return (ctx, layout, sanitizer);
+        var content = new ContentProcessingService(sanitizer);
+        return (ctx, layout, content);
     }
 
     [Fact(Skip = "Create sanitization covered by section tests")]
     public async Task CreatePage_SanitizesHtml()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminContentController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminContentController(ctx, layout, content);
         var model = new Page
         {
             Slug = "test",
@@ -61,8 +62,8 @@ public class SanitizationTests
     [Fact]
     public async Task CreateSection_SanitizesHtml()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, content);
 
         var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "main", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
         var result = await controller.Create(model, null);
@@ -75,8 +76,8 @@ public class SanitizationTests
     [Fact(Skip = "Edit sanitization covered by section tests")]
     public async Task EditPage_SanitizesHtml()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminContentController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminContentController(ctx, layout, content);
         var createModel = new Page
         {
             Slug = "edit",
@@ -103,8 +104,8 @@ public class SanitizationTests
     [Fact]
     public async Task CreateSection_MarkdownConverted()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, content);
         var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
         var result = await controller.Create(model, null);
         Assert.IsType<RedirectToActionResult>(result);
@@ -116,8 +117,8 @@ public class SanitizationTests
     [Fact]
     public async Task CreateSection_CodeEncoded()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, content);
         var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
         var result = await controller.Create(model, null);
         Assert.IsType<RedirectToActionResult>(result);
@@ -128,8 +129,8 @@ public class SanitizationTests
     [Fact]
     public async Task CreateSection_ImageStoresTag()
     {
-        var (ctx, layout, sanitizer) = CreateServices();
-        var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+        var (ctx, layout, content) = CreateServices();
+        var controller = new AdminPageSectionController(ctx, layout, content);
         var bytes = new byte[] { 1, 2, 3 };
         using var stream = new System.IO.MemoryStream(bytes);
         var file = new FormFile(stream, 0, bytes.Length, "file", "img.png");
