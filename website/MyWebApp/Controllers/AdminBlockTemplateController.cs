@@ -169,35 +169,4 @@ public class AdminBlockTemplateController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetBlocks()
-    {
-        var items = await _db.BlockTemplates.AsNoTracking()
-            .OrderBy(t => t.Name)
-            .Select(t => new { t.Id, t.Name })
-            .ToListAsync();
-        return Json(items);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetPages()
-    {
-        var pages = await _db.Pages.AsNoTracking()
-            .OrderBy(p => p.Slug)
-            .Select(p => new { p.Id, p.Slug })
-            .ToListAsync();
-        return Json(pages);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetSections(int id)
-    {
-        var zones = await _db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == id)
-            .Select(s => s.Zone)
-            .Distinct()
-            .OrderBy(a => a)
-            .ToListAsync();
-        return Json(zones);
-    }
 }

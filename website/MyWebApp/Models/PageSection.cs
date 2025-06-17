@@ -37,7 +37,6 @@ public class PageSection
 
     public int? PermissionId { get; set; }
 
-    public int ViewCount { get; set; }
 
     public Page? Page { get; set; }
 

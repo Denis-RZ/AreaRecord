@@ -149,6 +149,7 @@ builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddSingleton<MyWebApp.Services.TokenRenderService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
+builder.Services.AddSingleton<MyWebApp.Services.ContentProcessingService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
 builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();
 var smtpSection = builder.Configuration.GetSection("Smtp");
@@ -324,7 +325,6 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 StartDate TEXT,
                 EndDate TEXT,
                 PermissionId INTEGER,
-                ViewCount INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
             )");
             db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Zone_SortOrder ON PageSections(PageId, Zone, SortOrder)");
@@ -354,8 +354,6 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN EndDate TEXT");
             if (!columns.Contains("PermissionId"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN PermissionId INTEGER");
-            if (!columns.Contains("ViewCount"))
-                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN ViewCount INTEGER NOT NULL DEFAULT 0");
 
             cmd.CommandText = "PRAGMA index_list('PageSections')";
             using var idx = cmd.ExecuteReader();
