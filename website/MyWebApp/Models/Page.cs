@@ -19,11 +19,6 @@ namespace MyWebApp.Models
         [MaxLength(64)]
         public string Layout { get; set; } = "single-column";
 
-        public string? HeaderHtml { get; set; }
-
-        public string BodyHtml { get; set; } = string.Empty;
-
-        public string? FooterHtml { get; set; }
 
         [MaxLength(300)]
         public string? MetaDescription { get; set; }

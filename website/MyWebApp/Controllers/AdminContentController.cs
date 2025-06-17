@@ -54,9 +54,6 @@ public class AdminContentController : Controller
             ViewBag.Sections = model.Sections;
             return View("PageEditor", model);
         }
-        model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
-        model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
-        model.FooterHtml = _sanitizer.Sanitize(model.FooterHtml);
         if (model.IsPublished && model.PublishDate == null)
         {
             model.PublishDate = DateTime.UtcNow;
@@ -102,9 +99,6 @@ public class AdminContentController : Controller
             ViewBag.Sections = model.Sections;
             return View("PageEditor", model);
         }
-        model.HeaderHtml = _sanitizer.Sanitize(model.HeaderHtml);
-        model.BodyHtml = _sanitizer.Sanitize(model.BodyHtml);
-        model.FooterHtml = _sanitizer.Sanitize(model.FooterHtml);
         if (model.IsPublished && model.PublishDate == null)
         {
             model.PublishDate = DateTime.UtcNow;

@@ -19,7 +19,7 @@ public class PageTests
         using (var context = new ApplicationDbContext(options))
         {
             context.Database.EnsureCreated();
-            context.Pages.Add(new Page { Slug = "test", Title = "Test", Layout = "single-column", BodyHtml = "<p>Hi</p>" });
+            context.Pages.Add(new Page { Slug = "test", Title = "Test", Layout = "single-column" });
             context.SaveChanges();
         }
 
