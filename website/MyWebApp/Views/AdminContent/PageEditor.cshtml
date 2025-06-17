@@ -13,6 +13,13 @@
     <div>
         <div><label>Slug</label><input asp-for="Slug" id="slug-input" /></div>
         <div><label>Title</label><input asp-for="Title" id="title-input" /></div>
+        <div>
+            <label asp-for="Layout">Layout</label>
+            <select asp-for="Layout">
+                <option value="single-column">Single Column</option>
+                <option value="two-column-sidebar">Two Column with Sidebar</option>
+            </select>
+        </div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
         <div><label asp-for="PublishDate"></label><input asp-for="PublishDate" type="datetime-local" /></div>
         <details>

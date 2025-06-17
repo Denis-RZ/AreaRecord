@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using MyWebApp.Filters;
 using MyWebApp.Models;
 using MyWebApp.Services;
+using Microsoft.AspNetCore.Http;
+using Markdig;
+using System.IO;
+using System.Linq;
 
 namespace MyWebApp.Controllers;
 
@@ -27,6 +31,8 @@ public class AdminContentController : Controller
     {
         ViewBag.Templates = await _db.BlockTemplates.AsNoTracking()
             .OrderBy(t => t.Name).ToListAsync();
+        ViewBag.Permissions = await _db.Permissions.AsNoTracking()
+            .OrderBy(p => p.Name).ToListAsync();
     }
 
     public async Task<IActionResult> Index()
@@ -62,10 +68,14 @@ public class AdminContentController : Controller
         await _db.SaveChangesAsync();
         if (model.Sections != null && model.Sections.Count > 0)
         {
-            foreach (var s in model.Sections)
+            var files = HttpContext.Request.Form.Files;
+            var sections = model.Sections.ToList();
+            for (int i = 0; i < sections.Count; i++)
             {
+                var s = sections[i];
                 s.PageId = model.Id;
-                s.Html = _sanitizer.Sanitize(s.Html);
+                var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
+                await PrepareHtmlAsync(s, file);
                 _db.PageSections.Add(s);
             }
             await _db.SaveChangesAsync();
@@ -109,16 +119,53 @@ public class AdminContentController : Controller
         {
             var existing = _db.PageSections.Where(s => s.PageId == model.Id);
             _db.PageSections.RemoveRange(existing);
-            foreach (var s in model.Sections)
+            var files = HttpContext.Request.Form.Files;
+            var sections = model.Sections.ToList();
+            for (int i = 0; i < sections.Count; i++)
             {
+                var s = sections[i];
                 s.PageId = model.Id;
-                s.Html = _sanitizer.Sanitize(s.Html);
+                var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
+                await PrepareHtmlAsync(s, file);
                 _db.PageSections.Add(s);
             }
             await _db.SaveChangesAsync();
         }
         _layout.Reset();
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task PrepareHtmlAsync(PageSection model, IFormFile? file)
+    {
+        switch (model.Type)
+        {
+            case PageSectionType.Html:
+                model.Html = _sanitizer.Sanitize(model.Html);
+                break;
+            case PageSectionType.Markdown:
+                var html = Markdig.Markdown.ToHtml(model.Html ?? string.Empty);
+                model.Html = _sanitizer.Sanitize(html);
+                break;
+            case PageSectionType.Code:
+                model.Html = $"<pre><code>{System.Net.WebUtility.HtmlEncode(model.Html)}</code></pre>";
+                break;
+            case PageSectionType.Image:
+            case PageSectionType.Video:
+                if (file != null && file.Length > 0)
+                {
+                    var uploads = Path.Combine("wwwroot", "uploads");
+                    Directory.CreateDirectory(uploads);
+                    var name = Path.GetFileName(file.FileName);
+                    var path = Path.Combine(uploads, name);
+                    using var stream = new FileStream(path, FileMode.Create);
+                    await file.CopyToAsync(stream);
+                    if (model.Type == PageSectionType.Image)
+                        model.Html = $"<img src='/uploads/{name}' alt='' />";
+                    else
+                        model.Html = $"<video controls src='/uploads/{name}'></video>";
+                }
+                break;
+        }
     }
 
     public async Task<IActionResult> Delete(int id)
