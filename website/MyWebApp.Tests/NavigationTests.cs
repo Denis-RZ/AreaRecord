@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
@@ -23,7 +24,15 @@ public class NavigationTests
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
         var tokens = new TokenRenderService();
-        var layout = new LayoutService(cache, tokens);
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                {"Layouts:single-column:0", "main"},
+                {"Layouts:two-column-sidebar:0", "main"},
+                {"Layouts:two-column-sidebar:1", "sidebar"}
+            })
+            .Build();
+        var layout = new LayoutService(cache, tokens, config);
 
         context.Pages.Add(new Page { Slug = "about", Title = "About", Layout = "single-column", IsPublished = true });
         context.SaveChanges();
