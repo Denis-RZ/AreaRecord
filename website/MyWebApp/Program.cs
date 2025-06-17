@@ -147,6 +147,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
+builder.Services.AddSingleton<MyWebApp.Services.TokenRenderService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
 builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();

@@ -22,7 +22,8 @@ public class SanitizationTests
         ctx.Database.EnsureCreated();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
-        var layout = new LayoutService(cache);
+        var tokens = new TokenRenderService();
+        var layout = new LayoutService(cache, tokens);
         var sanitizer = new HtmlSanitizerService();
         return (ctx, layout, sanitizer);
     }

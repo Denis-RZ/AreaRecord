@@ -6,6 +6,20 @@
 <h2>Create Block</h2>
 <form asp-action="Create" method="post">
     <div><label>Name</label><input asp-for="Name" /></div>
-    <div><label>Html</label><textarea asp-for="Html"></textarea></div>
+    <div>
+        <label>Html</label>
+        <textarea asp-for="Html" id="html-area"></textarea>
+        <div class="insert-tools">
+            <button type="button" id="insert-block-btn">Insert Block</button>
+            <select id="block-select" style="display:none"></select>
+            <button type="button" id="insert-section-btn">Insert Section</button>
+            <select id="page-select" style="display:none"></select>
+            <select id="section-select" style="display:none"></select>
+        </div>
+    </div>
     <button type="submit">Save</button>
 </form>
+
+@section Scripts {
+    <script src="~/js/block-editor.js" asp-append-version="true"></script>
+}
