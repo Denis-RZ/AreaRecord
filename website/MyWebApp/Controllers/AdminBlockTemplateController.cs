@@ -85,6 +85,14 @@ public class AdminBlockTemplateController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Html(int id)
+    {
+        var item = await _db.BlockTemplates.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
+        if (item == null) return NotFound();
+        return Content(item.Html, "text/html");
+    }
+
     public async Task<IActionResult> Export()
     {
         var list = await _db.BlockTemplates.AsNoTracking().ToListAsync();

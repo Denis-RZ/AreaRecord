@@ -15,17 +15,20 @@
 <form asp-action="@(isNew ? "Create" : "Edit")" method="post">
     <input type="hidden" asp-for="Id" />
     <div id="tab-settings" class="tab-content active">
-        <div><label>Slug</label><input asp-for="Slug" /></div>
-        <div><label>Title</label><input asp-for="Title" /></div>
-        <div><label asp-for="MetaDescription"></label><input asp-for="MetaDescription" /></div>
-        <div><label asp-for="MetaKeywords"></label><input asp-for="MetaKeywords" /></div>
-        <div><label asp-for="OgTitle"></label><input asp-for="OgTitle" /></div>
-        <div><label asp-for="OgDescription"></label><input asp-for="OgDescription" /></div>
-        <div><label asp-for="Category"></label><input asp-for="Category" /></div>
-        <div><label asp-for="Tags"></label><input asp-for="Tags" /></div>
-        <div><label asp-for="FeaturedImage"></label><input asp-for="FeaturedImage" /></div>
+        <div><label>Slug</label><input asp-for="Slug" id="slug-input" /></div>
+        <div><label>Title</label><input asp-for="Title" id="title-input" /></div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
         <div><label asp-for="PublishDate"></label><input asp-for="PublishDate" type="datetime-local" /></div>
+        <details>
+            <summary>Advanced Options</summary>
+            <div><label asp-for="MetaDescription" title="SEO description"></label><input asp-for="MetaDescription" /></div>
+            <div><label asp-for="MetaKeywords" title="Comma separated keywords"></label><input asp-for="MetaKeywords" /></div>
+            <div><label asp-for="OgTitle" title="Social share title"></label><input asp-for="OgTitle" /></div>
+            <div><label asp-for="OgDescription" title="Social share description"></label><input asp-for="OgDescription" /></div>
+            <div><label asp-for="Category" title="Page category"></label><input asp-for="Category" /></div>
+            <div><label asp-for="Tags" title="Comma separated tags"></label><input asp-for="Tags" /></div>
+            <div><label asp-for="FeaturedImage" title="URL of featured image"></label><input asp-for="FeaturedImage" /></div>
+        </details>
         <div>
             <label>Header</label>
             <div id="header-editor" class="quill-editor"></div>
@@ -35,6 +38,17 @@
             <label>Body</label>
             <div id="body-editor" class="quill-editor"></div>
             <input type="hidden" asp-for="BodyHtml" />
+        </div>
+        <div>
+            <label>Insert Block</label>
+            <select id="template-select">
+                <option value="">--select--</option>
+                @foreach (var t in ViewBag.Templates as List<BlockTemplate>)
+                {
+                    <option value="@t.Id">@t.Name</option>
+                }
+            </select>
+            <button type="button" id="insert-template">Insert</button>
         </div>
         <div>
             <label>Footer</label>
@@ -81,6 +95,31 @@
                 const target = document.querySelector(btn.dataset.target);
                 if (target) target.style.display = 'block';
             });
+        });
+
+        const titleInput = document.getElementById('title-input');
+        const slugInput = document.getElementById('slug-input');
+        function slugify(text) {
+            return text.toLowerCase().trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+        titleInput.addEventListener('input', () => {
+            if (!slugInput.value) {
+                slugInput.value = slugify(titleInput.value);
+            }
+        });
+
+        document.getElementById('insert-template').addEventListener('click', async () => {
+            const id = document.getElementById('template-select').value;
+            if (!id) return;
+            const resp = await fetch(`/AdminBlockTemplate/Html/${id}`);
+            if (resp.ok) {
+                const html = await resp.text();
+                bodyQuill.focus();
+                const range = bodyQuill.getSelection(true);
+                bodyQuill.clipboard.dangerouslyPasteHTML(range.index, html);
+            }
         });
     </script>
 }
