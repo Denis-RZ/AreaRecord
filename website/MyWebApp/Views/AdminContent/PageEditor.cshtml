@@ -66,7 +66,9 @@
 </form>
 @section Scripts {
     <script>
-        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.LayoutZones));
+        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ViewBag.LayoutZones as IReadOnlyDictionary<string, string[]> ??
+            new Dictionary<string, string[]>()));
     </script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
     <script>
