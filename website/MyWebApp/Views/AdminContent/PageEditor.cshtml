@@ -8,6 +8,15 @@
     ViewData["Title"] = isNew ? "Create Page" : "Edit Page";
 }
 <h2>@ViewData["Title"]</h2>
+<div class="mode-toggle">
+    <button type="button" id="mode-edit" class="mode-btn active">Edit</button>
+    <button type="button" id="mode-preview" class="mode-btn">Preview<span id="unsaved-indicator" class="unsaved-indicator">*</span></button>
+    <div class="device-buttons">
+        <button type="button" class="device-btn active" data-width="100%">Desktop</button>
+        <button type="button" class="device-btn" data-width="768px">Tablet</button>
+        <button type="button" class="device-btn" data-width="375px">Mobile</button>
+    </div>
+</div>
 <div class="page-editor">
     <aside id="block-library" class="block-library">
         <input type="text" id="block-search" class="search" placeholder="Search blocks..." />
@@ -69,6 +78,11 @@
     </div>
     <button type="submit">Save</button>
     </form>
+    <div id="preview-wrapper" class="preview-wrapper">
+        <div id="preview-container" class="preview-container">
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </div>
 </div>
 @section Scripts {
     <script>

@@ -7,6 +7,16 @@ window.addEventListener('load', () => {
     let activeIndex = null;
     const layoutSelect = document.getElementById('layout-select');
     let currentLayout = layoutSelect ? layoutSelect.value : 'single-column';
+    const pageEditor = document.querySelector('.page-editor');
+    const previewWrapper = document.getElementById('preview-wrapper');
+    const previewFrame = document.getElementById('preview-frame');
+    const unsavedIndicator = document.getElementById('unsaved-indicator');
+    const modeEdit = document.getElementById('mode-edit');
+    const modePreview = document.getElementById('mode-preview');
+    const deviceBtns = document.querySelectorAll('.device-btn');
+    const previewContainer = document.getElementById('preview-container');
+    let dirty = false;
+    let previewTimer = null;
 
     function buildGroups() {
         container.innerHTML = '';
@@ -30,6 +40,53 @@ window.addEventListener('load', () => {
             const span = g.querySelector('.zone-count');
             if (span) span.textContent = `(${count})`;
         });
+    }
+
+    function collectData() {
+        const zones = {};
+        document.querySelectorAll('.zone-group').forEach(g => {
+            const zone = g.dataset.zone;
+            const html = Array.from(g.querySelectorAll('.section-editor')).map(sec => {
+                const idx = sec.dataset.index;
+                const typeSel = document.getElementById(`type-select-${idx}`);
+                if (typeSel && typeSel.value === 'Html') {
+                    return editors[idx].root.innerHTML;
+                }
+                const inp = document.getElementById(`Html-${idx}`);
+                return inp ? inp.value : '';
+            }).join('\n');
+            zones[zone] = html;
+        });
+        return {
+            layout: layoutSelect ? layoutSelect.value : 'single-column',
+            title: document.getElementById('title-input')?.value || '',
+            zones
+        };
+    }
+
+    function renderPreview() {
+        const data = collectData();
+        fetch('/AdminContent/Preview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify(data)
+        })
+            .then(r => r.text())
+            .then(html => {
+                if (previewFrame) previewFrame.srcdoc = html;
+                dirty = false;
+                if (unsavedIndicator) unsavedIndicator.style.display = 'none';
+            });
+    }
+
+    function schedulePreview() {
+        dirty = true;
+        if (unsavedIndicator) unsavedIndicator.style.display = 'inline';
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(renderPreview, 300);
     }
 
     function populateZones(select) {
@@ -322,6 +379,7 @@ window.addEventListener('load', () => {
         quill.root.addEventListener('click', () => { activeIndex = index; });
         quill.root.addEventListener('focus', () => { activeIndex = index; });
         editors[index] = quill;
+        quill.on('text-change', schedulePreview);
 
         function update() {
             const type = typeSelect.value;
@@ -338,4 +396,28 @@ window.addEventListener('load', () => {
         update();
         typeSelect.addEventListener('change', update);
     }
+
+    modePreview?.addEventListener('click', () => {
+        pageEditor?.classList.add('preview');
+        renderPreview();
+    });
+
+    modeEdit?.addEventListener('click', () => {
+        pageEditor?.classList.remove('preview');
+    });
+
+    deviceBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            deviceBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (previewContainer) previewContainer.style.width = btn.dataset.width;
+        });
+    });
+
+    document.querySelector('.editor-main')?.addEventListener('input', schedulePreview);
+    document.querySelector('.editor-main')?.addEventListener('change', schedulePreview);
+    form?.addEventListener('submit', () => {
+        dirty = false;
+        if (unsavedIndicator) unsavedIndicator.style.display = 'none';
+    });
 });

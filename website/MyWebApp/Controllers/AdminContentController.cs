@@ -17,12 +17,14 @@ public class AdminContentController : Controller
     private readonly ApplicationDbContext _db;
     private readonly LayoutService _layout;
     private readonly ContentProcessingService _content;
+    private readonly TokenRenderService _tokens;
 
-    public AdminContentController(ApplicationDbContext db, LayoutService layout, ContentProcessingService content)
+    public AdminContentController(ApplicationDbContext db, LayoutService layout, ContentProcessingService content, TokenRenderService tokens)
     {
         _db = db;
         _layout = layout;
         _content = content;
+        _tokens = tokens;
     }
 
     private async Task LoadTemplatesAsync()
@@ -97,6 +99,21 @@ public class AdminContentController : Controller
         }
         _layout.Reset();
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Preview([FromBody] PreviewRequest model)
+    {
+        var zones = new Dictionary<string, string>();
+        foreach (var kv in model.Zones ?? new Dictionary<string, string>())
+        {
+            zones[kv.Key] = await _tokens.RenderAsync(_db, kv.Value ?? string.Empty);
+        }
+        ViewBag.HeaderHtml = await _layout.GetHeaderAsync(_db);
+        ViewBag.FooterHtml = await _layout.GetFooterAsync(_db);
+        ViewBag.PageLayout = string.IsNullOrWhiteSpace(model.Layout) ? "single-column" : model.Layout;
+        ViewBag.ZoneHtml = zones;
+        return View("~/Views/Pages/Show.cshtml", new Page { Title = model.Title });
     }
 
     public async Task<IActionResult> Edit(int id)
