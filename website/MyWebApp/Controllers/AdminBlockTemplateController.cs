@@ -124,6 +124,30 @@ public class AdminBlockTemplateController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetBlocks()
+    {
+        var items = await _db.BlockTemplates.AsNoTracking()
+            .OrderBy(t => t.Name)
+            .Select(t => new { t.Id, t.Name, Preview = t.Html.Length > 200 ? t.Html.Substring(0, 200) + "..." : t.Html })
+            .ToListAsync();
+        return Json(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateFromSection(string name, string html)
+    {
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(html))
+            return BadRequest();
+        html = _sanitizer.Sanitize(html);
+        var t = new BlockTemplate { Name = name, Html = html };
+        _db.BlockTemplates.Add(t);
+        _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = t, Html = html });
+        await _db.SaveChangesAsync();
+        return Json(new { t.Id });
+    }
+
     public async Task<IActionResult> AddToPage(int id)
     {
         var item = await _db.BlockTemplates.FindAsync(id);

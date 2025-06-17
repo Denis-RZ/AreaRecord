@@ -1315,3 +1315,43 @@ form.mb-3 {
 }
 .zone-group[data-zone="main"] { border-color: #2563eb; }
 .zone-group[data-zone="sidebar"] { border-color: #16a34a; }
+
+/* Block library panel */
+.page-editor {
+    display: flex;
+    gap: 1rem;
+}
+
+.block-library {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid #e2e8f0;
+    padding-right: 1rem;
+    margin-right: 1rem;
+}
+
+.block-library .search {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.block-card {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    cursor: grab;
+}
+
+.block-card:hover {
+    box-shadow: 0 0 0 2px #0ea5e9 inset;
+}
+
+.block-card .block-preview {
+    font-size: 0.8rem;
+    color: #555;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}

@@ -8,7 +8,12 @@
     ViewData["Title"] = isNew ? "Create Page" : "Edit Page";
 }
 <h2>@ViewData["Title"]</h2>
-<form asp-action="@(isNew ? "Create" : "Edit")" method="post">
+<div class="page-editor">
+    <aside id="block-library" class="block-library">
+        <input type="text" id="block-search" class="search" placeholder="Search blocks..." />
+        <div class="block-list"></div>
+    </aside>
+    <form asp-action="@(isNew ? "Create" : "Edit")" method="post" class="editor-main">
     <input type="hidden" asp-for="Id" />
     <div>
         <div><label>Slug</label><input asp-for="Slug" id="slug-input" /></div>
@@ -63,7 +68,8 @@
         @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
     </div>
     <button type="submit">Save</button>
-</form>
+    </form>
+</div>
 @section Scripts {
     <script>
         const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
@@ -71,6 +77,7 @@
             new Dictionary<string, string[]>()));
     </script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
+    <script src="~/js/block-library.js" asp-append-version="true"></script>
     <script>
         const titleInput = document.getElementById('title-input');
         const slugInput = document.getElementById('slug-input');

@@ -14,10 +14,11 @@
 <div id="code-editor" class="type-editor">
     <textarea asp-for="Html"></textarea>
 </div>
-<div id="file-editor" class="type-editor">
-    <input type="file" name="file" />
-</div>
-<script>
+    <div id="file-editor" class="type-editor">
+        <input type="file" name="file" />
+    </div>
+    <button type="button" class="add-library">Add to Library</button>
+    <script>
     const typeSelect = document.getElementById('type-select');
     const htmlDiv = document.getElementById('html-editor');
     const markdownDiv = document.getElementById('markdown-editor');

@@ -133,6 +133,18 @@ window.addEventListener('load', () => {
         } else if (e.target.classList.contains('duplicate-section')) {
             const original = e.target.closest('.section-editor');
             duplicateSection(original);
+        } else if (e.target.classList.contains('add-library')) {
+            const section = e.target.closest('.section-editor');
+            const idx = section.dataset.index;
+            const name = prompt('Block name');
+            if (!name) return;
+            const html = editors[idx].root.innerHTML;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            fetch('/AdminBlockTemplate/CreateFromSection', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token },
+                body: new URLSearchParams({ name, html })
+            }).then(() => alert('Saved to library'));
         }
     });
 
@@ -145,7 +157,7 @@ window.addEventListener('load', () => {
         }
     });
 
-    function addSection() {
+    function addSection(htmlContent = '', zone = null) {
         const index = sectionCount++;
         const html = templateHtml.replace(/__index__/g, index);
         const temp = document.createElement('div');
@@ -155,9 +167,29 @@ window.addEventListener('load', () => {
         populateZones(section.querySelector('.zone-select'));
         placeSection(section);
         initSectionEditor(index);
+        if (htmlContent) {
+            editors[index].root.innerHTML = htmlContent;
+            const input = document.getElementById(`Html-${index}`);
+            if (input) input.value = htmlContent;
+        }
+        if (zone) {
+            const select = section.querySelector('.zone-select');
+            if (select) { select.value = zone; }
+            placeSection(section);
+        }
         updateIndexes();
         updatePreview();
         updateZoneCounts();
+        return index;
+    }
+
+    function addSectionFromBlock(id, zone) {
+        fetch(`/AdminBlockTemplate/Html/${id}`)
+            .then(r => r.text())
+            .then(html => {
+                addSection(html, zone);
+                autoSave();
+            });
     }
 
     function duplicateSection(original) {
@@ -204,11 +236,13 @@ window.addEventListener('load', () => {
     }
 
     let dragged = null;
+    let draggedBlockId = null;
     const dropIndicator = document.createElement('div');
     dropIndicator.className = 'drop-indicator';
 
     container.addEventListener('dragstart', e => {
         dragged = e.target.closest('.section-editor');
+        draggedBlockId = null;
         if (dragged) {
             dragged.classList.add('dragging');
             document.querySelectorAll('.zone-group').forEach(z => z.classList.add('drag-over'));
@@ -221,7 +255,7 @@ window.addEventListener('load', () => {
         const zone = e.target.closest('.zone-group');
         const target = e.target.closest('.section-editor');
         if (zone) zone.classList.add('drag-over');
-        if (dragged && target && target !== dragged) {
+        if (!draggedBlockId && dragged && target && target !== dragged) {
             const rect = target.getBoundingClientRect();
             const next = (e.clientY - rect.top) > (rect.height / 2);
             target.parentNode.insertBefore(dropIndicator, next ? target.nextSibling : target);
@@ -237,6 +271,13 @@ window.addEventListener('load', () => {
 
     container.addEventListener('drop', e => {
         e.preventDefault();
+        const zone = e.target.closest('.zone-group');
+        if (draggedBlockId && zone) {
+            addSectionFromBlock(draggedBlockId, zone.dataset.zone);
+            draggedBlockId = null;
+            document.querySelectorAll('.zone-group.drag-over').forEach(z => z.classList.remove('drag-over'));
+            return;
+        }
         if (dropIndicator.parentNode) {
             dropIndicator.parentNode.insertBefore(dragged, dropIndicator);
             dropIndicator.remove();
@@ -259,6 +300,12 @@ window.addEventListener('load', () => {
                 }
             });
         });
+    }
+
+    function autoSave() {
+        if (!form) return;
+        const fd = new FormData(form);
+        fetch(form.action, { method: 'POST', body: fd });
     }
 
     function initSectionEditor(index) {
