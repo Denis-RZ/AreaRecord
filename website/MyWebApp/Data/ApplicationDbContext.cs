@@ -53,9 +53,9 @@ namespace MyWebApp.Data
                 .IsUnique();
 
             modelBuilder.Entity<PageSection>()
- 
+
                 .HasIndex(s => new { s.PageId, s.Zone, s.SortOrder });
- 
+
 
             modelBuilder.Entity<PasswordResetToken>()
                 .HasIndex(t => t.Token)
@@ -107,11 +107,12 @@ namespace MyWebApp.Data
                     PageId = 1,
                     Zone = "header",
                     SortOrder = 0,
- 
+
                     Type = PageSectionType.Html,
- 
+
                     Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> {{nav}} <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
-                    , ViewCount = 0
+                    ,
+                    ViewCount = 0
                 },
                 new PageSection
                 {
@@ -119,11 +120,11 @@ namespace MyWebApp.Data
                     PageId = 1,
                     Zone = "footer",
                     SortOrder = 0,
- 
+
                     Type = PageSectionType.Html,
- 
+
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
- 
+
                 });
 
             modelBuilder.Entity<Role>().HasData(

@@ -43,11 +43,11 @@ public class AdminContentController : Controller
 
     public async Task<IActionResult> Create()
     {
- 
+
         await LoadTemplatesAsync();
         ViewBag.Sections = new List<PageSection>();
         return View("PageEditor", new Page());
- 
+
     }
 
     [HttpPost]
@@ -113,7 +113,7 @@ public class AdminContentController : Controller
         ViewBag.Sections = await _db.PageSections.Where(s => s.PageId == id)
             .OrderBy(s => s.SortOrder).ToListAsync();
         return View("PageEditor", page);
- 
+
     }
 
     [HttpPost]
