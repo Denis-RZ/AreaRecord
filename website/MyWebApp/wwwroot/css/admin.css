@@ -1278,15 +1278,15 @@ form.mb-3 {
     background: #0ea5e9;
     color: #fff;
 }
-.area-group {
+.zone-group {
     border: 1px solid #e2e8f0;
     padding: 0.5rem;
     margin-bottom: 1rem;
 }
-.area-group h3 {
+.zone-group h3 {
     margin: 0 0 0.5rem 0;
     text-transform: capitalize;
 }
-.area-sections {
+.zone-sections {
     min-height: 10px;
 }

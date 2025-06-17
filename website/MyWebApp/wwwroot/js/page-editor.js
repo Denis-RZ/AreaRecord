@@ -10,32 +10,32 @@ window.addEventListener('load', () => {
 
     function buildGroups() {
         container.innerHTML = '';
-        (layoutZones[currentLayout] || []).forEach(a => {
+        (layoutZones[currentLayout] || []).forEach(z => {
             const group = document.createElement('div');
-            group.className = 'area-group';
-            group.dataset.area = a;
+            group.className = 'zone-group';
+            group.dataset.zone = z;
             const h = document.createElement('h3');
-            h.textContent = a;
+            h.textContent = z;
             const div = document.createElement('div');
-            div.className = 'area-sections';
+            div.className = 'zone-sections';
             group.appendChild(h);
             group.appendChild(div);
             container.appendChild(group);
         });
     }
 
-    function populateAreas(select) {
+    function populateZones(select) {
         if (!select) return;
         const current = select.dataset.selected || select.value;
-        select.innerHTML = (layoutZones[currentLayout] || []).map(a => `<option value="${a}">${a}</option>`).join('');
+        select.innerHTML = (layoutZones[currentLayout] || []).map(z => `<option value="${z}">${z}</option>`).join('');
         if (current) select.value = current;
         select.dataset.selected = '';
     }
 
     function placeSection(section) {
-        const select = section.querySelector('.area-select');
-        const area = select ? select.value : 'main';
-        const group = container.querySelector(`.area-group[data-area='${area}'] .area-sections`);
+        const select = section.querySelector('.zone-select');
+        const zone = select ? select.value : 'main';
+        const group = container.querySelector(`.zone-group[data-zone='${zone}'] .zone-sections`);
         if (group) group.appendChild(section);
     }
 
@@ -43,11 +43,11 @@ window.addEventListener('load', () => {
         const preview = document.getElementById('layout-preview');
         if (!preview) return;
         preview.innerHTML = '';
-        (layoutZones[currentLayout] || []).forEach(a => {
+        (layoutZones[currentLayout] || []).forEach(z => {
             const div = document.createElement('div');
             div.className = 'preview-zone';
-            div.dataset.area = a;
-            div.textContent = a;
+            div.dataset.zone = z;
+            div.textContent = z;
             preview.appendChild(div);
         });
     }
@@ -56,9 +56,9 @@ window.addEventListener('load', () => {
         const zone = e.target.closest('.preview-zone');
         if (!zone) return;
         if (activeIndex !== null) {
-            const select = document.querySelector(`.area-select[data-index='${activeIndex}']`);
+            const select = document.querySelector(`.zone-select[data-index='${activeIndex}']`);
             if (select) {
-                select.value = zone.dataset.area;
+                select.value = zone.dataset.zone;
                 placeSection(select.closest('.section-editor'));
                 updateIndexes();
             }
@@ -91,7 +91,7 @@ window.addEventListener('load', () => {
     buildGroups();
     existing.forEach(el => {
         const idx = el.dataset.index;
-        populateAreas(el.querySelector('.area-select'));
+        populateZones(el.querySelector('.zone-select'));
         placeSection(el);
         initSectionEditor(idx);
     });
@@ -105,7 +105,7 @@ window.addEventListener('load', () => {
         currentLayout = layoutSelect.value;
         buildGroups();
         document.querySelectorAll('.section-editor').forEach(sec => {
-            populateAreas(sec.querySelector('.area-select'));
+            populateZones(sec.querySelector('.zone-select'));
             placeSection(sec);
         });
         updateIndexes();
@@ -123,7 +123,7 @@ window.addEventListener('load', () => {
     });
 
     container.addEventListener('change', e => {
-        if (e.target.classList.contains('area-select')) {
+        if (e.target.classList.contains('zone-select')) {
             const section = e.target.closest('.section-editor');
             placeSection(section);
             updateIndexes();
@@ -137,7 +137,7 @@ window.addEventListener('load', () => {
         temp.innerHTML = html;
         const section = temp.firstElementChild;
         section.dataset.index = index;
-        populateAreas(section.querySelector('.area-select'));
+        populateZones(section.querySelector('.zone-select'));
         placeSection(section);
         initSectionEditor(index);
         updateIndexes();
@@ -163,7 +163,7 @@ window.addEventListener('load', () => {
                 dest.value = src.value;
             }
         });
-        populateAreas(clone.querySelector('.area-select'));
+        populateZones(clone.querySelector('.zone-select'));
         placeSection(clone);
         initSectionEditor(index);
         if (editors[original.dataset.index]) {

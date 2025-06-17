@@ -13,12 +13,12 @@
         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
     </div>
     <div>
-        <label>Area</label>
-        <select id="area-select" asp-for="Area" data-selected="@Model.Area"></select>
+        <label>Zone</label>
+        <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
     </div>
  
 @await Html.PartialAsync("_SectionEditor", Model)
 
     <button type="submit">Save</button>
 </form>
-<script src="~/js/page-section-area.js" asp-append-version="true"></script>
+<script src="~/js/page-section-zone.js" asp-append-version="true"></script>
