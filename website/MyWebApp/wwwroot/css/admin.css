@@ -1261,3 +1261,32 @@ form.mb-3 {
     margin-top: 0.5rem;
     display: block;
 }
+
+.layout-preview {
+    display: flex;
+    gap: 4px;
+    margin-top: 0.5rem;
+}
+.layout-preview .preview-zone {
+    flex: 1;
+    border: 1px dashed #ccc;
+    padding: 4px;
+    text-align: center;
+    cursor: pointer;
+}
+.layout-preview .preview-zone.selected {
+    background: #0ea5e9;
+    color: #fff;
+}
+.area-group {
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+.area-group h3 {
+    margin: 0 0 0.5rem 0;
+    text-transform: capitalize;
+}
+.area-sections {
+    min-height: 10px;
+}

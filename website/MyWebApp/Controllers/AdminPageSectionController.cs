@@ -59,6 +59,16 @@ public class AdminPageSectionController : Controller
             await LoadPagesAsync();
             return View(model);
         }
+        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
+        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+        }
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            return View(model);
+        }
         await PrepareHtmlAsync(model, file);
         _db.PageSections.Add(model);
         await _db.SaveChangesAsync();
@@ -78,6 +88,16 @@ public class AdminPageSectionController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(PageSection model, IFormFile? file)
     {
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            return View(model);
+        }
+        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
+        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+        }
         if (!ModelState.IsValid)
         {
             await LoadPagesAsync();
@@ -142,5 +162,13 @@ public class AdminPageSectionController : Controller
             _layout.Reset();
         }
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAreasForPage(int id)
+    {
+        var layout = await _db.Pages.Where(p => p.Id == id).Select(p => p.Layout).FirstOrDefaultAsync() ?? "single-column";
+        var areas = LayoutService.GetAreas(layout);
+        return Json(areas);
     }
 }

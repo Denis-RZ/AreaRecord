@@ -65,6 +65,21 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
+        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+        }
+        if (!sections.Any(s => s.Area == "main"))
+        {
+            ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
+        }
+        if (!ModelState.IsValid)
+        {
+            await LoadTemplatesAsync();
+            ViewBag.Sections = sections;
+            model.Sections = sections;
+            return View("PageEditor", model);
+        }
         model.Sections = new List<PageSection>();
         _db.Pages.Add(model);
         await _db.SaveChangesAsync();
@@ -116,6 +131,21 @@ public class AdminContentController : Controller
             model.PublishDate = DateTime.UtcNow;
         }
         var sections = model.Sections?.ToList() ?? new List<PageSection>();
+        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+        }
+        if (!sections.Any(s => s.Area == "main"))
+        {
+            ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
+        }
+        if (!ModelState.IsValid)
+        {
+            await LoadTemplatesAsync();
+            ViewBag.Sections = sections;
+            model.Sections = sections;
+            return View("PageEditor", model);
+        }
         model.Sections = new List<PageSection>();
         _db.Update(model);
         await _db.SaveChangesAsync();

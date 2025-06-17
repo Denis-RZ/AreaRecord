@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using MyWebApp.Data;
 
 namespace MyWebApp.Services;
@@ -15,6 +16,16 @@ public class LayoutService
         ["single-column"] = new[] { "main" },
         ["two-column-sidebar"] = new[] { "main", "sidebar" }
     };
+
+    public static bool IsValidArea(string layout, string area)
+    {
+        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(area);
+    }
+
+    public static string[] GetAreas(string layout)
+    {
+        return LayoutZones.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
+    }
 
     public LayoutService(CacheService cache, TokenRenderService tokens)
     {
