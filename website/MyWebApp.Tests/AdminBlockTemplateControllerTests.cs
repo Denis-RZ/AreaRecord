@@ -6,6 +6,7 @@ using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -32,16 +33,16 @@ public class AdminBlockTemplateControllerTests
         using var connection = tuple.conn;
         var ctx = tuple.ctx;
         var controller = tuple.controller;
-        ctx.BlockTemplates.Add(new BlockTemplate { Id = 1, Name = "b", Html = "x" });
-        ctx.Pages.Add(new Page { Id = 1, Slug = "home", Title = "Home", Layout = "single-column" });
-        ctx.Roles.Add(new Role { Id = 1, Name = "Admin" });
+        var template = new BlockTemplate { Name = "b", Html = "x" };
+        ctx.BlockTemplates.Add(template);
         ctx.SaveChanges();
 
-        var result = await controller.AddToPage(1, new List<int> { 1 }, "", "Admin");
+        var homeId = ctx.Pages.Single(p => p.Slug == "home").Id;
+        var result = await controller.AddToPage(template.Id, new List<int> { homeId }, "", "Admin");
         var view = Assert.IsType<ViewResult>(result);
         Assert.False(controller.ModelState.IsValid);
         var selected = Assert.IsType<List<int>>(controller.ViewBag.SelectedPageIds);
-        Assert.Contains(1, selected);
+        Assert.Contains(homeId, selected);
         Assert.Equal("", controller.ViewBag.SelectedZone as string);
         Assert.Equal("Admin", controller.ViewBag.SelectedRole as string);
     }
@@ -53,17 +54,14 @@ public class AdminBlockTemplateControllerTests
         using var connection = tuple.conn;
         var ctx = tuple.ctx;
         var controller = tuple.controller;
-        ctx.Pages.Add(new Page { Id = 1, Slug = "home", Title = "Home", Layout = "single-column" });
-        ctx.Roles.Add(new Role { Id = 1, Name = "Admin" });
-        ctx.SaveChanges();
-
+        var homeId = ctx.Pages.Single(p => p.Slug == "home").Id;
         var model = new BlockTemplate();
         controller.ModelState.AddModelError("Name", "required");
-        var result = await controller.Create(model, new List<int> { 1 }, "main", "Admin");
+        var result = await controller.Create(model, new List<int> { homeId }, "main", "Admin");
         var view = Assert.IsType<ViewResult>(result);
         Assert.False(controller.ModelState.IsValid);
         var selected = Assert.IsType<List<int>>(controller.ViewBag.SelectedPageIds);
-        Assert.Contains(1, selected);
+        Assert.Contains(homeId, selected);
         Assert.Equal("main", controller.ViewBag.SelectedZone as string);
         Assert.Equal("Admin", controller.ViewBag.SelectedRole as string);
     }
