@@ -195,6 +195,7 @@ using (var scope = app.Services.CreateScope())
             UpgradePagesTable(db);
             UpgradeMediaItemsTable(db);
             UpgradeBlockTemplatesTable(db);
+            UpgradeRolesTable(db);
             UpgradePermissionsTable(db);
             UpgradeLayoutHeader(db);
         }
@@ -503,6 +504,46 @@ static void UpgradeBlockTemplatesTable(ApplicationDbContext db)
                 Html TEXT,
                 Created TEXT NOT NULL,
                 FOREIGN KEY(BlockTemplateId) REFERENCES BlockTemplates(Id) ON DELETE CASCADE
+            )");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradeRolesTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Roles'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE Roles (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL
+            )");
+            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_Roles_Name ON Roles(Name)");
+            db.Database.ExecuteSqlRaw(@"INSERT INTO Roles (Id, Name) VALUES
+                (1, 'Admin'), (2, 'User'), (3, 'Moderator')");
+        }
+
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='UserRoles'";
+        exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE UserRoles (
+                SiteUserId INTEGER NOT NULL,
+                RoleId INTEGER NOT NULL,
+                PRIMARY KEY(SiteUserId, RoleId),
+                FOREIGN KEY(SiteUserId) REFERENCES SiteUsers(Id) ON DELETE CASCADE,
+                FOREIGN KEY(RoleId) REFERENCES Roles(Id) ON DELETE CASCADE
             )");
         }
     }
