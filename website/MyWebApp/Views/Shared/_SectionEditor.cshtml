@@ -1,42 +1,33 @@
 @model MyWebApp.Models.PageSection
 @using MyWebApp.Models
-<div>
-    <label>Type</label>
-    <select asp-for="Type" asp-items="Html.GetEnumSelectList<PageSectionType>()" id="type-select"></select>
-</div>
-<div id="html-editor" class="type-editor">
-    <div class="quill-editor" id="quill-editor"></div>
-    <input type="hidden" asp-for="Html" />
-</div>
-<div id="markdown-editor" class="type-editor">
-    <textarea asp-for="Html"></textarea>
-</div>
-<div id="code-editor" class="type-editor">
-    <textarea asp-for="Html"></textarea>
-</div>
-    <div id="file-editor" class="type-editor">
-        <input type="file" name="file" />
+@{
+    var idxObj = ViewData["Index"];
+    var idx = idxObj?.ToString() ?? "0";
+    var prefix = idxObj != null ? $"Sections[{idx}]." : string.Empty;
+}
+<div class="section-editor" data-index="@idx" draggable="true">
+    <input type="hidden" name="@($"{prefix}Id")" value="@Model.Id" />
+    <input type="hidden" name="@($"{prefix}SortOrder")" value="@Model.SortOrder" class="sort-order" />
+    <div>
+        <label>Zone</label>
+        <select class="zone-select" data-index="@idx" name="@($"{prefix}Zone")" data-selected="@Model.Zone"></select>
+    </div>
+    <div>
+        <label>Type</label>
+        <select id="type-select-@idx" name="@($"{prefix}Type")" asp-items="Html.GetEnumSelectList<PageSectionType>()" value="@Model.Type"></select>
+    </div>
+    <div id="html-editor-@idx" class="type-editor">
+        <div class="quill-editor" id="quill-editor-@idx"></div>
+        <input type="hidden" id="Html-@idx" name="@($"{prefix}Html")" value="@Model.Html" />
+    </div>
+    <div id="markdown-editor-@idx" class="type-editor">
+        <textarea id="Markdown-@idx" name="@($"{prefix}Html")">@Model.Html</textarea>
+    </div>
+    <div id="code-editor-@idx" class="type-editor">
+        <textarea id="Code-@idx" name="@($"{prefix}Html")">@Model.Html</textarea>
+    </div>
+    <div id="file-editor-@idx" class="type-editor">
+        <input type="file" name="@($"{prefix}File")" />
     </div>
     <button type="button" class="add-library">Add to Library</button>
-    <script>
-    const typeSelect = document.getElementById('type-select');
-    const htmlDiv = document.getElementById('html-editor');
-    const markdownDiv = document.getElementById('markdown-editor');
-    const codeDiv = document.getElementById('code-editor');
-    const fileDiv = document.getElementById('file-editor');
-    const quill = new Quill('#quill-editor', { theme: 'snow' });
-    quill.root.innerHTML = document.getElementById('Html').value;
-    function updateEditors() {
-        htmlDiv.style.display = typeSelect.value == 'Html' ? 'block' : 'none';
-        markdownDiv.style.display = typeSelect.value == 'Markdown' ? 'block' : 'none';
-        codeDiv.style.display = typeSelect.value == 'Code' ? 'block' : 'none';
-        fileDiv.style.display = (typeSelect.value == 'Image' || typeSelect.value == 'Video') ? 'block' : 'none';
-    }
-    updateEditors();
-    typeSelect.addEventListener('change', updateEditors);
-    document.querySelector('form').addEventListener('submit', function () {
-        if (typeSelect.value === 'Html') {
-            document.getElementById('Html').value = quill.root.innerHTML;
-        }
-    });
-</script>
+</div>

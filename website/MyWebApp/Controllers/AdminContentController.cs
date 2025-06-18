@@ -18,13 +18,15 @@ public class AdminContentController : Controller
     private readonly LayoutService _layout;
     private readonly ContentProcessingService _content;
     private readonly TokenRenderService _tokens;
+    private readonly HtmlSanitizerService _sanitizer;
 
-    public AdminContentController(ApplicationDbContext db, LayoutService layout, ContentProcessingService content, TokenRenderService tokens)
+    public AdminContentController(ApplicationDbContext db, LayoutService layout, ContentProcessingService content, TokenRenderService tokens, HtmlSanitizerService sanitizer)
     {
         _db = db;
         _layout = layout;
         _content = content;
         _tokens = tokens;
+        _sanitizer = sanitizer;
     }
 
     private async Task LoadTemplatesAsync()
@@ -104,15 +106,19 @@ public class AdminContentController : Controller
     [HttpPost]
     public async Task<IActionResult> Preview([FromBody] PreviewRequest model)
     {
+        var layout = string.IsNullOrWhiteSpace(model.Layout) ? "single-column" : model.Layout;
         var zones = new Dictionary<string, string>();
         foreach (var kv in model.Zones ?? new Dictionary<string, string>())
         {
-            zones[kv.Key] = await _tokens.RenderAsync(_db, kv.Value ?? string.Empty);
+            if (!LayoutService.IsValidZone(layout, kv.Key)) continue;
+            var clean = _sanitizer.Sanitize(kv.Value ?? string.Empty);
+            zones[kv.Key] = await _tokens.RenderAsync(_db, clean);
         }
         ViewBag.HeaderHtml = await _layout.GetHeaderAsync(_db);
         ViewBag.FooterHtml = await _layout.GetFooterAsync(_db);
-        ViewBag.PageLayout = string.IsNullOrWhiteSpace(model.Layout) ? "single-column" : model.Layout;
+        ViewBag.PageLayout = layout;
         ViewBag.ZoneHtml = zones;
+        Response.Headers["Content-Security-Policy"] = "default-src 'self'";
         return View("~/Views/Pages/Show.cshtml", new Page { Title = model.Title });
     }
 

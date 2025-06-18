@@ -36,7 +36,8 @@ window.addEventListener('load', () => {
     list.addEventListener('dragstart', e => {
         const card = e.target.closest('.block-card');
         if (!card) return;
-        window.draggedBlockId = card.dataset.id;
+        const ev = new CustomEvent('blockdragstart', { detail: card.dataset.id });
+        document.dispatchEvent(ev);
         e.dataTransfer.effectAllowed = 'copy';
     });
 });
