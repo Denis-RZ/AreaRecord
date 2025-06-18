@@ -19,7 +19,7 @@
             <option value="">(none)</option>
             @foreach (var r in roles)
             {
-                <option value="@r.Id" @(Model.RoleId == r.Id ? "selected" : "")>@r.Name</option>
+                <option value="@r.Id" selected="@(Model.RoleId == r.Id)">@r.Name</option>
             }
         </select>
     </div>
