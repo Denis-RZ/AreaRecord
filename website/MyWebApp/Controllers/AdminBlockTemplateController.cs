@@ -207,11 +207,11 @@ public class AdminBlockTemplateController : Controller
         }
         foreach (var pageId in pageIds)
         {
-            var sort = await _db.PageSections
+            var maxSort = await _db.PageSections
                 .Where(s => s.PageId == pageId && s.Zone == zone)
-                .Select(s => s.SortOrder)
-                .DefaultIfEmpty(-1)
-                .MaxAsync() + 1;
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
             var section = new PageSection
             {
                 PageId = pageId,
@@ -240,11 +240,11 @@ public class AdminBlockTemplateController : Controller
         }
         foreach (var pageId in pageIds)
         {
-            var sort = await _db.PageSections
+            var maxSort = await _db.PageSections
                 .Where(s => s.PageId == pageId && s.Zone == zone)
-                .Select(s => s.SortOrder)
-                .DefaultIfEmpty(-1)
-                .MaxAsync() + 1;
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
             var section = new PageSection
             {
                 PageId = pageId,
