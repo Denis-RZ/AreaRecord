@@ -90,14 +90,16 @@ namespace MyWebApp.Data
                     Id = 1,
                     Slug = "layout",
                     Title = "Layout",
-                    Layout = "single-column"
+                    Layout = "single-column",
+                    RoleId = null
                 },
                 new Page
                 {
                     Id = 2,
                     Slug = "home",
                     Title = "Home",
-                    Layout = "single-column"
+                    Layout = "single-column",
+                    RoleId = null
                 });
 
             modelBuilder.Entity<PageSection>().HasData(

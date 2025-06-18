@@ -45,6 +45,10 @@ namespace MyWebApp.Models
         [MaxLength(256)]
         public string? FeaturedImage { get; set; }
 
+        public int? RoleId { get; set; }
+
+        public Role? Role { get; set; }
+
         public ICollection<PageSection> Sections { get; set; } = new List<PageSection>();
     }
 }

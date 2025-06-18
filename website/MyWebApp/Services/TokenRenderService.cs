@@ -32,6 +32,15 @@ public class TokenRenderService
             .ToListAsync();
     }
 
+    private async Task<List<int>> GetRoleIdsAsync(ApplicationDbContext db, string[] roles)
+    {
+        if (roles.Length == 0) return new List<int>();
+        return await db.Roles.AsNoTracking()
+            .Where(r => roles.Contains(r.Name))
+            .Select(r => r.Id)
+            .ToListAsync();
+    }
+
     public Task<string> RenderAsync(ApplicationDbContext db, string html)
     {
         return RenderAsync(db, html, new HashSet<int>());
@@ -43,8 +52,10 @@ public class TokenRenderService
         {
             if (match.Value.StartsWith("{{nav", StringComparison.OrdinalIgnoreCase))
             {
+                var roles = GetRoles();
+                var roleIds = await GetRoleIdsAsync(db, roles);
                 var pages = await db.Pages.AsNoTracking()
-                    .Where(p => p.IsPublished && p.Slug != "layout" && p.Slug != "home")
+                    .Where(p => p.IsPublished && p.Slug != "layout" && p.Slug != "home" && (p.RoleId == null || roleIds.Contains(p.RoleId.Value)))
                     .OrderBy(p => p.Title)
                     .Select(p => new { p.Slug, p.Title })
                     .ToListAsync();
@@ -75,13 +86,16 @@ public class TokenRenderService
                 {
                     var zone = parts[1];
                     var roles = GetRoles();
+                    var roleIds = await GetRoleIdsAsync(db, roles);
                     var allowed = await GetAllowedPermissionsAsync(db, roles);
                     var query = db.PageSections.AsNoTracking()
                         .Where(s => s.PageId == pageId && s.Zone == zone);
-                    if (allowed.Count == 0)
-                        query = query.Where(s => s.PermissionId == null);
+                    if (allowed.Count == 0 && roleIds.Count == 0)
+                        query = query.Where(s => s.PermissionId == null && s.RoleId == null);
                     else
-                        query = query.Where(s => s.PermissionId == null || allowed.Contains(s.PermissionId.Value));
+                        query = query.Where(s =>
+                            (s.PermissionId == null || allowed.Contains(s.PermissionId.Value)) &&
+                            (s.RoleId == null || roleIds.Contains(s.RoleId.Value)));
                     var htmlParts = await query
                         .OrderBy(s => s.SortOrder)
                         .Select(s => s.Html)

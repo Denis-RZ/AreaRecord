@@ -4,6 +4,7 @@
     Layout = "../Admin/_AdminLayout";
     var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
     var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
+    var roles = ViewBag.Roles as List<MyWebApp.Models.Role> ?? new List<MyWebApp.Models.Role>();
 }
 <h2>Edit Section</h2>
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
@@ -17,7 +18,7 @@
         <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
     </div>
  
-@await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", Model)
+@await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", Model, new ViewDataDictionary(ViewData) { ["Roles"] = roles })
 
     <button type="submit">Save</button>
 </form>

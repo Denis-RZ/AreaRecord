@@ -355,6 +355,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN EndDate TEXT");
             if (!columns.Contains("PermissionId"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN PermissionId INTEGER");
+            if (!columns.Contains("RoleId"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN RoleId INTEGER");
 
             cmd.CommandText = "PRAGMA index_list('PageSections')";
             using var idx = cmd.ExecuteReader();
@@ -437,6 +439,10 @@ static void UpgradePagesTable(ApplicationDbContext db)
         if (!columns.Contains("FeaturedImage"))
         {
             db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN FeaturedImage TEXT");
+        }
+        if (!columns.Contains("RoleId"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN RoleId INTEGER");
         }
     }
     catch (Exception ex)
