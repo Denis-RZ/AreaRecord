@@ -28,6 +28,11 @@ public class AdminBlockTemplateController : Controller
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
         ViewBag.Roles = await _db.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
+        ViewBag.Zones = await _db.PageSections.AsNoTracking()
+            .Select(s => s.Zone)
+            .Distinct()
+            .OrderBy(z => z)
+            .ToListAsync();
     }
 
     public async Task<IActionResult> Index()

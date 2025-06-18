@@ -22,7 +22,12 @@
     </div>
     <div>
         <label>Zone</label>
-        <input type="text" name="zone" />
+        <select id="zone-select" name="zone">
+            @foreach (var z in ViewBag.Zones as List<string>)
+            {
+                <option value="@z">@z</option>
+            }
+        </select>
     </div>
     <div>
         <label>Role</label>
