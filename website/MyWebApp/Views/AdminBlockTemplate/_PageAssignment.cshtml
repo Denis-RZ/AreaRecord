@@ -10,10 +10,10 @@
         <label>Pages</label>
         <input type="text" id="page-display" readonly />
         <select id="page-select" name="pageIds" multiple size="5">
-            <option value="0" selected="@(selectedPages.Contains(0))">All Pages</option>
+            <option value="0" selected="@(selectedPages.Contains(0) ? "selected" : null)">All Pages</option>
             @foreach (var p in ViewBag.Pages as List<Page>)
             {
-                <option value="@p.Id" selected="@(selectedPages.Contains(p.Id))">@p.Slug</option>
+                <option value="@p.Id" selected="@(selectedPages.Contains(p.Id) ? "selected" : null)">@p.Slug</option>
             }
         </select>
     </div>
@@ -22,17 +22,17 @@
         <select id="zone-select" name="zone">
             @foreach (var z in ViewBag.Zones as List<string>)
             {
-                <option value="@z" selected="@(selectedZone == z)">@z</option>
+                <option value="@z" selected="@(selectedZone == z ? "selected" : null)">@z</option>
             }
         </select>
     </div>
     <div>
         <label>Role</label>
         <select name="role">
-            <option value="" selected="@(string.IsNullOrEmpty(selectedRole))">(none)</option>
+            <option value="" selected="@(string.IsNullOrEmpty(selectedRole) ? "selected" : null)">(none)</option>
             @foreach (var r in ViewBag.Roles as List<Role>)
             {
-                <option value="@r.Name" selected="@(selectedRole == r.Name)">@r.Name</option>
+                <option value="@r.Name" selected="@(selectedRole == r.Name ? "selected" : null)">@r.Name</option>
             }
         </select>
     </div>
