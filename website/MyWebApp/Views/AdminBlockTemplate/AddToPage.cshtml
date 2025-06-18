@@ -19,5 +19,15 @@
         <label>Zone</label>
         <input type="text" name="zone" />
     </div>
+    <div>
+        <label>Role</label>
+        <select name="roleId">
+            <option value="">(none)</option>
+            @foreach (var r in ViewBag.Roles as List<Role>)
+            {
+                <option value="@r.Id">@r.Name</option>
+            }
+        </select>
+    </div>
     <button type="submit">Add</button>
 </form>

@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     var sections = ViewBag.Sections as List<PageSection> ?? new List<PageSection>();
+    var roles = ViewBag.Roles as List<Role> ?? new List<Role>();
     Layout = "../Admin/_AdminLayout";
     var isNew = Model.Id == 0;
     ViewData["Title"] = isNew ? "Create Page" : "Edit Page";
@@ -40,6 +41,16 @@
             </select>
             <div id="layout-preview" class="layout-preview"></div>
         </div>
+        <div>
+            <label asp-for="RoleId">Role</label>
+            <select asp-for="RoleId">
+                <option value="">(none)</option>
+                @foreach (var r in roles)
+                {
+                    <option value="@r.Id">@r.Name</option>
+                }
+            </select>
+        </div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
         <div><label asp-for="PublishDate"></label><input asp-for="PublishDate" type="datetime-local" /></div>
         <details>
@@ -56,7 +67,7 @@
     <div class="mt-3" id="sections-container">
 @for (int i = 0; i < sections.Count; i++)
 {
-    var vd = new ViewDataDictionary(ViewData) { ["Index"] = i };
+    var vd = new ViewDataDictionary(ViewData) { ["Index"] = i, ["Roles"] = roles };
     @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", sections[i], vd)
 }
     </div>
@@ -74,7 +85,7 @@
     }
     <button type="button" id="add-section">Add Section</button>
     <div id="section-template" style="display:none">
-        @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
+        @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__", ["Roles"] = roles })
     </div>
     <button type="submit">Save</button>
     </form>

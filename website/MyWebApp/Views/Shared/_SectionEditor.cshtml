@@ -4,6 +4,7 @@
     var idxObj = ViewData["Index"];
     var idx = idxObj?.ToString() ?? "0";
     var prefix = idxObj != null ? $"Sections[{idx}]." : string.Empty;
+    var roles = ViewData["Roles"] as List<Role> ?? new List<Role>();
 }
 <div class="section-editor" data-index="@idx" draggable="true">
     <input type="hidden" name="@($"{prefix}Id")" value="@Model.Id" />
@@ -11,6 +12,16 @@
     <div>
         <label>Zone</label>
         <select class="zone-select" data-index="@idx" name="@($"{prefix}Zone")" data-selected="@Model.Zone"></select>
+    </div>
+    <div>
+        <label>Role</label>
+        <select name="@($"{prefix}RoleId")">
+            <option value="">(none)</option>
+            @foreach (var r in roles)
+            {
+                <option value="@r.Id" @(Model.RoleId == r.Id ? "selected" : "")>@r.Name</option>
+            }
+        </select>
     </div>
     <div>
         <label>Type</label>

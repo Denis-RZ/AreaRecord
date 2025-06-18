@@ -39,6 +39,7 @@ public class AdminPageSectionController : Controller
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
         ViewBag.Permissions = await _db.Permissions.AsNoTracking().OrderBy(p => p.Name).ToListAsync();
+        ViewBag.Roles = await _db.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
     }
 
     public async Task<IActionResult> Create()

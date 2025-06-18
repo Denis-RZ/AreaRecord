@@ -29,6 +29,15 @@ public class PagesController : BaseController
         {
             return NotFound();
         }
+        var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
+        if (page.RoleId != null)
+        {
+            var allowed = await Db.Roles.AsNoTracking().Where(r => roles.Contains(r.Name)).Select(r => r.Id).ToListAsync();
+            if (!allowed.Contains(page.RoleId.Value))
+            {
+                return Unauthorized();
+            }
+        }
 
         var header = await _layout.GetSectionAsync(Db, page.Id, "header");
         if (string.IsNullOrEmpty(header))

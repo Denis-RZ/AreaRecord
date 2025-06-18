@@ -26,6 +26,7 @@ public class AdminBlockTemplateController : Controller
     private async Task LoadPagesAsync()
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
+        ViewBag.Roles = await _db.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
     }
 
     public async Task<IActionResult> Index()
@@ -159,7 +160,7 @@ public class AdminBlockTemplateController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddToPage(int id, int pageId, string zone)
+    public async Task<IActionResult> AddToPage(int id, int pageId, string zone, int? roleId)
     {
         var template = await _db.BlockTemplates.FindAsync(id);
         var page = await _db.Pages.FindAsync(pageId);
@@ -186,7 +187,8 @@ public class AdminBlockTemplateController : Controller
             Zone = zone,
             SortOrder = sort,
             Html = template.Html,
-            Type = PageSectionType.Html
+            Type = PageSectionType.Html,
+            RoleId = roleId
         };
         _db.PageSections.Add(section);
         await _db.SaveChangesAsync();
