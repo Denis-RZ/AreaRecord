@@ -36,19 +36,26 @@ public class AdminBlockTemplateController : Controller
         return View(items);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        await LoadPagesAsync();
         return View(new BlockTemplate());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(BlockTemplate model)
+    public async Task<IActionResult> Create(BlockTemplate model, List<int>? pageIds, string? zone, string? role)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            return View(model);
+        }
         model.Html = _sanitizer.Sanitize(model.Html);
         _db.BlockTemplates.Add(model);
         _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = model, Html = model.Html });
+        await _db.SaveChangesAsync();
+        await AddSectionsAsync(model, pageIds, zone, role);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -57,17 +64,24 @@ public class AdminBlockTemplateController : Controller
     {
         var item = await _db.BlockTemplates.FindAsync(id);
         if (item == null) return NotFound();
+        await LoadPagesAsync();
         return View(item);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(BlockTemplate model)
+    public async Task<IActionResult> Edit(BlockTemplate model, List<int>? pageIds, string? zone, string? role)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            return View(model);
+        }
         model.Html = _sanitizer.Sanitize(model.Html);
         _db.Update(model);
         _db.BlockTemplateVersions.Add(new BlockTemplateVersion { BlockTemplateId = model.Id, Html = model.Html });
+        await _db.SaveChangesAsync();
+        await AddSectionsAsync(model, pageIds, zone, role);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -208,4 +222,34 @@ public class AdminBlockTemplateController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    private async Task AddSectionsAsync(BlockTemplate template, List<int>? pageIds, string? zone, string? role)
+    {
+        if (pageIds == null || pageIds.Count == 0 || string.IsNullOrWhiteSpace(zone))
+            return;
+        var roleEntity = await _db.Roles.FirstOrDefaultAsync(r => r.Name == role);
+        int? roleId = roleEntity?.Id;
+        zone = zone!.Trim();
+        if (pageIds.Contains(0))
+        {
+            pageIds = await _db.Pages.Select(p => p.Id).ToListAsync();
+        }
+        foreach (var pageId in pageIds)
+        {
+            var sort = await _db.PageSections
+                .Where(s => s.PageId == pageId && s.Zone == zone)
+                .Select(s => s.SortOrder)
+                .DefaultIfEmpty(-1)
+                .MaxAsync() + 1;
+            var section = new PageSection
+            {
+                PageId = pageId,
+                Zone = zone,
+                SortOrder = sort,
+                Html = template.Html,
+                Type = PageSectionType.Html,
+                RoleId = roleId
+            };
+            _db.PageSections.Add(section);
+        }
+    }
 }
