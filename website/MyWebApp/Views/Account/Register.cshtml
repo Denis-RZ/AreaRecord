@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "Register";
-    var roles = Context.Session.GetString("Roles") ?? string.Empty;
+    var roles = Context.Session.GetString("Roles") ?? "Anonym";
     bool canSelectType = roles.Contains("Admin") || roles.Contains("Moderator");
 }
 <h2>Register</h2>

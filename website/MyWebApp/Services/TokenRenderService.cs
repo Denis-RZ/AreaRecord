@@ -19,7 +19,11 @@ public class TokenRenderService
     private string[] GetRoles()
     {
         var roles = _accessor.HttpContext?.Session.GetString("Roles");
-        return string.IsNullOrWhiteSpace(roles) ? Array.Empty<string>() : roles.Split(',');
+        if (string.IsNullOrWhiteSpace(roles))
+        {
+            return new[] { "Anonym" };
+        }
+        return roles.Split(',');
     }
 
     private async Task<List<int>> GetAllowedPermissionsAsync(ApplicationDbContext db, string[] roles)

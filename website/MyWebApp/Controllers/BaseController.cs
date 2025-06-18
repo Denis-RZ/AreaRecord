@@ -33,8 +33,9 @@ public abstract class BaseController : Controller
 
     protected bool HasRole(string role)
     {
-        var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
-        return roles.Contains(role);
+        var roles = HttpContext.Session.GetString("Roles");
+        var roleNames = string.IsNullOrWhiteSpace(roles) ? new[] { "Anonym" } : roles.Split(',');
+        return roleNames.Contains(role);
     }
 
     protected bool IsAdmin()
