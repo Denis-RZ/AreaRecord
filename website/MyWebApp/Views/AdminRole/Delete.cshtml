@@ -1,0 +1,12 @@
+@model MyWebApp.Models.Role
+@{
+    ViewData["Title"] = "Delete Role";
+    Layout = "../Admin/_AdminLayout";
+}
+<h2>Delete Role</h2>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <p>Are you sure you want to delete "@Model.Name"?</p>
+    <button type="submit">Delete</button> |
+    <a asp-action="Index">Cancel</a>
+</form>

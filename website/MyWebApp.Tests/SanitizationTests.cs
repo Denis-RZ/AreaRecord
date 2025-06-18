@@ -23,7 +23,8 @@ public class SanitizationTests
         ctx.Database.EnsureCreated();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
-        var tokens = new TokenRenderService();
+        var accessor = new HttpContextAccessor();
+        var tokens = new TokenRenderService(accessor);
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -32,7 +33,7 @@ public class SanitizationTests
                 {"Layouts:two-column-sidebar:1", "sidebar"}
             })
             .Build();
-        var layout = new LayoutService(cache, tokens);
+        var layout = new LayoutService(cache, tokens, accessor);
         var sanitizer = new HtmlSanitizerService();
         var content = new ContentProcessingService(sanitizer);
         return (ctx, layout, content, tokens, sanitizer);

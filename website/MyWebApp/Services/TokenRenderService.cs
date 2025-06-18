@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using System.Linq;
 using MyWebApp.Data;
 
@@ -8,6 +9,28 @@ namespace MyWebApp.Services;
 public class TokenRenderService
 {
     private static readonly Regex TokenRegex = new(@"\{\{(block|section):([^{}]+)\}\}|\{\{nav\}\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private readonly IHttpContextAccessor _accessor;
+
+    public TokenRenderService(IHttpContextAccessor accessor)
+    {
+        _accessor = accessor;
+    }
+
+    private string[] GetRoles()
+    {
+        var roles = _accessor.HttpContext?.Session.GetString("Roles");
+        return string.IsNullOrWhiteSpace(roles) ? Array.Empty<string>() : roles.Split(',');
+    }
+
+    private async Task<List<int>> GetAllowedPermissionsAsync(ApplicationDbContext db, string[] roles)
+    {
+        if (roles.Length == 0) return new List<int>();
+        return await db.RolePermissions.AsNoTracking()
+            .Where(rp => roles.Contains(rp.Role!.Name))
+            .Select(rp => rp.PermissionId)
+            .Distinct()
+            .ToListAsync();
+    }
 
     public Task<string> RenderAsync(ApplicationDbContext db, string html)
     {
@@ -51,8 +74,15 @@ public class TokenRenderService
                 if (parts.Length == 2 && int.TryParse(parts[0], out var pageId))
                 {
                     var zone = parts[1];
-                    var htmlParts = await db.PageSections.AsNoTracking()
-                        .Where(s => s.PageId == pageId && s.Zone == zone)
+                    var roles = GetRoles();
+                    var allowed = await GetAllowedPermissionsAsync(db, roles);
+                    var query = db.PageSections.AsNoTracking()
+                        .Where(s => s.PageId == pageId && s.Zone == zone);
+                    if (allowed.Count == 0)
+                        query = query.Where(s => s.PermissionId == null);
+                    else
+                        query = query.Where(s => s.PermissionId == null || allowed.Contains(s.PermissionId.Value));
+                    var htmlParts = await query
                         .OrderBy(s => s.SortOrder)
                         .Select(s => s.Html)
                         .ToListAsync();

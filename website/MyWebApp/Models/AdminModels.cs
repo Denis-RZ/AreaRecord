@@ -40,4 +40,10 @@ namespace MyWebApp.Models
         public DownloadFile File { get; set; } = new DownloadFile();
         public int DownloadCount { get; set; }
     }
+
+    public class RoleEditViewModel
+    {
+        public Role Role { get; set; } = new Role();
+        public IList<int> SelectedPermissions { get; set; } = new List<int>();
+    }
 }
