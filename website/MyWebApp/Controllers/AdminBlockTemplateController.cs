@@ -28,6 +28,11 @@ public class AdminBlockTemplateController : Controller
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
         ViewBag.Roles = await _db.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
+        ViewBag.Zones = await _db.PageSections.AsNoTracking()
+            .Select(s => s.Zone)
+            .Distinct()
+            .OrderBy(z => z)
+            .ToListAsync();
     }
 
     public async Task<IActionResult> Index()
@@ -202,11 +207,11 @@ public class AdminBlockTemplateController : Controller
         }
         foreach (var pageId in pageIds)
         {
-            var sort = await _db.PageSections
+            var maxSort = await _db.PageSections
                 .Where(s => s.PageId == pageId && s.Zone == zone)
-                .Select(s => s.SortOrder)
-                .DefaultIfEmpty(-1)
-                .MaxAsync() + 1;
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
             var section = new PageSection
             {
                 PageId = pageId,
@@ -235,11 +240,11 @@ public class AdminBlockTemplateController : Controller
         }
         foreach (var pageId in pageIds)
         {
-            var sort = await _db.PageSections
+            var maxSort = await _db.PageSections
                 .Where(s => s.PageId == pageId && s.Zone == zone)
-                .Select(s => s.SortOrder)
-                .DefaultIfEmpty(-1)
-                .MaxAsync() + 1;
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
             var section = new PageSection
             {
                 PageId = pageId,
