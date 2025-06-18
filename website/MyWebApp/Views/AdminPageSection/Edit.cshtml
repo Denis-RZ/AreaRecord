@@ -10,6 +10,10 @@
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
     <div>
+        <label>Associated Page</label>
+        <input type="text" readonly value="@pages.FirstOrDefault(p => p.Id == Model.PageId)?.Slug" />
+    </div>
+    <div>
         <label>Page</label>
         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
     </div>

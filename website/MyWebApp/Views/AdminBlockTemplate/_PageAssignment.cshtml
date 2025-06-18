@@ -1,0 +1,41 @@
+@using MyWebApp.Models
+<div class="block-assignment">
+    <h3>Page Assignment</h3>
+    <div>
+        <label>Pages</label>
+        <input type="text" id="page-display" readonly />
+        <select id="page-select" name="pageIds" multiple size="5">
+            <option value="0">All Pages</option>
+            @foreach (var p in ViewBag.Pages as List<Page>)
+            {
+                <option value="@p.Id">@p.Slug</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label>Zone</label>
+        <input type="text" name="zone" />
+    </div>
+    <div>
+        <label>Role</label>
+        <select name="role">
+            <option value="">(none)</option>
+            @foreach (var r in ViewBag.Roles as List<Role>)
+            {
+                <option value="@r.Name">@r.Name</option>
+            }
+        </select>
+    </div>
+</div>
+@section Scripts {
+<script>
+    const select = document.getElementById('page-select');
+    const display = document.getElementById('page-display');
+    function updateDisplay() {
+        const names = Array.from(select.selectedOptions).map(o => o.text);
+        display.value = names.join(', ');
+    }
+    select.addEventListener('change', updateDisplay);
+    updateDisplay();
+</script>
+}
