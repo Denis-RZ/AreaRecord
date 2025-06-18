@@ -3,7 +3,11 @@ window.addEventListener('load', () => {
     if (!container) return;
     const templateHtml = document.getElementById('section-template').innerHTML.trim();
     let sectionCount = container.querySelectorAll('.section-editor').length;
-    const editors = {};
+    const editors = new Map();
+    document.addEventListener('section-editor:ready', e => {
+        editors.set(e.detail.index, e.detail.quill);
+        e.detail.quill.on('text-change', schedulePreview);
+    });
     let activeIndex = null;
     const layoutSelect = document.getElementById('layout-select');
     let currentLayout = layoutSelect ? layoutSelect.value : 'single-column';
@@ -50,7 +54,8 @@ window.addEventListener('load', () => {
                 const idx = sec.dataset.index;
                 const typeSel = document.getElementById(`type-select-${idx}`);
                 if (typeSel && typeSel.value === 'Html') {
-                    return editors[idx].root.innerHTML;
+                    const q = editors.get(idx);
+                    return q ? q.root.innerHTML : '';
                 }
                 const inp = document.getElementById(`Html-${idx}`);
                 return inp ? inp.value : '';
@@ -138,7 +143,7 @@ window.addEventListener('load', () => {
         templateSelect.addEventListener('change', () => {
             const id = templateSelect.value;
             if (!id) return;
-            if (activeIndex === null || !editors[activeIndex]) {
+            if (activeIndex === null || !editors.has(activeIndex)) {
                 alert('Select a section first');
                 templateSelect.value = '';
                 return;
@@ -146,7 +151,7 @@ window.addEventListener('load', () => {
             fetch(`/AdminBlockTemplate/Html/${id}`)
                 .then(r => r.text())
                 .then(html => {
-                    const quill = editors[activeIndex];
+                    const quill = editors.get(activeIndex);
                     quill.root.innerHTML = html;
                     const input = document.getElementById(`Html-${activeIndex}`);
                     if (input) input.value = html;
@@ -161,7 +166,7 @@ window.addEventListener('load', () => {
         const idx = el.dataset.index;
         populateZones(el.querySelector('.zone-select'));
         placeSection(el);
-        initSectionEditor(idx);
+        document.dispatchEvent(new CustomEvent('section-editor:add', { detail: el }));
     });
     updatePreview();
     updateZoneCounts();
@@ -195,7 +200,8 @@ window.addEventListener('load', () => {
             const idx = section.dataset.index;
             const name = prompt('Block name');
             if (!name) return;
-            const html = editors[idx].root.innerHTML;
+            const q = editors.get(idx);
+            const html = q ? q.root.innerHTML : '';
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             fetch('/AdminBlockTemplate/CreateFromSection', {
                 method: 'POST',
@@ -223,9 +229,10 @@ window.addEventListener('load', () => {
         section.dataset.index = index;
         populateZones(section.querySelector('.zone-select'));
         placeSection(section);
-        initSectionEditor(index);
+        document.dispatchEvent(new CustomEvent('section-editor:add', { detail: section }));
         if (htmlContent) {
-            editors[index].root.innerHTML = htmlContent;
+            const q = editors.get(index);
+            if (q) q.root.innerHTML = htmlContent;
             const input = document.getElementById(`Html-${index}`);
             if (input) input.value = htmlContent;
         }
@@ -270,11 +277,13 @@ window.addEventListener('load', () => {
         });
         populateZones(clone.querySelector('.zone-select'));
         placeSection(clone);
-        initSectionEditor(index);
-        if (editors[original.dataset.index]) {
-            editors[index].root.innerHTML = editors[original.dataset.index].root.innerHTML;
+        document.dispatchEvent(new CustomEvent('section-editor:add', { detail: clone }));
+        const orig = editors.get(original.dataset.index);
+        const copy = editors.get(index);
+        if (orig && copy) {
+            copy.root.innerHTML = orig.root.innerHTML;
             const destInput = clone.querySelector(`#Html-${index}`);
-            if (destInput) destInput.value = editors[index].root.innerHTML;
+            if (destInput) destInput.value = copy.root.innerHTML;
         }
         updateIndexes();
         updatePreview();
@@ -294,6 +303,9 @@ window.addEventListener('load', () => {
 
     let dragged = null;
     let draggedBlockId = null;
+    document.addEventListener('blockdragstart', e => {
+        draggedBlockId = e.detail;
+    });
     const dropIndicator = document.createElement('div');
     dropIndicator.className = 'drop-indicator';
 
@@ -349,7 +361,7 @@ window.addEventListener('load', () => {
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', () => {
-            Object.entries(editors).forEach(([key, quill]) => {
+            editors.forEach((quill, key) => {
                 const typeSelect = document.getElementById(`type-select-${key}`);
                 if (typeSelect && typeSelect.value === 'Html') {
                     const input = document.getElementById(`Html-${key}`);
@@ -365,37 +377,6 @@ window.addEventListener('load', () => {
         fetch(form.action, { method: 'POST', body: fd });
     }
 
-    function initSectionEditor(index) {
-        const typeSelect = document.getElementById(`type-select-${index}`);
-        const htmlDiv = document.getElementById(`html-editor-${index}`);
-        const markdownDiv = document.getElementById(`markdown-editor-${index}`);
-        const codeDiv = document.getElementById(`code-editor-${index}`);
-        const fileDiv = document.getElementById(`file-editor-${index}`);
-        const quillInput = document.getElementById(`Html-${index}`);
-        const markdown = markdownDiv ? markdownDiv.querySelector('textarea') : null;
-        const code = codeDiv ? codeDiv.querySelector('textarea') : null;
-        const quill = new Quill(`#quill-editor-${index}`, { theme: 'snow' });
-        quill.root.innerHTML = quillInput.value || '';
-        quill.root.addEventListener('click', () => { activeIndex = index; });
-        quill.root.addEventListener('focus', () => { activeIndex = index; });
-        editors[index] = quill;
-        quill.on('text-change', schedulePreview);
-
-        function update() {
-            const type = typeSelect.value;
-            htmlDiv.style.display = type === 'Html' ? 'block' : 'none';
-            markdownDiv.style.display = type === 'Markdown' ? 'block' : 'none';
-            codeDiv.style.display = type === 'Code' ? 'block' : 'none';
-            fileDiv.style.display = (type === 'Image' || type === 'Video') ? 'block' : 'none';
-            if (markdown) markdown.disabled = type !== 'Markdown';
-            if (code) code.disabled = type !== 'Code';
-            quillInput.disabled = type !== 'Html';
-            const fileInput = fileDiv ? fileDiv.querySelector('input[type="file"]') : null;
-            if (fileInput) fileInput.disabled = !(type === 'Image' || type === 'Video');
-        }
-        update();
-        typeSelect.addEventListener('change', update);
-    }
 
     modePreview?.addEventListener('click', () => {
         pageEditor?.classList.add('preview');
