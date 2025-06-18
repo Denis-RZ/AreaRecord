@@ -7,8 +7,13 @@
 <form asp-action="AddToPage" method="post">
     <input type="hidden" name="id" value="@ViewBag.BlockId" />
     <div>
-        <label>Page</label>
-        <select name="pageId">
+        <label>Associated Page(s)</label>
+        <input type="text" id="page-display" readonly />
+    </div>
+    <div>
+        <label>Assign To Pages</label>
+        <select id="page-select" name="pageIds" multiple size="5">
+            <option value="0">All Pages</option>
             @foreach (var p in ViewBag.Pages as List<Page>)
             {
                 <option value="@p.Id">@p.Slug</option>
@@ -21,13 +26,25 @@
     </div>
     <div>
         <label>Role</label>
-        <select name="roleId">
-            <option value="">(none)</option>
-            @foreach (var r in ViewBag.Roles as List<Role>)
-            {
-                <option value="@r.Id">@r.Name</option>
-            }
+        <select name="role" required>
+            <option value="">Select role</option>
+            <option value="Admin">Admin</option>
+            <option value="Editor">Editor</option>
+            <option value="Viewer">Viewer</option>
         </select>
     </div>
     <button type="submit">Add</button>
 </form>
+
+@section Scripts {
+    <script>
+        const select = document.getElementById('page-select');
+        const display = document.getElementById('page-display');
+        function updateDisplay() {
+            const names = Array.from(select.selectedOptions).map(o => o.text);
+            display.value = names.join(', ');
+        }
+        select.addEventListener('change', updateDisplay);
+        updateDisplay();
+    </script>
+}

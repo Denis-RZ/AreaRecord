@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json;
 using MyWebApp.Data;
@@ -160,14 +161,19 @@ public class AdminBlockTemplateController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddToPage(int id, int pageId, string zone, int? roleId)
+    public async Task<IActionResult> AddToPage(int id, List<int> pageIds, string zone, string role)
     {
         var template = await _db.BlockTemplates.FindAsync(id);
-        var page = await _db.Pages.FindAsync(pageId);
-        if (template == null || page == null)
+        if (template == null) return NotFound();
+        if (pageIds == null || pageIds.Count == 0)
         {
-            return NotFound();
+            await LoadPagesAsync();
+            ViewBag.BlockId = id;
+            ModelState.AddModelError("pageIds", "Page selection required");
+            return View();
         }
+        var roleEntity = await _db.Roles.FirstOrDefaultAsync(r => r.Name == role);
+        int? roleId = roleEntity?.Id;
         zone = zone?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(zone))
         {
@@ -176,21 +182,28 @@ public class AdminBlockTemplateController : Controller
             ModelState.AddModelError("zone", "Zone required");
             return View();
         }
-        var sort = await _db.PageSections
-            .Where(s => s.PageId == pageId && s.Zone == zone)
-            .Select(s => s.SortOrder)
-            .DefaultIfEmpty(-1)
-            .MaxAsync() + 1;
-        var section = new PageSection
+        if (pageIds.Contains(0))
         {
-            PageId = pageId,
-            Zone = zone,
-            SortOrder = sort,
-            Html = template.Html,
-            Type = PageSectionType.Html,
-            RoleId = roleId
-        };
-        _db.PageSections.Add(section);
+            pageIds = await _db.Pages.Select(p => p.Id).ToListAsync();
+        }
+        foreach (var pageId in pageIds)
+        {
+            var sort = await _db.PageSections
+                .Where(s => s.PageId == pageId && s.Zone == zone)
+                .Select(s => s.SortOrder)
+                .DefaultIfEmpty(-1)
+                .MaxAsync() + 1;
+            var section = new PageSection
+            {
+                PageId = pageId,
+                Zone = zone,
+                SortOrder = sort,
+                Html = template.Html,
+                Type = PageSectionType.Html,
+                RoleId = roleId
+            };
+            _db.PageSections.Add(section);
+        }
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }

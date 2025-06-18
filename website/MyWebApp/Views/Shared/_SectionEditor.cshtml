@@ -15,12 +15,11 @@
     </div>
     <div>
         <label>Role</label>
-        <select name="@($"{prefix}RoleId")">
-            <option value="">(none)</option>
-            @foreach (var r in roles)
-            {
-                <option value="@r.Id" selected="@(Model.RoleId == r.Id)">@r.Name</option>
-            }
+        <select name="@($"{prefix}RoleId")" required>
+            <option value="">Select role</option>
+            <option value="1" selected="@(Model.RoleId == 1)">Admin</option>
+            <option value="2" selected="@(Model.RoleId == 2)">Editor</option>
+            <option value="3" selected="@(Model.RoleId == 3)">Viewer</option>
         </select>
     </div>
     <div>
