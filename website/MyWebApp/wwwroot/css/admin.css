@@ -1290,3 +1290,94 @@ form.mb-3 {
 .zone-sections {
     min-height: 10px;
 }
+.zone-group.drag-over {
+    border-color: #0ea5e9;
+    background: #f0f9ff;
+}
+.drop-indicator {
+    height: 4px;
+    background: #0ea5e9;
+    margin: 4px 0;
+    border-radius: 2px;
+}
+.section-editor {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.section-editor:hover {
+    box-shadow: 0 0 0 2px #0ea5e9 inset;
+}
+.layout-preview {
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+}
+.zone-group[data-zone="main"] { border-color: #2563eb; }
+.zone-group[data-zone="sidebar"] { border-color: #16a34a; }
+
+/* Block library panel */
+.page-editor {
+    display: flex;
+    gap: 1rem;
+}
+
+.block-library {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid #e2e8f0;
+    padding-right: 1rem;
+    margin-right: 1rem;
+}
+
+.block-library .search {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.block-card {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    cursor: grab;
+}
+
+.block-card:hover {
+    box-shadow: 0 0 0 2px #0ea5e9 inset;
+}
+
+.block-card .block-preview {
+    font-size: 0.8rem;
+    color: #555;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+\n
+/* Live preview styles */
+.mode-toggle {
+    margin-bottom: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.mode-toggle .device-buttons {
+    margin-left: auto;
+    display: flex;
+    gap: 0.25rem;
+}
+.mode-btn.active,
+.device-btn.active {
+    background: #0ea5e9;
+    color: #fff;
+}
+.unsaved-indicator { color: #dc2626; margin-left: 0.25rem; display: none; }
+.preview-wrapper { display: none; margin-top: 1rem; }
+.page-editor.preview .editor-main,
+.page-editor.preview .block-library { display: none; }
+.page-editor.preview .preview-wrapper { display: block; }
+.preview-container { border: 1px solid #e2e8f0; margin: 0 auto; }
+.preview-container iframe { width: 100%; height: 600px; border: none; }
+

@@ -1,0 +1,21 @@
+@model MyWebApp.Models.RoleEditViewModel
+@{
+    ViewData["Title"] = "Edit Role";
+    Layout = "../Admin/_AdminLayout";
+    var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
+}
+<h2>Edit Role</h2>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Role.Id" />
+    <div><label>Name</label><input asp-for="Role.Name" /></div>
+    <div>
+        <label>Permissions</label>
+        @foreach (var p in permissions)
+        {
+            <div>
+                <input type="checkbox" name="SelectedPermissions" value="@p.Id" @(Model.SelectedPermissions.Contains(p.Id) ? "checked" : "") /> @p.Name
+            </div>
+        }
+    </div>
+    <button type="submit">Save</button>
+</form>

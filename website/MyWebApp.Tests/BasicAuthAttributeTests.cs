@@ -34,7 +34,7 @@ public class BasicAuthAttributeTests
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         services.Configure<MyWebApp.Options.AdminAuthOptions>(o => { o.Username = "admin"; o.Password = "SecurePass123"; });
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string,string?> { {"AdminAuth:Username","admin"}, {"AdminAuth:Password","SecurePass123"} }).Build());
+            .AddInMemoryCollection(new Dictionary<string, string?> { { "AdminAuth:Username", "admin" }, { "AdminAuth:Password", "SecurePass123" } }).Build());
         var provider = services.BuildServiceProvider();
         var http = new DefaultHttpContext { RequestServices = provider };
         var ctx = new AuthorizationFilterContext(
@@ -51,7 +51,7 @@ public class BasicAuthAttributeTests
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         services.Configure<MyWebApp.Options.AdminAuthOptions>(o => { o.Username = "admin"; o.Password = "SecurePass123"; });
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string,string?> { {"AdminAuth:Username","admin"}, {"AdminAuth:Password","SecurePass123"} }).Build());
+            .AddInMemoryCollection(new Dictionary<string, string?> { { "AdminAuth:Username", "admin" }, { "AdminAuth:Password", "SecurePass123" } }).Build());
         var provider = services.BuildServiceProvider();
         var http = new DefaultHttpContext { RequestServices = provider };
         var creds = Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:SecurePass123"));
@@ -71,7 +71,7 @@ public class BasicAuthAttributeTests
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         services.Configure<MyWebApp.Options.AdminAuthOptions>(o => { o.Username = "admin"; o.Password = "SecurePass123"; });
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string,string?> { {"AdminAuth:Username","admin"}, {"AdminAuth:Password","SecurePass123"} }).Build());
+            .AddInMemoryCollection(new Dictionary<string, string?> { { "AdminAuth:Username", "admin" }, { "AdminAuth:Password", "SecurePass123" } }).Build());
         var provider = services.BuildServiceProvider();
         var http = new DefaultHttpContext { RequestServices = provider };
         var creds = Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:wrong"));
@@ -103,7 +103,7 @@ public class BasicAuthAttributeTests
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         services.Configure<AdminAuthOptions>(o => { o.Username = "admin"; o.Password = "SecurePass123"; });
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string,string?> { {"AdminAuth:Username","admin"}, {"AdminAuth:Password","SecurePass123"} }).Build());
+            .AddInMemoryCollection(new Dictionary<string, string?> { { "AdminAuth:Username", "admin" }, { "AdminAuth:Password", "SecurePass123" } }).Build());
         var provider = services.BuildServiceProvider();
         var http = new DefaultHttpContext { RequestServices = provider, Session = new DummySession() };
         http.Session.SetString("IsAdmin", "true");

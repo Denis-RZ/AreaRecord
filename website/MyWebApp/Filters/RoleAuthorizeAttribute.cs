@@ -17,8 +17,9 @@ namespace MyWebApp.Filters
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             var session = context.HttpContext.Session;
-            var roles = session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
-            if (!_roles.Any(r => roles.Contains(r)))
+            var roles = session.GetString("Roles");
+            var roleNames = string.IsNullOrWhiteSpace(roles) ? new[] { "Anonym" } : roles.Split(',');
+            if (!_roles.Any(r => roleNames.Contains(r)))
             {
                 var returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
                 context.Result = new RedirectToActionResult("Login", "Account", new { returnUrl });

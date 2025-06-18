@@ -1,0 +1,777 @@
+diff --git a/website/MyWebApp.Tests/PageSectionTests.cs b/website/MyWebApp.Tests/PageSectionTests.cs
+index e6d1f72..29643b7 100644
+--- a/website/MyWebApp.Tests/PageSectionTests.cs
++++ b/website/MyWebApp.Tests/PageSectionTests.cs
+@@ -22,7 +22,7 @@ public class PageSectionTests
+             context.Pages.Add(page);
+             context.SaveChanges();
+  
+-            context.PageSections.Add(new PageSection { PageId = page.Id, Area = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
++            context.PageSections.Add(new PageSection { PageId = page.Id, Zone = "header", Html = "<p>hi</p>", Type = PageSectionType.Html });
+  
+             context.SaveChanges();
+         }
+@@ -30,7 +30,7 @@ public class PageSectionTests
+         using (var context = new ApplicationDbContext(options))
+         {
+             var section = context.PageSections.Include(s => s.Page)
+-                .Single(s => s.Area == "header" && s.Page!.Slug == "test");
++                .Single(s => s.Zone == "header" && s.Page!.Slug == "test");
+             Assert.Equal("<p>hi</p>", section.Html);
+             Assert.Equal("test", section.Page!.Slug);
+         }
+diff --git a/website/MyWebApp.Tests/SanitizationTests.cs b/website/MyWebApp.Tests/SanitizationTests.cs
+index 44e1adc..3246fa6 100644
+--- a/website/MyWebApp.Tests/SanitizationTests.cs
++++ b/website/MyWebApp.Tests/SanitizationTests.cs
+@@ -40,7 +40,7 @@ public class SanitizationTests
+             Layout = "single-column",
+             Sections = new List<PageSection>
+             {
+-                new PageSection { Area = "main", Html = "<p>b</p><script>alert(2)</script>" }
++                new PageSection { Zone = "main", Html = "<p>b</p><script>alert(2)</script>" }
+             }
+         };
+         var result = await controller.Create(model);
+@@ -55,7 +55,7 @@ public class SanitizationTests
+         var (ctx, layout, sanitizer) = CreateServices();
+         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+  
+-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "test", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
++        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "main", Html = "<div>hi</div><script>bad()</script>", Type = PageSectionType.Html };
+         var result = await controller.Create(model, null);
+  
+         Assert.IsType<RedirectToActionResult>(result);
+@@ -73,7 +73,7 @@ public class SanitizationTests
+             Slug = "edit",
+             Title = "Edit",
+             Layout = "single-column",
+-            Sections = new List<PageSection> { new PageSection { Area = "main", Html = "<p>a</p>" } }
++            Sections = new List<PageSection> { new PageSection { Zone = "main", Html = "<p>a</p>" } }
+         };
+         await controller.Create(createModel);
+         var page = ctx.Pages.Single(p => p.Slug == "edit");
+@@ -83,7 +83,7 @@ public class SanitizationTests
+             Slug = page.Slug,
+             Title = page.Title,
+             Layout = page.Layout,
+-            Sections = new List<PageSection> { new PageSection { Area = "main", Html = "<p>b</p><script>alert(2)</script>" } }
++            Sections = new List<PageSection> { new PageSection { Zone = "main", Html = "<p>b</p><script>alert(2)</script>" } }
+         };
+         var result = await controller.Edit(model);
+         var section = ctx.PageSections.Single(s => s.PageId == page.Id);
+@@ -96,10 +96,10 @@ public class SanitizationTests
+     {
+         var (ctx, layout, sanitizer) = CreateServices();
+         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
++        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "md", Html = "# Hello\n<script>bad()</script>", Type = PageSectionType.Markdown };
+         var result = await controller.Create(model, null);
+         Assert.IsType<RedirectToActionResult>(result);
+-        var section = ctx.PageSections.First(s => s.Area == "md");
++        var section = ctx.PageSections.First(s => s.Zone == "md");
+         Assert.Contains("<h1>", section.Html);
+         Assert.DoesNotContain("<script", section.Html, System.StringComparison.OrdinalIgnoreCase);
+     }
+@@ -109,10 +109,10 @@ public class SanitizationTests
+     {
+         var (ctx, layout, sanitizer) = CreateServices();
+         var controller = new AdminPageSectionController(ctx, layout, sanitizer);
+-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
++        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "code", Html = "<b>test</b>", Type = PageSectionType.Code };
+         var result = await controller.Create(model, null);
+         Assert.IsType<RedirectToActionResult>(result);
+-        var section = ctx.PageSections.First(s => s.Area == "code");
++        var section = ctx.PageSections.First(s => s.Zone == "code");
+         Assert.Contains("&lt;b&gt;test&lt;/b&gt;", section.Html);
+     }
+ 
+@@ -124,10 +124,10 @@ public class SanitizationTests
+         var bytes = new byte[] {1,2,3};
+         using var stream = new System.IO.MemoryStream(bytes);
+         var file = new FormFile(stream, 0, bytes.Length, "file", "img.png");
+-        var model = new PageSection { PageId = ctx.Pages.First().Id, Area = "img", Type = PageSectionType.Image };
++        var model = new PageSection { PageId = ctx.Pages.First().Id, Zone = "img", Type = PageSectionType.Image };
+         var result = await controller.Create(model, file);
+         Assert.IsType<RedirectToActionResult>(result);
+-        var section = ctx.PageSections.First(s => s.Area == "img");
++        var section = ctx.PageSections.First(s => s.Zone == "img");
+         Assert.Contains("<img", section.Html);
+     }
+ }
+diff --git a/website/MyWebApp/Controllers/AdminBlockTemplateController.cs b/website/MyWebApp/Controllers/AdminBlockTemplateController.cs
+index 11300f9..52799a5 100644
+--- a/website/MyWebApp/Controllers/AdminBlockTemplateController.cs
++++ b/website/MyWebApp/Controllers/AdminBlockTemplateController.cs
+@@ -135,7 +135,7 @@ public class AdminBlockTemplateController : Controller
+ 
+     [HttpPost]
+     [ValidateAntiForgeryToken]
+-    public async Task<IActionResult> AddToPage(int id, int pageId, string area)
++    public async Task<IActionResult> AddToPage(int id, int pageId, string zone)
+     {
+         var template = await _db.BlockTemplates.FindAsync(id);
+         var page = await _db.Pages.FindAsync(pageId);
+@@ -143,23 +143,23 @@ public class AdminBlockTemplateController : Controller
+         {
+             return NotFound();
+         }
+-        area = area?.Trim() ?? string.Empty;
+-        if (string.IsNullOrEmpty(area))
++        zone = zone?.Trim() ?? string.Empty;
++        if (string.IsNullOrEmpty(zone))
+         {
+             await LoadPagesAsync();
+             ViewBag.BlockId = id;
+-            ModelState.AddModelError("area", "Area required");
++            ModelState.AddModelError("zone", "Zone required");
+             return View();
+         }
+         var sort = await _db.PageSections
+-            .Where(s => s.PageId == pageId && s.Area == area)
++            .Where(s => s.PageId == pageId && s.Zone == zone)
+             .Select(s => s.SortOrder)
+             .DefaultIfEmpty(-1)
+             .MaxAsync() + 1;
+         var section = new PageSection
+         {
+             PageId = pageId,
+-            Area = area,
++            Zone = zone,
+             SortOrder = sort,
+             Html = template.Html,
+             Type = PageSectionType.Html
+@@ -192,12 +192,12 @@ public class AdminBlockTemplateController : Controller
+     [HttpGet]
+     public async Task<IActionResult> GetSections(int id)
+     {
+-        var areas = await _db.PageSections.AsNoTracking()
++        var zones = await _db.PageSections.AsNoTracking()
+             .Where(s => s.PageId == id)
+-            .Select(s => s.Area)
++            .Select(s => s.Zone)
+             .Distinct()
+             .OrderBy(a => a)
+             .ToListAsync();
+-        return Json(areas);
++        return Json(zones);
+     }
+ }
+diff --git a/website/MyWebApp/Controllers/AdminContentController.cs b/website/MyWebApp/Controllers/AdminContentController.cs
+index 7e54fea..bd78896 100644
+--- a/website/MyWebApp/Controllers/AdminContentController.cs
++++ b/website/MyWebApp/Controllers/AdminContentController.cs
+@@ -65,11 +65,11 @@ public class AdminContentController : Controller
+             model.PublishDate = DateTime.UtcNow;
+         }
+         var sections = model.Sections?.ToList() ?? new List<PageSection>();
+-        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
++        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
+         {
+             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+         }
+-        if (!sections.Any(s => s.Area == "main"))
++        if (!sections.Any(s => s.Zone == "main"))
+         {
+             ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
+         }
+@@ -131,11 +131,11 @@ public class AdminContentController : Controller
+             model.PublishDate = DateTime.UtcNow;
+         }
+         var sections = model.Sections?.ToList() ?? new List<PageSection>();
+-        if (sections.Any(s => !LayoutService.IsValidArea(model.Layout, s.Area)))
++        if (sections.Any(s => !LayoutService.IsValidZone(model.Layout, s.Zone)))
+         {
+             ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+         }
+-        if (!sections.Any(s => s.Area == "main"))
++        if (!sections.Any(s => s.Zone == "main"))
+         {
+             ModelState.AddModelError(string.Empty, "Main area cannot be empty.");
+         }
+diff --git a/website/MyWebApp/Controllers/AdminPageSectionController.cs b/website/MyWebApp/Controllers/AdminPageSectionController.cs
+index d440e5f..fc748ee 100644
+--- a/website/MyWebApp/Controllers/AdminPageSectionController.cs
++++ b/website/MyWebApp/Controllers/AdminPageSectionController.cs
+@@ -31,9 +31,9 @@ public class AdminPageSectionController : Controller
+         if (!string.IsNullOrWhiteSpace(q))
+         {
+             q = q.ToLowerInvariant();
+-            query = query.Where(s => s.Area.ToLower().Contains(q) || s.Html.ToLower().Contains(q) || s.Page.Slug.ToLower().Contains(q));
++            query = query.Where(s => s.Zone.ToLower().Contains(q) || s.Html.ToLower().Contains(q) || s.Page.Slug.ToLower().Contains(q));
+         }
+-        var sections = await query.OrderBy(s => s.Page.Slug).ThenBy(s => s.Area).ToListAsync();
++        var sections = await query.OrderBy(s => s.Page.Slug).ThenBy(s => s.Zone).ToListAsync();
+         ViewBag.Query = q;
+         return View(sections);
+     }
+@@ -59,11 +59,6 @@ public class AdminPageSectionController : Controller
+             await LoadPagesAsync();
+             return View(model);
+         }
+-        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
+-        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
+-        {
+-            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+-        }
+         if (!ModelState.IsValid)
+         {
+             await LoadPagesAsync();
+@@ -93,11 +88,6 @@ public class AdminPageSectionController : Controller
+             await LoadPagesAsync();
+             return View(model);
+         }
+-        var pageLayout = await _db.Pages.Where(p => p.Id == model.PageId).Select(p => p.Layout).FirstOrDefaultAsync();
+-        if (!LayoutService.IsValidArea(pageLayout ?? "single-column", model.Area))
+-        {
+-            ModelState.AddModelError(string.Empty, "Invalid area for selected layout.");
+-        }
+         if (!ModelState.IsValid)
+         {
+             await LoadPagesAsync();
+@@ -165,10 +155,10 @@ public class AdminPageSectionController : Controller
+     }
+ 
+     [HttpGet]
+-    public async Task<IActionResult> GetAreasForPage(int id)
++    public async Task<IActionResult> GetZonesForPage(int id)
+     {
+         var layout = await _db.Pages.Where(p => p.Id == id).Select(p => p.Layout).FirstOrDefaultAsync() ?? "single-column";
+-        var areas = LayoutService.GetAreas(layout);
+-        return Json(areas);
++        var zones = LayoutService.GetZones(layout);
++        return Json(zones);
+     }
+ }
+diff --git a/website/MyWebApp/Data/ApplicationDbContext.cs b/website/MyWebApp/Data/ApplicationDbContext.cs
+index 3a5f5e0..d1f2415 100644
+--- a/website/MyWebApp/Data/ApplicationDbContext.cs
++++ b/website/MyWebApp/Data/ApplicationDbContext.cs
+@@ -54,7 +54,7 @@ namespace MyWebApp.Data
+ 
+             modelBuilder.Entity<PageSection>()
+  
+-                .HasIndex(s => new { s.PageId, s.Area, s.SortOrder });
++                .HasIndex(s => new { s.PageId, s.Zone, s.SortOrder });
+  
+ 
+             modelBuilder.Entity<PasswordResetToken>()
+@@ -105,7 +105,7 @@ namespace MyWebApp.Data
+                 {
+                     Id = 1,
+                     PageId = 1,
+-                    Area = "header",
++                    Zone = "header",
+                     SortOrder = 0,
+  
+                     Type = PageSectionType.Html,
+@@ -117,7 +117,7 @@ namespace MyWebApp.Data
+                 {
+                     Id = 2,
+                     PageId = 1,
+-                    Area = "footer",
++                    Zone = "footer",
+                     SortOrder = 0,
+  
+                     Type = PageSectionType.Html,
+diff --git a/website/MyWebApp/Migrations/20250617_RenameAreaToZone.cs b/website/MyWebApp/Migrations/20250617_RenameAreaToZone.cs
+new file mode 100644
+index 0000000..0b2e978
+--- /dev/null
++++ b/website/MyWebApp/Migrations/20250617_RenameAreaToZone.cs
+@@ -0,0 +1,23 @@
++using Microsoft.EntityFrameworkCore.Migrations;
++
++namespace MyWebApp.Migrations
++{
++    public partial class _20250617_RenameAreaToZone : Migration
++    {
++        protected override void Up(MigrationBuilder migrationBuilder)
++        {
++            migrationBuilder.RenameColumn(
++                name: "Area",
++                table: "PageSections",
++                newName: "Zone");
++        }
++
++        protected override void Down(MigrationBuilder migrationBuilder)
++        {
++            migrationBuilder.RenameColumn(
++                name: "Zone",
++                table: "PageSections",
++                newName: "Area");
++        }
++    }
++}
+diff --git a/website/MyWebApp/Migrations/ApplicationDbContextModelSnapshot.cs b/website/MyWebApp/Migrations/ApplicationDbContextModelSnapshot.cs
+new file mode 100644
+index 0000000..872d909
+--- /dev/null
++++ b/website/MyWebApp/Migrations/ApplicationDbContextModelSnapshot.cs
+@@ -0,0 +1,14 @@
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using MyWebApp.Data;
++
++namespace MyWebApp.Migrations
++{
++    [DbContext(typeof(ApplicationDbContext))]
++    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
++    {
++        protected override void BuildModel(ModelBuilder modelBuilder)
++        {
++        }
++    }
++}
+diff --git a/website/MyWebApp/Models/PageSection.cs b/website/MyWebApp/Models/PageSection.cs
+index 294236d..f0cf8c5 100644
+--- a/website/MyWebApp/Models/PageSection.cs
++++ b/website/MyWebApp/Models/PageSection.cs
+@@ -21,7 +21,7 @@ public class PageSection
+ 
+     [Required]
+     [MaxLength(64)]
+-    public string Area { get; set; } = string.Empty;
++    public string Zone { get; set; } = string.Empty;
+ 
+     public int SortOrder { get; set; }
+ 
+diff --git a/website/MyWebApp/Program.cs b/website/MyWebApp/Program.cs
+index da50f5a..650cc87 100644
+--- a/website/MyWebApp/Program.cs
++++ b/website/MyWebApp/Program.cs
+@@ -317,7 +317,7 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
+             db.Database.ExecuteSqlRaw(@"CREATE TABLE PageSections (
+                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 PageId INTEGER NOT NULL,
+-                Area TEXT NOT NULL,
++                Zone TEXT NOT NULL,
+                 SortOrder INTEGER NOT NULL DEFAULT 0,
+                 Type INTEGER NOT NULL DEFAULT 0,
+                 Html TEXT,
+@@ -327,8 +327,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
+                 ViewCount INTEGER NOT NULL DEFAULT 0,
+                 FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
+             )");
+-            db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Area_SortOrder ON PageSections(PageId, Area, SortOrder)");
+-            db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Area, SortOrder, Type, Html) VALUES
++            db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Zone_SortOrder ON PageSections(PageId, Zone, SortOrder)");
++            db.Database.ExecuteSqlRaw(@"INSERT INTO PageSections (Id, PageId, Zone, SortOrder, Type, Html) VALUES
+                 (1, 1, 'header', 0, 0, '<div class ""container-fluid nav-container""><a class=""logo"" href=""/"">Screen Area Recorder Pro</a><nav class=""site-nav""><a href=""/"">Home</a> {{nav}} <a href=""/Download"">Download</a> <a href=""/Home/Faq"">FAQ</a> <a href=""/Home/Privacy"">Privacy</a> <a href=""/Setup"">Setup</a> <a href=""/Account/Login"">Login</a></nav></div>'),
+                 (2, 1, 'footer', 0, 0, '<div class ""container"">&copy; 2025 - Screen Area Recorder Pro</div>')");
+         }
+@@ -342,6 +342,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
+                 columns.Add(reader.GetString(1));
+             }
+             reader.Close();
++            if (columns.Contains("Area") && !columns.Contains("Zone"))
++                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections RENAME COLUMN Area TO Zone");
+             if (!columns.Contains("SortOrder"))
+                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0");
+             if (!columns.Contains("Type"))
+@@ -365,8 +367,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
+             idx.Close();
+             if (indexes.Contains("IX_PageSections_PageId_Area"))
+                 db.Database.ExecuteSqlRaw("DROP INDEX IX_PageSections_PageId_Area");
+-            if (!indexes.Contains("IX_PageSections_PageId_Area_SortOrder"))
+-                db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Area_SortOrder ON PageSections(PageId, Area, SortOrder)");
++            if (!indexes.Contains("IX_PageSections_PageId_Zone_SortOrder"))
++                db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Zone_SortOrder ON PageSections(PageId, Zone, SortOrder)");
+         }
+     }
+     catch (Exception ex)
+@@ -562,7 +564,7 @@ static void UpgradeLayoutHeader(ApplicationDbContext db)
+             return;
+ 
+         var section = db.PageSections
+-            .FirstOrDefault(s => s.PageId == layoutId && s.Area == "header");
++            .FirstOrDefault(s => s.PageId == layoutId && s.Zone == "header");
+         if (section == null)
+             return;
+ 
+diff --git a/website/MyWebApp/Services/LayoutService.cs b/website/MyWebApp/Services/LayoutService.cs
+index a53b4c6..a9aed2f 100644
+--- a/website/MyWebApp/Services/LayoutService.cs
++++ b/website/MyWebApp/Services/LayoutService.cs
+@@ -17,12 +17,12 @@ public class LayoutService
+         ["two-column-sidebar"] = new[] { "main", "sidebar" }
+     };
+ 
+-    public static bool IsValidArea(string layout, string area)
++    public static bool IsValidZone(string layout, string zone)
+     {
+-        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(area);
++        return LayoutZones.TryGetValue(layout, out var zones) && zones.Contains(zone);
+     }
+ 
+-    public static string[] GetAreas(string layout)
++    public static string[] GetZones(string layout)
+     {
+         return LayoutZones.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
+     }
+@@ -39,7 +39,7 @@ public class LayoutService
+         {
+             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+             var parts = await db.PageSections.AsNoTracking()
+-                .Where(s => s.Page.Slug == "layout" && s.Area == "header")
++                .Where(s => s.Page.Slug == "layout" && s.Zone == "header")
+                 .OrderBy(s => s.SortOrder)
+                 .Select(s => s.Html)
+                 .ToListAsync();
+@@ -54,7 +54,7 @@ public class LayoutService
+         {
+             e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+             var parts = await db.PageSections.AsNoTracking()
+-                .Where(s => s.Page.Slug == "layout" && s.Area == "footer")
++                .Where(s => s.Page.Slug == "layout" && s.Zone == "footer")
+                 .OrderBy(s => s.SortOrder)
+                 .Select(s => s.Html)
+                 .ToListAsync();
+@@ -63,11 +63,11 @@ public class LayoutService
+         });
+     }
+ 
+-    public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string area)
++    public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string zone)
+     {
+- 
++
+         var parts = await db.PageSections.AsNoTracking()
+-            .Where(s => s.PageId == pageId && s.Area == area)
++            .Where(s => s.PageId == pageId && s.Zone == zone)
+             .OrderBy(s => s.SortOrder)
+             .Select(s => s.Html)
+             .ToListAsync();
+diff --git a/website/MyWebApp/Services/TokenRenderService.cs b/website/MyWebApp/Services/TokenRenderService.cs
+index a71ae00..cc6f4fb 100644
+--- a/website/MyWebApp/Services/TokenRenderService.cs
++++ b/website/MyWebApp/Services/TokenRenderService.cs
+@@ -50,9 +50,9 @@ public class TokenRenderService
+                 var parts = param.Split(':', 2);
+                 if (parts.Length == 2 && int.TryParse(parts[0], out var pageId))
+                 {
+-                    var area = parts[1];
++                    var zone = parts[1];
+                     var htmlParts = await db.PageSections.AsNoTracking()
+-                        .Where(s => s.PageId == pageId && s.Area == area)
++                        .Where(s => s.PageId == pageId && s.Zone == zone)
+                         .OrderBy(s => s.SortOrder)
+                         .Select(s => s.Html)
+                         .ToListAsync();
+diff --git a/website/MyWebApp/TagHelpers/PageBlocksTagHelper.cs b/website/MyWebApp/TagHelpers/PageBlocksTagHelper.cs
+index 6f8c8cb..2f7dc72 100644
+--- a/website/MyWebApp/TagHelpers/PageBlocksTagHelper.cs
++++ b/website/MyWebApp/TagHelpers/PageBlocksTagHelper.cs
+@@ -17,13 +17,13 @@ public class PageBlocksTagHelper : TagHelper
+     }
+ 
+     public int PageId { get; set; }
+-    public string Area { get; set; } = string.Empty;
++    public string Zone { get; set; } = string.Empty;
+ 
+     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+     {
+         output.TagName = null;
+         var htmlParts = await _db.PageSections.AsNoTracking()
+-            .Where(s => s.PageId == PageId && s.Area == Area)
++            .Where(s => s.PageId == PageId && s.Zone == Zone)
+             .OrderBy(s => s.SortOrder)
+             .Select(s => s.Html)
+             .ToListAsync();
+diff --git a/website/MyWebApp/Views/AdminBlockTemplate/AddToPage.cshtml b/website/MyWebApp/Views/AdminBlockTemplate/AddToPage.cshtml
+index a9c6d99..8e06142 100644
+--- a/website/MyWebApp/Views/AdminBlockTemplate/AddToPage.cshtml
++++ b/website/MyWebApp/Views/AdminBlockTemplate/AddToPage.cshtml
+@@ -16,8 +16,8 @@
+         </select>
+     </div>
+     <div>
+-        <label>Area</label>
+-        <input type="text" name="area" />
++        <label>Zone</label>
++        <input type="text" name="zone" />
+     </div>
+     <button type="submit">Add</button>
+ </form>
+diff --git a/website/MyWebApp/Views/AdminContent/_SectionEditor.cshtml b/website/MyWebApp/Views/AdminContent/_SectionEditor.cshtml
+index 01027e7..82e7f54 100644
+--- a/website/MyWebApp/Views/AdminContent/_SectionEditor.cshtml
++++ b/website/MyWebApp/Views/AdminContent/_SectionEditor.cshtml
+@@ -15,8 +15,8 @@
+     <input type="hidden" name="Sections[@index].SortOrder" value="@Model.SortOrder" class="sort-order" />
+     <input type="hidden" name="Sections[@index].ViewCount" value="@Model.ViewCount" />
+     <div>
+-        <label>Area</label>
+-        <select class="area-select" data-index="@index" name="Sections[@index].Area" data-selected="@Model.Area"></select>
++        <label>Zone</label>
++        <select class="zone-select" data-index="@index" name="Sections[@index].Zone" data-selected="@Model.Zone"></select>
+     </div>
+     <div>
+         <label>Type</label>
+diff --git a/website/MyWebApp/Views/AdminPageSection/Create.cshtml b/website/MyWebApp/Views/AdminPageSection/Create.cshtml
+index 3e1d846..4f30413 100644
+--- a/website/MyWebApp/Views/AdminPageSection/Create.cshtml
++++ b/website/MyWebApp/Views/AdminPageSection/Create.cshtml
+@@ -12,12 +12,12 @@
+         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
+     </div>
+     <div>
+-        <label>Area</label>
+-        <select id="area-select" asp-for="Area" data-selected="@Model.Area"></select>
++        <label>Zone</label>
++        <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
+     </div>
+  
+ @await Html.PartialAsync("_SectionEditor", Model)
+ 
+     <button type="submit">Save</button>
+ </form>
+-<script src="~/js/page-section-area.js" asp-append-version="true"></script>
++<script src="~/js/page-section-zone.js" asp-append-version="true"></script>
+diff --git a/website/MyWebApp/Views/AdminPageSection/Delete.cshtml b/website/MyWebApp/Views/AdminPageSection/Delete.cshtml
+index a93a86a..a426762 100644
+--- a/website/MyWebApp/Views/AdminPageSection/Delete.cshtml
++++ b/website/MyWebApp/Views/AdminPageSection/Delete.cshtml
+@@ -6,7 +6,7 @@
+ <h2>Delete Section</h2>
+ <form asp-action="Delete" method="post">
+     <input type="hidden" asp-for="Id" />
+-    <p>Are you sure you want to delete <strong>@Model.Area</strong> for page @Model.PageId?</p>
++    <p>Are you sure you want to delete <strong>@Model.Zone</strong> for page @Model.PageId?</p>
+     <button type="submit">Delete</button>
+     <a asp-action="Index">Cancel</a>
+ </form>
+diff --git a/website/MyWebApp/Views/AdminPageSection/Edit.cshtml b/website/MyWebApp/Views/AdminPageSection/Edit.cshtml
+index 641ab5c..590e245 100644
+--- a/website/MyWebApp/Views/AdminPageSection/Edit.cshtml
++++ b/website/MyWebApp/Views/AdminPageSection/Edit.cshtml
+@@ -13,12 +13,12 @@
+         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
+     </div>
+     <div>
+-        <label>Area</label>
+-        <select id="area-select" asp-for="Area" data-selected="@Model.Area"></select>
++        <label>Zone</label>
++        <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
+     </div>
+  
+ @await Html.PartialAsync("_SectionEditor", Model)
+ 
+     <button type="submit">Save</button>
+ </form>
+-<script src="~/js/page-section-area.js" asp-append-version="true"></script>
++<script src="~/js/page-section-zone.js" asp-append-version="true"></script>
+diff --git a/website/MyWebApp/Views/AdminPageSection/Index.cshtml b/website/MyWebApp/Views/AdminPageSection/Index.cshtml
+index eb878dc..8115b47 100644
+--- a/website/MyWebApp/Views/AdminPageSection/Index.cshtml
++++ b/website/MyWebApp/Views/AdminPageSection/Index.cshtml
+@@ -12,7 +12,7 @@
+ <table>
+     <thead>
+  
+-        <tr><th>Page</th><th>Area</th><th>Type</th><th colspan="2"></th></tr>
++        <tr><th>Page</th><th>Zone</th><th>Type</th><th colspan="2"></th></tr>
+  
+     </thead>
+     <tbody>
+@@ -20,7 +20,7 @@
+ {
+     <tr>
+         <td>@s.Page?.Slug</td>
+-        <td>@s.Area</td>
++        <td>@s.Zone</td>
+  
+         <td>@s.Type</td>
+  
+diff --git a/website/MyWebApp/wwwroot/css/admin.css b/website/MyWebApp/wwwroot/css/admin.css
+index ac0c040..e891877 100644
+--- a/website/MyWebApp/wwwroot/css/admin.css
++++ b/website/MyWebApp/wwwroot/css/admin.css
+@@ -1278,15 +1278,15 @@ form.mb-3 {
+     background: #0ea5e9;
+     color: #fff;
+ }
+-.area-group {
++.zone-group {
+     border: 1px solid #e2e8f0;
+     padding: 0.5rem;
+     margin-bottom: 1rem;
+ }
+-.area-group h3 {
++.zone-group h3 {
+     margin: 0 0 0.5rem 0;
+     text-transform: capitalize;
+ }
+-.area-sections {
++.zone-sections {
+     min-height: 10px;
+ }
+diff --git a/website/MyWebApp/wwwroot/js/page-editor.js b/website/MyWebApp/wwwroot/js/page-editor.js
+index 9dec3f2..533e07c 100644
+--- a/website/MyWebApp/wwwroot/js/page-editor.js
++++ b/website/MyWebApp/wwwroot/js/page-editor.js
+@@ -10,32 +10,32 @@ window.addEventListener('load', () => {
+ 
+     function buildGroups() {
+         container.innerHTML = '';
+-        (layoutZones[currentLayout] || []).forEach(a => {
++        (layoutZones[currentLayout] || []).forEach(z => {
+             const group = document.createElement('div');
+-            group.className = 'area-group';
+-            group.dataset.area = a;
++            group.className = 'zone-group';
++            group.dataset.zone = z;
+             const h = document.createElement('h3');
+-            h.textContent = a;
++            h.textContent = z;
+             const div = document.createElement('div');
+-            div.className = 'area-sections';
++            div.className = 'zone-sections';
+             group.appendChild(h);
+             group.appendChild(div);
+             container.appendChild(group);
+         });
+     }
+ 
+-    function populateAreas(select) {
++    function populateZones(select) {
+         if (!select) return;
+         const current = select.dataset.selected || select.value;
+-        select.innerHTML = (layoutZones[currentLayout] || []).map(a => `<option value="${a}">${a}</option>`).join('');
++        select.innerHTML = (layoutZones[currentLayout] || []).map(z => `<option value="${z}">${z}</option>`).join('');
+         if (current) select.value = current;
+         select.dataset.selected = '';
+     }
+ 
+     function placeSection(section) {
+-        const select = section.querySelector('.area-select');
+-        const area = select ? select.value : 'main';
+-        const group = container.querySelector(`.area-group[data-area='${area}'] .area-sections`);
++        const select = section.querySelector('.zone-select');
++        const zone = select ? select.value : 'main';
++        const group = container.querySelector(`.zone-group[data-zone='${zone}'] .zone-sections`);
+         if (group) group.appendChild(section);
+     }
+ 
+@@ -43,11 +43,11 @@ window.addEventListener('load', () => {
+         const preview = document.getElementById('layout-preview');
+         if (!preview) return;
+         preview.innerHTML = '';
+-        (layoutZones[currentLayout] || []).forEach(a => {
++        (layoutZones[currentLayout] || []).forEach(z => {
+             const div = document.createElement('div');
+             div.className = 'preview-zone';
+-            div.dataset.area = a;
+-            div.textContent = a;
++            div.dataset.zone = z;
++            div.textContent = z;
+             preview.appendChild(div);
+         });
+     }
+@@ -56,9 +56,9 @@ window.addEventListener('load', () => {
+         const zone = e.target.closest('.preview-zone');
+         if (!zone) return;
+         if (activeIndex !== null) {
+-            const select = document.querySelector(`.area-select[data-index='${activeIndex}']`);
++            const select = document.querySelector(`.zone-select[data-index='${activeIndex}']`);
+             if (select) {
+-                select.value = zone.dataset.area;
++                select.value = zone.dataset.zone;
+                 placeSection(select.closest('.section-editor'));
+                 updateIndexes();
+             }
+@@ -91,7 +91,7 @@ window.addEventListener('load', () => {
+     buildGroups();
+     existing.forEach(el => {
+         const idx = el.dataset.index;
+-        populateAreas(el.querySelector('.area-select'));
++        populateZones(el.querySelector('.zone-select'));
+         placeSection(el);
+         initSectionEditor(idx);
+     });
+@@ -105,7 +105,7 @@ window.addEventListener('load', () => {
+         currentLayout = layoutSelect.value;
+         buildGroups();
+         document.querySelectorAll('.section-editor').forEach(sec => {
+-            populateAreas(sec.querySelector('.area-select'));
++            populateZones(sec.querySelector('.zone-select'));
+             placeSection(sec);
+         });
+         updateIndexes();
+@@ -123,7 +123,7 @@ window.addEventListener('load', () => {
+     });
+ 
+     container.addEventListener('change', e => {
+-        if (e.target.classList.contains('area-select')) {
++        if (e.target.classList.contains('zone-select')) {
+             const section = e.target.closest('.section-editor');
+             placeSection(section);
+             updateIndexes();
+@@ -137,7 +137,7 @@ window.addEventListener('load', () => {
+         temp.innerHTML = html;
+         const section = temp.firstElementChild;
+         section.dataset.index = index;
+-        populateAreas(section.querySelector('.area-select'));
++        populateZones(section.querySelector('.zone-select'));
+         placeSection(section);
+         initSectionEditor(index);
+         updateIndexes();
+@@ -163,7 +163,7 @@ window.addEventListener('load', () => {
+                 dest.value = src.value;
+             }
+         });
+-        populateAreas(clone.querySelector('.area-select'));
++        populateZones(clone.querySelector('.zone-select'));
+         placeSection(clone);
+         initSectionEditor(index);
+         if (editors[original.dataset.index]) {
+diff --git a/website/MyWebApp/wwwroot/js/page-section-area.js b/website/MyWebApp/wwwroot/js/page-section-area.js
+deleted file mode 100644
+index c105b77..0000000
+--- a/website/MyWebApp/wwwroot/js/page-section-area.js
++++ /dev/null
+@@ -1,19 +0,0 @@
+-window.addEventListener('load', () => {
+-    const pageSelect = document.querySelector('select[name="PageId"]');
+-    const areaSelect = document.getElementById('area-select');
+-    if (!pageSelect || !areaSelect) return;
+-
+-    function loadAreas() {
+-        const id = pageSelect.value;
+-        if (!id) { areaSelect.innerHTML = ''; return; }
+-        fetch(`/AdminPageSection/GetAreasForPage/${id}`)
+-            .then(r => r.json())
+-            .then(list => {
+-                areaSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
+-                if (areaSelect.dataset.selected)
+-                    areaSelect.value = areaSelect.dataset.selected;
+-            });
+-    }
+-    loadAreas();
+-    pageSelect.addEventListener('change', loadAreas);
+-});
+diff --git a/website/MyWebApp/wwwroot/js/page-section-zone.js b/website/MyWebApp/wwwroot/js/page-section-zone.js
+new file mode 100644
+index 0000000..9b2d0d3
+--- /dev/null
++++ b/website/MyWebApp/wwwroot/js/page-section-zone.js
+@@ -0,0 +1,19 @@
++window.addEventListener('load', () => {
++    const pageSelect = document.querySelector('select[name="PageId"]');
++    const zoneSelect = document.getElementById('zone-select');
++    if (!pageSelect || !zoneSelect) return;
++
++    function loadZones() {
++        const id = pageSelect.value;
++        if (!id) { zoneSelect.innerHTML = ''; return; }
++        fetch(`/AdminPageSection/GetZonesForPage/${id}`)
++            .then(r => r.json())
++            .then(list => {
++                zoneSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');
++                if (zoneSelect.dataset.selected)
++                    zoneSelect.value = zoneSelect.dataset.selected;
++            });
++    }
++    loadZones();
++    pageSelect.addEventListener('change', loadZones);
++});

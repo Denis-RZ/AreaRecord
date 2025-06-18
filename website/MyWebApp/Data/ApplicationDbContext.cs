@@ -53,9 +53,9 @@ namespace MyWebApp.Data
                 .IsUnique();
 
             modelBuilder.Entity<PageSection>()
- 
+
                 .HasIndex(s => new { s.PageId, s.Zone, s.SortOrder });
- 
+
 
             modelBuilder.Entity<PasswordResetToken>()
                 .HasIndex(t => t.Token)
@@ -90,14 +90,16 @@ namespace MyWebApp.Data
                     Id = 1,
                     Slug = "layout",
                     Title = "Layout",
-                    Layout = "single-column"
+                    Layout = "single-column",
+                    RoleId = null
                 },
                 new Page
                 {
                     Id = 2,
                     Slug = "home",
                     Title = "Home",
-                    Layout = "single-column"
+                    Layout = "single-column",
+                    RoleId = null
                 });
 
             modelBuilder.Entity<PageSection>().HasData(
@@ -107,11 +109,11 @@ namespace MyWebApp.Data
                     PageId = 1,
                     Zone = "header",
                     SortOrder = 0,
- 
+
                     Type = PageSectionType.Html,
- 
+
                     Html = "<div class=\"container-fluid nav-container\"><a class=\"logo\" href=\"/\">Screen Area Recorder Pro</a><nav class=\"site-nav\"><a href=\"/\">Home</a> {{nav}} <a href=\"/Download\">Download</a> <a href=\"/Home/Faq\">FAQ</a> <a href=\"/Home/Privacy\">Privacy</a> <a href=\"/Setup\">Setup</a> <a href=\"/Account/Login\">Login</a></nav></div>"
-                    , ViewCount = 0
+                    
                 },
                 new PageSection
                 {
@@ -119,17 +121,18 @@ namespace MyWebApp.Data
                     PageId = 1,
                     Zone = "footer",
                     SortOrder = 0,
- 
+
                     Type = PageSectionType.Html,
- 
+
                     Html = "<div class=\"container\">&copy; 2025 - Screen Area Recorder Pro</div>"
- 
+
                 });
 
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin" },
                 new Role { Id = 2, Name = "User" },
-                new Role { Id = 3, Name = "Moderator" });
+                new Role { Id = 3, Name = "Moderator" },
+                new Role { Id = 4, Name = "Anonym" });
 
             // provider specific optimizations
             var provider = Database.ProviderName ?? string.Empty;

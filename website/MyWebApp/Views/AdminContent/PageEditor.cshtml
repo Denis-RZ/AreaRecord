@@ -1,15 +1,29 @@
 @model MyWebApp.Models.Page
 @using MyWebApp.Models
-@using MyWebApp.Services
 @using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     var sections = ViewBag.Sections as List<PageSection> ?? new List<PageSection>();
+    var roles = ViewBag.Roles as List<Role> ?? new List<Role>();
     Layout = "../Admin/_AdminLayout";
     var isNew = Model.Id == 0;
     ViewData["Title"] = isNew ? "Create Page" : "Edit Page";
 }
 <h2>@ViewData["Title"]</h2>
-<form asp-action="@(isNew ? "Create" : "Edit")" method="post">
+<div class="mode-toggle">
+    <button type="button" id="mode-edit" class="mode-btn active">Edit</button>
+    <button type="button" id="mode-preview" class="mode-btn">Preview<span id="unsaved-indicator" class="unsaved-indicator">*</span></button>
+    <div class="device-buttons">
+        <button type="button" class="device-btn active" data-width="100%">Desktop</button>
+        <button type="button" class="device-btn" data-width="768px">Tablet</button>
+        <button type="button" class="device-btn" data-width="375px">Mobile</button>
+    </div>
+</div>
+<div class="page-editor">
+    <aside id="block-library" class="block-library">
+        <input type="text" id="block-search" class="search" placeholder="Search blocks..." />
+        <div class="block-list"></div>
+    </aside>
+    <form asp-action="@(isNew ? "Create" : "Edit")" method="post" class="editor-main">
     <input type="hidden" asp-for="Id" />
     <div>
         <div><label>Slug</label><input asp-for="Slug" id="slug-input" /></div>
@@ -17,10 +31,25 @@
         <div>
             <label asp-for="Layout">Layout</label>
             <select asp-for="Layout" id="layout-select">
-                <option value="single-column">Single Column</option>
-                <option value="two-column-sidebar">Two Column with Sidebar</option>
+@if (ViewBag.LayoutZones is IReadOnlyDictionary<string, string[]> layouts)
+{
+    foreach (var entry in layouts)
+    {
+            <option value="@entry.Key">@entry.Key</option>
+    }
+}
             </select>
             <div id="layout-preview" class="layout-preview"></div>
+        </div>
+        <div>
+            <label asp-for="RoleId">Role</label>
+            <select asp-for="RoleId">
+                <option value="">(none)</option>
+                @foreach (var r in roles)
+                {
+                    <option value="@r.Id">@r.Name</option>
+                }
+            </select>
         </div>
         <div><label asp-for="IsPublished"></label><input asp-for="IsPublished" /></div>
         <div><label asp-for="PublishDate"></label><input asp-for="PublishDate" type="datetime-local" /></div>
@@ -38,8 +67,8 @@
     <div class="mt-3" id="sections-container">
 @for (int i = 0; i < sections.Count; i++)
 {
-    var vd = new ViewDataDictionary(ViewData) { ["Index"] = i };
-    @await Html.PartialAsync("_SectionEditor", sections[i], vd)
+    var vd = new ViewDataDictionary(ViewData) { ["Index"] = i, ["Roles"] = roles };
+    @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", sections[i], vd)
 }
     </div>
     @if (ViewBag.Templates is List<BlockTemplate> templates && templates.Count > 0)
@@ -56,15 +85,25 @@
     }
     <button type="button" id="add-section">Add Section</button>
     <div id="section-template" style="display:none">
-        @await Html.PartialAsync("_SectionEditor", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__" })
+        @await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", new PageSection(), new ViewDataDictionary(ViewData) { ["Index"] = "__index__", ["Roles"] = roles })
     </div>
     <button type="submit">Save</button>
-</form>
+    </form>
+    <div id="preview-wrapper" class="preview-wrapper">
+        <div id="preview-container" class="preview-container">
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
-        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(LayoutService.LayoutZones));
+        const layoutZones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ViewBag.LayoutZones as IReadOnlyDictionary<string, string[]> ??
+            new Dictionary<string, string[]>()));
     </script>
+    <script src="~/js/section-editor.js" asp-append-version="true"></script>
     <script src="~/js/page-editor.js" asp-append-version="true"></script>
+    <script src="~/js/block-library.js" asp-append-version="true"></script>
     <script>
         const titleInput = document.getElementById('title-input');
         const slugInput = document.getElementById('slug-input');
