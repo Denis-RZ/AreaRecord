@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using MyWebApp.Data;
 using MyWebApp.Models;
 using MyWebApp.Services;
+using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
@@ -23,7 +24,8 @@ public class NavigationTests
         context.Database.EnsureCreated();
         var memory = new MemoryCache(new MemoryCacheOptions());
         var cache = new CacheService(memory);
-        var tokens = new TokenRenderService();
+        var accessor = new HttpContextAccessor();
+        var tokens = new TokenRenderService(accessor);
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -32,7 +34,7 @@ public class NavigationTests
                 {"Layouts:two-column-sidebar:1", "sidebar"}
             })
             .Build();
-        var layout = new LayoutService(cache, tokens);
+        var layout = new LayoutService(cache, tokens, accessor);
 
         context.Pages.Add(new Page { Slug = "about", Title = "About", Layout = "single-column", IsPublished = true });
         context.SaveChanges();
