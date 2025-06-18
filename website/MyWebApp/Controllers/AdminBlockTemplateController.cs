@@ -54,6 +54,9 @@ public class AdminBlockTemplateController : Controller
         if (!ModelState.IsValid)
         {
             await LoadPagesAsync();
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
             return View(model);
         }
         model.Html = _sanitizer.Sanitize(model.Html);
@@ -80,6 +83,9 @@ public class AdminBlockTemplateController : Controller
         if (!ModelState.IsValid)
         {
             await LoadPagesAsync();
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
             return View(model);
         }
         model.Html = _sanitizer.Sanitize(model.Html);
@@ -175,6 +181,9 @@ public class AdminBlockTemplateController : Controller
         if (item == null) return NotFound();
         await LoadPagesAsync();
         ViewBag.BlockId = id;
+        ViewBag.SelectedPageIds = new List<int>();
+        ViewBag.SelectedZone = string.Empty;
+        ViewBag.SelectedRole = string.Empty;
         return View();
     }
 
@@ -188,6 +197,9 @@ public class AdminBlockTemplateController : Controller
         {
             await LoadPagesAsync();
             ViewBag.BlockId = id;
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
             ModelState.AddModelError("pageIds", "Page selection required");
             return View();
         }
@@ -198,6 +210,9 @@ public class AdminBlockTemplateController : Controller
         {
             await LoadPagesAsync();
             ViewBag.BlockId = id;
+            ViewBag.SelectedPageIds = pageIds;
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
             ModelState.AddModelError("zone", "Zone required");
             return View();
         }
