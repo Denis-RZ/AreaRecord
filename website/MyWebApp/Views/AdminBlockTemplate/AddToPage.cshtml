@@ -26,12 +26,14 @@
     </div>
     <div>
         <label>Role</label>
+ 
         <select name="role">
             <option value="">(none)</option>
             @foreach (var r in ViewBag.Roles as List<Role>)
             {
                 <option value="@r.Name">@r.Name</option>
             }
+ 
         </select>
     </div>
     <button type="submit">Add</button>
