@@ -21,8 +21,9 @@ public class AccountController : Controller
 
     private bool HasRole(string role)
     {
-        var roles = HttpContext.Session.GetString("Roles")?.Split(',') ?? Array.Empty<string>();
-        return roles.Contains(role);
+        var roles = HttpContext.Session.GetString("Roles");
+        var roleNames = string.IsNullOrWhiteSpace(roles) ? new[] { "Anonym" } : roles.Split(',');
+        return roleNames.Contains(role);
     }
 
     public AccountController(ApplicationDbContext db, CaptchaService captchaService, IEmailSender emailSender, ILogger<AccountController> logger)

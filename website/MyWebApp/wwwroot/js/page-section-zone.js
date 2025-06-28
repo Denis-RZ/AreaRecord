@@ -6,7 +6,7 @@ window.addEventListener('load', () => {
     function loadZones() {
         const id = pageSelect.value;
         if (!id) { zoneSelect.innerHTML = ''; return; }
-        fetch(`/AdminPageSection/GetZonesForPage/${id}`)
+        fetch(`/Api/GetZonesForPage/${id}`)
             .then(r => r.json())
             .then(list => {
                 zoneSelect.innerHTML = list.map(a => `<option value="${a}">${a}</option>`).join('');

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using System.Linq;
 using MyWebApp.Data;
 
@@ -8,6 +9,7 @@ public class LayoutService
 {
     private readonly CacheService _cache;
     private readonly TokenRenderService _tokens;
+    private readonly IHttpContextAccessor _accessor;
     private const string HeaderKey = "layout_header";
     private const string FooterKey = "layout_footer";
 
@@ -27,53 +29,119 @@ public class LayoutService
         return LayoutZones.TryGetValue(layout, out var zones) ? zones : Array.Empty<string>();
     }
 
-    public LayoutService(CacheService cache, TokenRenderService tokens)
+    public LayoutService(CacheService cache, TokenRenderService tokens, IHttpContextAccessor accessor)
     {
         _cache = cache;
         _tokens = tokens;
+        _accessor = accessor;
+    }
+
+    private string[] GetRoles()
+    {
+        var roles = _accessor.HttpContext?.Session.GetString("Roles");
+        if (string.IsNullOrWhiteSpace(roles))
+        {
+            return new[] { "Anonym" };
+        }
+        return roles.Split(',');
+    }
+
+    private async Task<List<int>> GetAllowedPermissionsAsync(ApplicationDbContext db, string[] roles)
+    {
+        if (roles.Length == 0) return new List<int>();
+        return await db.RolePermissions.AsNoTracking()
+            .Where(rp => roles.Contains(rp.Role!.Name))
+            .Select(rp => rp.PermissionId)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    private async Task<List<int>> GetRoleIdsAsync(ApplicationDbContext db, string[] roles)
+    {
+        if (roles.Length == 0) return new List<int>();
+        return await db.Roles.AsNoTracking()
+            .Where(r => roles.Contains(r.Name))
+            .Select(r => r.Id)
+            .ToListAsync();
     }
 
     public async Task<string> GetHeaderAsync(ApplicationDbContext db)
     {
-        return await _cache.GetOrCreateAsync(HeaderKey, async e =>
+        var roles = GetRoles();
+        var roleIds = await GetRoleIdsAsync(db, roles);
+        if (roles.Length == 0)
         {
-            e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var parts = await db.PageSections.AsNoTracking()
-                .Where(s => s.Page.Slug == "layout" && s.Zone == "header")
-                .OrderBy(s => s.SortOrder)
-                .Select(s => s.Html)
-                .ToListAsync();
-            var html = string.Join(System.Environment.NewLine, parts);
-            return await _tokens.RenderAsync(db, html);
-        });
+            return await _cache.GetOrCreateAsync(HeaderKey, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var parts = await db.PageSections.AsNoTracking()
+                    .Where(s => s.Page.Slug == "layout" && s.Zone == "header" && s.PermissionId == null && s.RoleId == null)
+                    .OrderBy(s => s.SortOrder)
+                    .Select(s => s.Html)
+                    .ToListAsync();
+                var html = string.Join(System.Environment.NewLine, parts);
+                return await _tokens.RenderAsync(db, html);
+            });
+        }
+
+        var allowed = await GetAllowedPermissionsAsync(db, roles);
+        var query = db.PageSections.AsNoTracking()
+            .Where(s => s.Page.Slug == "layout" && s.Zone == "header");
+        query = query.Where(s =>
+            (s.PermissionId == null || allowed.Contains(s.PermissionId.Value)) &&
+            (s.RoleId == null || roleIds.Contains(s.RoleId.Value)));
+        var parts2 = await query.OrderBy(s => s.SortOrder).Select(s => s.Html).ToListAsync();
+        var html2 = string.Join(System.Environment.NewLine, parts2);
+        return await _tokens.RenderAsync(db, html2);
     }
 
     public async Task<string> GetFooterAsync(ApplicationDbContext db)
     {
-        return await _cache.GetOrCreateAsync(FooterKey, async e =>
+        var roles = GetRoles();
+        var roleIds = await GetRoleIdsAsync(db, roles);
+        if (roles.Length == 0)
         {
-            e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var parts = await db.PageSections.AsNoTracking()
-                .Where(s => s.Page.Slug == "layout" && s.Zone == "footer")
-                .OrderBy(s => s.SortOrder)
-                .Select(s => s.Html)
-                .ToListAsync();
-            var html = string.Join(System.Environment.NewLine, parts);
-            return await _tokens.RenderAsync(db, html);
-        });
+            return await _cache.GetOrCreateAsync(FooterKey, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+                var parts = await db.PageSections.AsNoTracking()
+                    .Where(s => s.Page.Slug == "layout" && s.Zone == "footer" && s.PermissionId == null && s.RoleId == null)
+                    .OrderBy(s => s.SortOrder)
+                    .Select(s => s.Html)
+                    .ToListAsync();
+                var html = string.Join(System.Environment.NewLine, parts);
+                return await _tokens.RenderAsync(db, html);
+            });
+        }
+
+        var allowed = await GetAllowedPermissionsAsync(db, roles);
+        var query = db.PageSections.AsNoTracking()
+            .Where(s => s.Page.Slug == "layout" && s.Zone == "footer");
+        query = query.Where(s =>
+            (s.PermissionId == null || allowed.Contains(s.PermissionId.Value)) &&
+            (s.RoleId == null || roleIds.Contains(s.RoleId.Value)));
+        var parts2 = await query.OrderBy(s => s.SortOrder).Select(s => s.Html).ToListAsync();
+        var html2 = string.Join(System.Environment.NewLine, parts2);
+        return await _tokens.RenderAsync(db, html2);
     }
 
     public async Task<string> GetSectionAsync(ApplicationDbContext db, int pageId, string zone)
     {
-
-        var parts = await db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == pageId && s.Zone == zone)
-            .OrderBy(s => s.SortOrder)
-            .Select(s => s.Html)
-            .ToListAsync();
+        var roles = GetRoles();
+        var roleIds = await GetRoleIdsAsync(db, roles);
+        var allowed = await GetAllowedPermissionsAsync(db, roles);
+        var query = db.PageSections.AsNoTracking()
+            .Where(s => s.PageId == pageId && s.Zone == zone);
+        if (allowed.Count == 0 && roleIds.Count == 0)
+            query = query.Where(s => s.PermissionId == null && s.RoleId == null);
+        else
+            query = query.Where(s =>
+                (s.PermissionId == null || allowed.Contains(s.PermissionId.Value)) &&
+                (s.RoleId == null || roleIds.Contains(s.RoleId.Value)));
+        var parts = await query.OrderBy(s => s.SortOrder).Select(s => s.Html).ToListAsync();
         var html = string.Join(System.Environment.NewLine, parts);
         return await _tokens.RenderAsync(db, html);
- 
+
     }
 
     public void Reset()

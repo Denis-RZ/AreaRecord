@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json;
 using MyWebApp.Data;
@@ -26,6 +27,12 @@ public class AdminBlockTemplateController : Controller
     private async Task LoadPagesAsync()
     {
         ViewBag.Pages = await _db.Pages.AsNoTracking().OrderBy(p => p.Slug).ToListAsync();
+        ViewBag.Roles = await _db.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
+        ViewBag.Zones = await _db.PageSections.AsNoTracking()
+            .Select(s => s.Zone)
+            .Distinct()
+            .OrderBy(z => z)
+            .ToListAsync();
     }
 
     public async Task<IActionResult> Index()
@@ -34,19 +41,29 @@ public class AdminBlockTemplateController : Controller
         return View(items);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        await LoadPagesAsync();
         return View(new BlockTemplate());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(BlockTemplate model)
+    public async Task<IActionResult> Create(BlockTemplate model, List<int>? pageIds, string? zone, string? role)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
+            return View(model);
+        }
         model.Html = _sanitizer.Sanitize(model.Html);
         _db.BlockTemplates.Add(model);
         _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = model, Html = model.Html });
+        await _db.SaveChangesAsync();
+        await AddSectionsAsync(model, pageIds, zone, role);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -55,17 +72,27 @@ public class AdminBlockTemplateController : Controller
     {
         var item = await _db.BlockTemplates.FindAsync(id);
         if (item == null) return NotFound();
+        await LoadPagesAsync();
         return View(item);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(BlockTemplate model)
+    public async Task<IActionResult> Edit(BlockTemplate model, List<int>? pageIds, string? zone, string? role)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            await LoadPagesAsync();
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
+            return View(model);
+        }
         model.Html = _sanitizer.Sanitize(model.Html);
         _db.Update(model);
         _db.BlockTemplateVersions.Add(new BlockTemplateVersion { BlockTemplateId = model.Id, Html = model.Html });
+        await _db.SaveChangesAsync();
+        await AddSectionsAsync(model, pageIds, zone, role);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -124,80 +151,125 @@ public class AdminBlockTemplateController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetBlocks()
+    {
+        var items = await _db.BlockTemplates.AsNoTracking()
+            .OrderBy(t => t.Name)
+            .Select(t => new { t.Id, t.Name, Preview = t.Html.Length > 200 ? t.Html.Substring(0, 200) + "..." : t.Html })
+            .ToListAsync();
+        return Json(items);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateFromSection(string name, string html)
+    {
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(html))
+            return BadRequest();
+        html = _sanitizer.Sanitize(html);
+        var t = new BlockTemplate { Name = name, Html = html };
+        _db.BlockTemplates.Add(t);
+        _db.BlockTemplateVersions.Add(new BlockTemplateVersion { Template = t, Html = html });
+        await _db.SaveChangesAsync();
+        return Json(new { t.Id });
+    }
+
     public async Task<IActionResult> AddToPage(int id)
     {
         var item = await _db.BlockTemplates.FindAsync(id);
         if (item == null) return NotFound();
         await LoadPagesAsync();
         ViewBag.BlockId = id;
+        ViewBag.SelectedPageIds = new List<int>();
+        ViewBag.SelectedZone = string.Empty;
+        ViewBag.SelectedRole = string.Empty;
         return View();
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddToPage(int id, int pageId, string zone)
+    public async Task<IActionResult> AddToPage(int id, List<int> pageIds, string zone, string role)
     {
         var template = await _db.BlockTemplates.FindAsync(id);
-        var page = await _db.Pages.FindAsync(pageId);
-        if (template == null || page == null)
+        if (template == null) return NotFound();
+        if (pageIds == null || pageIds.Count == 0)
         {
-            return NotFound();
+            await LoadPagesAsync();
+            ViewBag.BlockId = id;
+            ViewBag.SelectedPageIds = pageIds ?? new List<int>();
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
+            ModelState.AddModelError("pageIds", "Page selection required");
+            return View();
         }
+        var roleEntity = await _db.Roles.FirstOrDefaultAsync(r => r.Name == role);
+        int? roleId = roleEntity?.Id;
         zone = zone?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(zone))
         {
             await LoadPagesAsync();
             ViewBag.BlockId = id;
+            ViewBag.SelectedPageIds = pageIds;
+            ViewBag.SelectedZone = zone;
+            ViewBag.SelectedRole = role;
             ModelState.AddModelError("zone", "Zone required");
             return View();
         }
-        var sort = await _db.PageSections
-            .Where(s => s.PageId == pageId && s.Zone == zone)
-            .Select(s => s.SortOrder)
-            .DefaultIfEmpty(-1)
-            .MaxAsync() + 1;
-        var section = new PageSection
+        if (pageIds.Contains(0))
         {
-            PageId = pageId,
-            Zone = zone,
-            SortOrder = sort,
-            Html = template.Html,
-            Type = PageSectionType.Html
-        };
-        _db.PageSections.Add(section);
+            pageIds = await _db.Pages.Select(p => p.Id).ToListAsync();
+        }
+        foreach (var pageId in pageIds)
+        {
+            var maxSort = await _db.PageSections
+                .Where(s => s.PageId == pageId && s.Zone == zone)
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
+            var section = new PageSection
+            {
+                PageId = pageId,
+                Zone = zone,
+                SortOrder = sort,
+                Html = template.Html,
+                Type = PageSectionType.Html,
+                RoleId = roleId
+            };
+            _db.PageSections.Add(section);
+        }
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetBlocks()
+    private async Task AddSectionsAsync(BlockTemplate template, List<int>? pageIds, string? zone, string? role)
     {
-        var items = await _db.BlockTemplates.AsNoTracking()
-            .OrderBy(t => t.Name)
-            .Select(t => new { t.Id, t.Name })
-            .ToListAsync();
-        return Json(items);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetPages()
-    {
-        var pages = await _db.Pages.AsNoTracking()
-            .OrderBy(p => p.Slug)
-            .Select(p => new { p.Id, p.Slug })
-            .ToListAsync();
-        return Json(pages);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetSections(int id)
-    {
-        var zones = await _db.PageSections.AsNoTracking()
-            .Where(s => s.PageId == id)
-            .Select(s => s.Zone)
-            .Distinct()
-            .OrderBy(a => a)
-            .ToListAsync();
-        return Json(zones);
+        if (pageIds == null || pageIds.Count == 0 || string.IsNullOrWhiteSpace(zone))
+            return;
+        var roleEntity = await _db.Roles.FirstOrDefaultAsync(r => r.Name == role);
+        int? roleId = roleEntity?.Id;
+        zone = zone!.Trim();
+        if (pageIds.Contains(0))
+        {
+            pageIds = await _db.Pages.Select(p => p.Id).ToListAsync();
+        }
+        foreach (var pageId in pageIds)
+        {
+            var maxSort = await _db.PageSections
+                .Where(s => s.PageId == pageId && s.Zone == zone)
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync();
+            var sort = (maxSort ?? -1) + 1;
+            var section = new PageSection
+            {
+                PageId = pageId,
+                Zone = zone,
+                SortOrder = sort,
+                Html = template.Html,
+                Type = PageSectionType.Html,
+                RoleId = roleId
+            };
+            _db.PageSections.Add(section);
+        }
     }
 }

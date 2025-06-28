@@ -21,7 +21,7 @@
         <label asp-for="Password"></label>
         <input asp-for="Password" type="password" class="form-control" />
     </div>
-    <div class="form-group mt-3">
+    <div class="form-group mt-3 captcha-container">
         <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
         <input type="text" name="captcha" class="form-control mt-1" placeholder="Enter code" />
     </div>
@@ -31,7 +31,7 @@
     </div>
     <button type="submit" class="btn btn-primary mt-2">Login</button>
 </form>
-<div class="mt-2">
+<div class="mt-2 form-links">
     <a asp-action="ForgotPassword" asp-controller="Account">Forgot Password?</a>
     |
     <a asp-action="Register" asp-controller="Account">Register</a>

@@ -5,7 +5,7 @@
 /* Form container */
 form[method="post"] {
     max-width: 400px !important;
-    width: 400px !important;
+    width: 100% !important;
     margin: 1rem auto 0 auto !important; /* Remove bottom margin */
     padding: 2rem !important;
     background: #ffffff !important;
@@ -19,7 +19,7 @@ form[method="post"] {
 /* Wide forms */
 form[action*="Register"] {
     max-width: 500px !important;
-    width: 500px !important;
+    width: 100% !important;
 }
 
 /* Input fields remain as is */
@@ -101,21 +101,21 @@ form[method="post"] input[type="checkbox"] {
     accent-color: #0d6efd !important;
 }
 
-form[method="post"] > div:has(input[type="checkbox"]) {
+.form-check {
     display: flex !important;
     align-items: center !important;
     margin-bottom: 1.5rem !important;
     cursor: pointer !important;
 }
 
-    form[method="post"] > div:has(input[type="checkbox"]) label {
+    .form-check label {
         margin: 0 !important;
         cursor: pointer !important;
         font-size: 0.9rem !important;
     }
 
 /* Captcha remains as is */
-form[method="post"] > div:has(img[src*="captcha"]) {
+.captcha-container {
     display: flex !important;
     align-items: center !important;
     gap: 1rem !important;
@@ -140,7 +140,7 @@ form[method="post"] img[src*="captcha" i] {
         border-color: #0d6efd !important;
     }
 
-form[method="post"] > div:has(img[src*="captcha"]) input[type="text"] {
+.captcha-container input[type="text"] {
     flex: 1 !important;
     margin-bottom: 0 !important;
     min-width: 100px !important;
@@ -151,8 +151,8 @@ form[method="post"] > div:has(img[src*="captcha"]) input[type="text"] {
    ========================================== */
 
 /* Links block - FULLY MERGED with form */
-form[method="post"] + div:has(a) {
-    width: 400px !important;
+form[method="post"] + .form-links {
+    width: 100% !important;
     max-width: 400px !important;
     margin: 0 auto 2rem auto !important; /* WITHOUT negative margin */
     text-align: center !important;
@@ -168,8 +168,8 @@ form[method="post"] + div:has(a) {
 }
 
 /* For wide forms */
-form[action*="Register"] + div:has(a) {
-    width: 500px !important;
+form[action*="Register"] + .form-links {
+    width: 100% !important;
     max-width: 500px !important;
 }
 
@@ -204,7 +204,7 @@ form[method="post"] + div {
         padding: 1.5rem !important;
     }
 
-        form[method="post"] + div:has(a) {
+        form[method="post"] + .form-links {
             width: calc(100vw - 2rem) !important;
             max-width: none !important;
             margin: 0 1rem 2rem 1rem !important;
@@ -217,13 +217,13 @@ form[method="post"] + div {
             font-size: 16px !important;
         }
 
-        form[method="post"] > div:has(img[src*="captcha"]) {
+        .captcha-container {
             flex-direction: column !important;
             align-items: center !important;
             gap: 0.75rem !important;
         }
 
-            form[method="post"] > div:has(img[src*="captcha"]) input[type="text"] {
+            .captcha-container input[type="text"] {
                 width: 100% !important;
             }
 }
@@ -232,13 +232,8 @@ form[method="post"] + div {
    ADDITIONAL FIXES
    ========================================== */
 
-/* Remove any margins between form and links block */
-form[method="post"]:has(+ div:has(a)) {
-    margin-bottom: 0 !important;
-}
-
 /* Ensure smooth transition */
-form[method="post"] + div:has(a):before {
+form[method="post"] + .form-links:before {
     content: "";
     position: absolute;
     top: -1px;
@@ -247,4 +242,15 @@ form[method="post"] + div:has(a):before {
     height: 1px;
     background: #ffffff;
     z-index: 1;
+}
+
+/* Error styling shared across themes */
+.error {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: var(--space-md, 1rem);
+    border-radius: var(--radius-md, 0.375rem);
+    margin-bottom: var(--space-md, 1rem);
+    font-weight: 500;
 }

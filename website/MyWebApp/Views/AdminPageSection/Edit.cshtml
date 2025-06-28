@@ -4,10 +4,15 @@
     Layout = "../Admin/_AdminLayout";
     var pages = ViewBag.Pages as List<MyWebApp.Models.Page>;
     var permissions = ViewBag.Permissions as List<MyWebApp.Models.Permission>;
+    var roles = ViewBag.Roles as List<MyWebApp.Models.Role> ?? new List<MyWebApp.Models.Role>();
 }
 <h2>Edit Section</h2>
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
+    <div>
+        <label>Associated Page</label>
+        <input type="text" readonly value="@pages.FirstOrDefault(p => p.Id == Model.PageId)?.Slug" />
+    </div>
     <div>
         <label>Page</label>
         <select asp-for="PageId" asp-items="@(new SelectList(pages, "Id", "Slug"))"></select>
@@ -17,8 +22,9 @@
         <select id="zone-select" asp-for="Zone" data-selected="@Model.Zone"></select>
     </div>
  
-@await Html.PartialAsync("_SectionEditor", Model)
+@await Html.PartialAsync("~/Views/Shared/_SectionEditor.cshtml", Model, new ViewDataDictionary(ViewData) { ["Roles"] = roles })
 
     <button type="submit">Save</button>
 </form>
+<script src="~/js/section-editor.js" asp-append-version="true"></script>
 <script src="~/js/page-section-zone.js" asp-append-version="true"></script>

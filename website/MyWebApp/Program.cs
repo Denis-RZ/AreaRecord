@@ -149,6 +149,7 @@ builder.Services.AddSingleton<MyWebApp.Services.CacheService>();
 builder.Services.AddSingleton<MyWebApp.Services.LayoutService>();
 builder.Services.AddSingleton<MyWebApp.Services.TokenRenderService>();
 builder.Services.AddSingleton<MyWebApp.Services.HtmlSanitizerService>();
+builder.Services.AddSingleton<MyWebApp.Services.ContentProcessingService>();
 builder.Services.AddSingleton<MyWebApp.Services.ThemeService>();
 builder.Services.AddSingleton<MyWebApp.Services.CaptchaService>();
 var smtpSection = builder.Configuration.GetSection("Smtp");
@@ -184,19 +185,20 @@ using (var scope = app.Services.CreateScope())
         {
             app.Logger.LogInformation("Database schema created.");
         }
-            if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
-            {
-                db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-                db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+        if (provider.Equals("sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
 
-                UpgradeDownloadFilesTable(db);
-                UpgradePageSectionsTable(db);
-                UpgradePagesTable(db);
-                UpgradeMediaItemsTable(db);
-                UpgradeBlockTemplatesTable(db);
-                UpgradePermissionsTable(db);
-                UpgradeLayoutHeader(db);
-            }
+            UpgradeDownloadFilesTable(db);
+            UpgradePageSectionsTable(db);
+            UpgradePagesTable(db);
+            UpgradeMediaItemsTable(db);
+            UpgradeBlockTemplatesTable(db);
+            UpgradeRolesTable(db);
+            UpgradePermissionsTable(db);
+            UpgradeLayoutHeader(db);
+        }
         if (db.Database.CanConnect())
         {
             cacheService.WarmCache(db);
@@ -324,7 +326,6 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 StartDate TEXT,
                 EndDate TEXT,
                 PermissionId INTEGER,
-                ViewCount INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(PageId) REFERENCES Pages(Id) ON DELETE CASCADE
             )");
             db.Database.ExecuteSqlRaw("CREATE INDEX IX_PageSections_PageId_Zone_SortOrder ON PageSections(PageId, Zone, SortOrder)");
@@ -354,8 +355,8 @@ static void UpgradePageSectionsTable(ApplicationDbContext db)
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN EndDate TEXT");
             if (!columns.Contains("PermissionId"))
                 db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN PermissionId INTEGER");
-            if (!columns.Contains("ViewCount"))
-                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN ViewCount INTEGER NOT NULL DEFAULT 0");
+            if (!columns.Contains("RoleId"))
+                db.Database.ExecuteSqlRaw("ALTER TABLE PageSections ADD COLUMN RoleId INTEGER");
 
             cmd.CommandText = "PRAGMA index_list('PageSections')";
             using var idx = cmd.ExecuteReader();
@@ -439,6 +440,10 @@ static void UpgradePagesTable(ApplicationDbContext db)
         {
             db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN FeaturedImage TEXT");
         }
+        if (!columns.Contains("RoleId"))
+        {
+            db.Database.ExecuteSqlRaw("ALTER TABLE Pages ADD COLUMN RoleId INTEGER");
+        }
     }
     catch (Exception ex)
     {
@@ -505,6 +510,46 @@ static void UpgradeBlockTemplatesTable(ApplicationDbContext db)
                 Html TEXT,
                 Created TEXT NOT NULL,
                 FOREIGN KEY(BlockTemplateId) REFERENCES BlockTemplates(Id) ON DELETE CASCADE
+            )");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Schema upgrade failed: {ex.Message}");
+    }
+}
+
+static void UpgradeRolesTable(ApplicationDbContext db)
+{
+    try
+    {
+        using var conn = db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Roles'";
+        var exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE Roles (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL
+            )");
+            db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IX_Roles_Name ON Roles(Name)");
+            db.Database.ExecuteSqlRaw(@"INSERT INTO Roles (Id, Name) VALUES
+                (1, 'Admin'), (2, 'User'), (3, 'Moderator')");
+        }
+
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='UserRoles'";
+        exists = cmd.ExecuteScalar() != null;
+        if (!exists)
+        {
+            db.Database.ExecuteSqlRaw(@"CREATE TABLE UserRoles (
+                SiteUserId INTEGER NOT NULL,
+                RoleId INTEGER NOT NULL,
+                PRIMARY KEY(SiteUserId, RoleId),
+                FOREIGN KEY(SiteUserId) REFERENCES SiteUsers(Id) ON DELETE CASCADE,
+                FOREIGN KEY(RoleId) REFERENCES Roles(Id) ON DELETE CASCADE
             )");
         }
     }

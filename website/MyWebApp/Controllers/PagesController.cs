@@ -29,6 +29,16 @@ public class PagesController : BaseController
         {
             return NotFound();
         }
+        var roles = HttpContext.Session.GetString("Roles");
+        var roleNames = string.IsNullOrWhiteSpace(roles) ? new[] { "Anonym" } : roles.Split(',');
+        if (page.RoleId != null)
+        {
+            var allowed = await Db.Roles.AsNoTracking().Where(r => roleNames.Contains(r.Name)).Select(r => r.Id).ToListAsync();
+            if (!allowed.Contains(page.RoleId.Value))
+            {
+                return Unauthorized();
+            }
+        }
 
         var header = await _layout.GetSectionAsync(Db, page.Id, "header");
         if (string.IsNullOrEmpty(header))

@@ -8,7 +8,7 @@ window.addEventListener('load', () => {
     const sectionSelect = document.getElementById('section-select');
 
     blockBtn?.addEventListener('click', () => {
-        fetch('/AdminBlockTemplate/GetBlocks')
+        fetch('/Api/GetBlocks')
             .then(r => r.json())
             .then(list => {
                 blockSelect.innerHTML = '<option value="">select</option>' +
@@ -26,7 +26,7 @@ window.addEventListener('load', () => {
     });
 
     sectionBtn?.addEventListener('click', () => {
-        fetch('/AdminBlockTemplate/GetPages')
+        fetch('/Api/GetPages')
             .then(r => r.json())
             .then(list => {
                 pageSelect.innerHTML = '<option value="">page</option>' +
@@ -40,7 +40,7 @@ window.addEventListener('load', () => {
     pageSelect?.addEventListener('change', () => {
         const id = pageSelect.value;
         if (!id) return;
-        fetch(`/AdminBlockTemplate/GetSections/${id}`)
+        fetch(`/Api/GetSections/${id}`)
             .then(r => r.json())
             .then(list => {
                 sectionSelect.innerHTML = '<option value="">area</option>' +

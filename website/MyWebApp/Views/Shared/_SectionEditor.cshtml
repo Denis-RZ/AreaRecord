@@ -1,0 +1,43 @@
+@model MyWebApp.Models.PageSection
+@using MyWebApp.Models
+@{
+    var idxObj = ViewData["Index"];
+    var idx = idxObj?.ToString() ?? "0";
+    var prefix = idxObj != null ? $"Sections[{idx}]." : string.Empty;
+    var roles = ViewData["Roles"] as List<Role> ?? new List<Role>();
+}
+<div class="section-editor" data-index="@idx" draggable="true">
+    <input type="hidden" name="@($"{prefix}Id")" value="@Model.Id" />
+    <input type="hidden" name="@($"{prefix}SortOrder")" value="@Model.SortOrder" class="sort-order" />
+    <div>
+        <label>Zone</label>
+        <select class="zone-select" data-index="@idx" name="@($"{prefix}Zone")" data-selected="@Model.Zone"></select>
+    </div>
+    <div>
+        <label>Role</label>
+        <select name="@($"{prefix}RoleId")" required>
+            <option value="">Select role</option>
+            <option value="1" selected="@(Model.RoleId == 1)">Admin</option>
+            <option value="2" selected="@(Model.RoleId == 2)">Editor</option>
+            <option value="3" selected="@(Model.RoleId == 3)">Viewer</option>
+        </select>
+    </div>
+    <div>
+        <label>Type</label>
+        <select id="type-select-@idx" name="@($"{prefix}Type")" asp-items="Html.GetEnumSelectList<PageSectionType>()" value="@Model.Type"></select>
+    </div>
+    <div id="html-editor-@idx" class="type-editor">
+        <div class="quill-editor" id="quill-editor-@idx"></div>
+        <input type="hidden" id="Html-@idx" name="@($"{prefix}Html")" value="@Model.Html" />
+    </div>
+    <div id="markdown-editor-@idx" class="type-editor">
+        <textarea id="Markdown-@idx" name="@($"{prefix}Html")">@Model.Html</textarea>
+    </div>
+    <div id="code-editor-@idx" class="type-editor">
+        <textarea id="Code-@idx" name="@($"{prefix}Html")">@Model.Html</textarea>
+    </div>
+    <div id="file-editor-@idx" class="type-editor">
+        <input type="file" name="@($"{prefix}File")" />
+    </div>
+    <button type="button" class="add-library">Add to Library</button>
+</div>

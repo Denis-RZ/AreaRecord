@@ -4,19 +4,11 @@
     var selectedZone = ViewBag.SelectedZone as string ?? string.Empty;
     var selectedRole = ViewBag.SelectedRole as string ?? string.Empty;
 }
-@{
-    ViewData["Title"] = "Add Block To Page";
-    Layout = "../Admin/_AdminLayout";
-}
-<h2>@ViewData["Title"]</h2>
-<form asp-action="AddToPage" method="post">
-    <input type="hidden" name="id" value="@ViewBag.BlockId" />
+<div class="block-assignment">
+    <h3>Page Assignment</h3>
     <div>
-        <label>Associated Page(s)</label>
+        <label>Pages</label>
         <input type="text" id="page-display" readonly />
-    </div>
-    <div>
-        <label>Assign To Pages</label>
         <select id="page-select" name="pageIds" multiple size="5">
             <option value="0" selected="@(selectedPages.Contains(0) ? "selected" : null)">All Pages</option>
             @foreach (var p in ViewBag.Pages as List<Page>)
@@ -36,28 +28,24 @@
     </div>
     <div>
         <label>Role</label>
-
         <select name="role">
             <option value="" selected="@(string.IsNullOrEmpty(selectedRole) ? "selected" : null)">(none)</option>
             @foreach (var r in ViewBag.Roles as List<Role>)
             {
                 <option value="@r.Name" selected="@(selectedRole == r.Name ? "selected" : null)">@r.Name</option>
             }
-
         </select>
     </div>
-    <button type="submit">Add</button>
-</form>
-
+</div>
 @section Scripts {
-    <script>
-        const select = document.getElementById('page-select');
-        const display = document.getElementById('page-display');
-        function updateDisplay() {
-            const names = Array.from(select.selectedOptions).map(o => o.text);
-            display.value = names.join(', ');
-        }
-        select.addEventListener('change', updateDisplay);
-        updateDisplay();
-    </script>
+<script>
+    const select = document.getElementById('page-select');
+    const display = document.getElementById('page-display');
+    function updateDisplay() {
+        const names = Array.from(select.selectedOptions).map(o => o.text);
+        display.value = names.join(', ');
+    }
+    select.addEventListener('change', updateDisplay);
+    updateDisplay();
+</script>
 }

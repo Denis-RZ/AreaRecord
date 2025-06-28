@@ -7,8 +7,6 @@ using MyWebApp.Filters;
 using MyWebApp.Models;
 using MyWebApp.Services;
 using Microsoft.AspNetCore.Http;
-using Markdig;
-using System.IO;
 using System.Linq;
 
 namespace MyWebApp.Controllers;
@@ -18,12 +16,16 @@ public class AdminContentController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly LayoutService _layout;
+    private readonly ContentProcessingService _content;
+    private readonly TokenRenderService _tokens;
     private readonly HtmlSanitizerService _sanitizer;
 
-    public AdminContentController(ApplicationDbContext db, LayoutService layout, HtmlSanitizerService sanitizer)
+    public AdminContentController(ApplicationDbContext db, LayoutService layout, ContentProcessingService content, TokenRenderService tokens, HtmlSanitizerService sanitizer)
     {
         _db = db;
         _layout = layout;
+        _content = content;
+        _tokens = tokens;
         _sanitizer = sanitizer;
     }
 
@@ -33,6 +35,8 @@ public class AdminContentController : Controller
             .OrderBy(t => t.Name).ToListAsync();
         ViewBag.Permissions = await _db.Permissions.AsNoTracking()
             .OrderBy(p => p.Name).ToListAsync();
+        ViewBag.Roles = await _db.Roles.AsNoTracking()
+            .OrderBy(r => r.Name).ToListAsync();
     }
 
     public async Task<IActionResult> Index()
@@ -43,11 +47,11 @@ public class AdminContentController : Controller
 
     public async Task<IActionResult> Create()
     {
- 
+
         await LoadTemplatesAsync();
         ViewBag.Sections = new List<PageSection>();
         return View("PageEditor", new Page());
- 
+
     }
 
     [HttpPost]
@@ -92,13 +96,32 @@ public class AdminContentController : Controller
                 s.Id = 0;
                 s.PageId = model.Id;
                 var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
-                await PrepareHtmlAsync(s, file);
+                await _content.PrepareHtmlAsync(s, file);
                 _db.PageSections.Add(s);
             }
             await _db.SaveChangesAsync();
         }
         _layout.Reset();
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Preview([FromBody] PreviewRequest model)
+    {
+        var layout = string.IsNullOrWhiteSpace(model.Layout) ? "single-column" : model.Layout;
+        var zones = new Dictionary<string, string>();
+        foreach (var kv in model.Zones ?? new Dictionary<string, string>())
+        {
+            if (!LayoutService.IsValidZone(layout, kv.Key)) continue;
+            var clean = _sanitizer.Sanitize(kv.Value ?? string.Empty);
+            zones[kv.Key] = await _tokens.RenderAsync(_db, clean);
+        }
+        ViewBag.HeaderHtml = await _layout.GetHeaderAsync(_db);
+        ViewBag.FooterHtml = await _layout.GetFooterAsync(_db);
+        ViewBag.PageLayout = layout;
+        ViewBag.ZoneHtml = zones;
+        Response.Headers["Content-Security-Policy"] = "default-src 'self'";
+        return View("~/Views/Pages/Show.cshtml", new Page { Title = model.Title });
     }
 
     public async Task<IActionResult> Edit(int id)
@@ -113,7 +136,7 @@ public class AdminContentController : Controller
         ViewBag.Sections = await _db.PageSections.Where(s => s.PageId == id)
             .OrderBy(s => s.SortOrder).ToListAsync();
         return View("PageEditor", page);
- 
+
     }
 
     [HttpPost]
@@ -160,7 +183,7 @@ public class AdminContentController : Controller
                 s.Id = 0;
                 s.PageId = model.Id;
                 var file = files.FirstOrDefault(f => f.Name == $"Sections[{i}].File");
-                await PrepareHtmlAsync(s, file);
+                await _content.PrepareHtmlAsync(s, file);
                 _db.PageSections.Add(s);
             }
             await _db.SaveChangesAsync();
@@ -169,38 +192,6 @@ public class AdminContentController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task PrepareHtmlAsync(PageSection model, IFormFile? file)
-    {
-        switch (model.Type)
-        {
-            case PageSectionType.Html:
-                model.Html = _sanitizer.Sanitize(model.Html);
-                break;
-            case PageSectionType.Markdown:
-                var html = Markdig.Markdown.ToHtml(model.Html ?? string.Empty);
-                model.Html = _sanitizer.Sanitize(html);
-                break;
-            case PageSectionType.Code:
-                model.Html = $"<pre><code>{System.Net.WebUtility.HtmlEncode(model.Html)}</code></pre>";
-                break;
-            case PageSectionType.Image:
-            case PageSectionType.Video:
-                if (file != null && file.Length > 0)
-                {
-                    var uploads = Path.Combine("wwwroot", "uploads");
-                    Directory.CreateDirectory(uploads);
-                    var name = Path.GetFileName(file.FileName);
-                    var path = Path.Combine(uploads, name);
-                    using var stream = new FileStream(path, FileMode.Create);
-                    await file.CopyToAsync(stream);
-                    if (model.Type == PageSectionType.Image)
-                        model.Html = $"<img src='/uploads/{name}' alt='' />";
-                    else
-                        model.Html = $"<video controls src='/uploads/{name}'></video>";
-                }
-                break;
-        }
-    }
 
     public async Task<IActionResult> Delete(int id)
     {
