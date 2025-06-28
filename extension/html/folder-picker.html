@@ -152,9 +152,9 @@
                     });
                     
                     showResult(
-                        <strong>✅ Folder Selected Successfully!</strong><br>
-                        <strong>Location:</strong> {dirHandle.name}<br>
-                        <em>Your recordings will now be saved in this folder</em>
+                        `<strong>✅ Folder Selected Successfully!</strong><br>
+                        <strong>Location:</strong> ${dirHandle.name}<br>
+                        <em>Your recordings will now be saved in this folder</em>`
                     );
                     
                     // Send back to extension
@@ -173,31 +173,31 @@
                     
                 } else {
                     showResult(
-                        <strong>⚠️ Browser Limitation</strong><br>
+                        `<strong>⚠️ Browser Limitation</strong><br>
                         Folder selection is not supported in this browser version.<br>
-                        <em>Recordings will be saved to the Downloads folder.</em>
-                    , false);
+                        <em>Recordings will be saved to the Downloads folder.</em>`,
+                        false);
                 }
             } catch (err) {
                 if (err.name === 'AbortError') {
                     showResult(
-                        <strong>📂 Folder Selection Cancelled</strong><br>
-                        <em>No folder was selected. Using default Downloads folder.</em>
-                    , false);
+                        `<strong>📂 Folder Selection Cancelled</strong><br>
+                        <em>No folder was selected. Using default Downloads folder.</em>`,
+                        false);
                 } else {
                     showResult(
-                        <strong>❌ Error Selecting Folder</strong><br>
-                        <em>{err.message}</em><br>
-                        Using default Downloads folder instead.
-                    , false);
+                        `<strong>❌ Error Selecting Folder</strong><br>
+                        <em>${err.message}</em><br>
+                        Using default Downloads folder instead.`,
+                        false);
                 }
             }
         };
         
         document.getElementById('useDefault').onclick = () => {
             showResult(
-                <strong>📥 Using Default Downloads Folder</strong><br>
-                <em>All recordings will be saved to your Downloads folder</em>
+                `<strong>📥 Using Default Downloads Folder</strong><br>
+                <em>All recordings will be saved to your Downloads folder</em>`
             );
             
             // Send back to extension
