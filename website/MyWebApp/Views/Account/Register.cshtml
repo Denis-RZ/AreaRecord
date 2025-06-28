@@ -68,7 +68,7 @@
         <input asp-for="AcceptPrivacy" class="form-check-input" type="checkbox" />
         <label asp-for="AcceptPrivacy" class="form-check-label">Accept Privacy Policy</label><span class="text-danger">*</span>
     </div>
-    <div class="form-group mt-3">
+    <div class="form-group mt-3 captcha-container">
         <img src="@Url.Action("Image", "Captcha")?t=@ViewBag.CaptchaToken" class="captcha-img" alt="captcha" />
         <input type="text" name="captcha" class="form-control mt-1" placeholder="Enter code" />
     </div>
